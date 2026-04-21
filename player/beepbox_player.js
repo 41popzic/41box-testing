@@ -10056,13 +10056,7 @@ var beepbox = (function (exports) {
         return { interval: interval, time: time, size: size };
     }
     class Note {
-        constructor(pitch, start, end, size, fadeout = false) {
-            this.pitches = [pitch];
-            this.pins = [makeNotePin(0, 0, size), makeNotePin(0, end - start, fadeout ? 0 : size)];
-            this.start = start;
-            this.end = end;
-            this.continuesLastPattern = false;
-        }
+        constructor(pitch, start, end, size, fadeout = false) { this.pitches = [pitch]; this.pins = [makeNotePin(0, 0, size), makeNotePin(0, end - start, fadeout ? 0 : size)]; this.start = start; this.end = end; this.continuesLastPattern = false; }
         pickMainInterval() {
             let longestFlatIntervalDuration = 0;
             let mainInterval = 0;

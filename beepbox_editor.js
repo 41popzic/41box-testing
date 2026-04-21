@@ -11949,13 +11949,7 @@ li.select2-results__option[role=group] > strong:hover {
         return { interval: interval, time: time, size: size };
     }
     class Note {
-        constructor(pitch, start, end, size, fadeout = false) {
-            this.pitches = [pitch];
-            this.pins = [makeNotePin(0, 0, size), makeNotePin(0, end - start, fadeout ? 0 : size)];
-            this.start = start;
-            this.end = end;
-            this.continuesLastPattern = false;
-        }
+        constructor(pitch, start, end, size, fadeout = false) { this.pitches = [pitch]; this.pins = [makeNotePin(0, 0, size), makeNotePin(0, end - start, fadeout ? 0 : size)]; this.start = start; this.end = end; this.continuesLastPattern = false; }
         pickMainInterval() {
             let longestFlatIntervalDuration = 0;
             let mainInterval = 0;
@@ -29611,12 +29605,44 @@ li.select2-results__option[role=group] > strong:hover {
             const rhythm = Config.rhythms[newValue];
             if (!rhythm)
                 return;
-            doc.song.rhythm = newValue;
-            Config.partsPerBeat = rhythm.stepsPerBeat;
-            doc.notifier.changed();
-            this._didSomething();
+            this._newPPB = rhythm.stepsPerBeat;
+            if (this._oldRhythm !== newValue) {
+                const scale = this._newPPB / this._oldPPB;
+                this._scaleSong(doc, scale);
+                doc.song.rhythm = newValue;
+                Config.partsPerBeat = this._newPPB;
+                doc.notifier.changed();
+                this._didSomething();
+            }
+        }
+        _scaleSong(doc, scale) {
+            for (const channel of doc.song.channels) {
+                for (const pattern of channel.patterns) {
+                    if (!pattern || !pattern.notes)
+                        continue;
+                    for (const note of pattern.notes) {
+                        note.start *= scale;
+                        note.end *= scale;
+                        note.start = Math.round(note.start);
+                        note.end = Math.round(note.end);
+                        if (note.end <= note.start) {
+                            note.end = note.start + 1;
+                        }
+                        for (const pin of note.pins) {
+                            pin.time *= scale;
+                            pin.time = Math.round(pin.time);
+                        }
+                        if (note.pins.length > 1) {
+                            const lastPin = note.pins[note.pins.length - 1];
+                            lastPin.time = note.end - note.start;
+                        }
+                    }
+                }
+            }
         }
         undo(doc) {
+            const scale = this._oldPPB / this._newPPB;
+            this._scaleSong(doc, scale);
             doc.song.rhythm = this._oldRhythm;
             Config.partsPerBeat = this._oldPPB;
             doc.notifier.changed();
