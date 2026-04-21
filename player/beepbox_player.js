@@ -412,21 +412,24 @@ var beepbox = (function (exports) {
         }
     }
     class Config {
-        static getClosestRhythmSteps(target) {
-            let best = this.rhythms[0].stepsPerBeat;
-            let bestError = Infinity;
-            for (const r of this.rhythms) {
-                const error = Math.abs(r.stepsPerBeat - target);
-                if (error < bestError) {
-                    bestError = error;
-                    best = r.stepsPerBeat;
-                }
-            }
-            return best;
+        static get fadeOutTicks() {
+            const ppb = this.partsPerBeat;
+            return [
+                ppb * -1,
+                ppb * -0.5,
+                ppb * -0.25,
+                ppb * -0.125,
+                ppb / -24,
+                ppb * 0.25,
+                ppb * 0.5,
+                ppb * 1,
+                ppb * 2,
+                ppb * 3,
+                ppb * 4,
+            ].map(Math.round);
         }
-        static getStepSize(stepsPerBeat) {
-            const actual = this.getClosestRhythmSteps(stepsPerBeat);
-            return Math.round(this.partsPerBeat / actual);
+        static get drumsetFadeOutTicks() {
+            return this.partsPerBeat;
         }
         static generateSineWave() {
             const wave = new Float32Array(_a$1.sineWaveLength + 1);
@@ -463,6 +466,20 @@ var beepbox = (function (exports) {
             for (let i = 0; i < _a$1.sineWaveLength + 1; i++) {
                 wave[i] = ((i + (_a$1.sineWaveLength / 4.0)) * 2.0 / _a$1.sineWaveLength) % 2 - 1;
                 wave[i] = inverse ? -wave[i] : wave[i];
+            }
+            return wave;
+        }
+        static generateWhiteNoiseFmWave() {
+            const wave = new Float32Array(_a$1.sineWaveLength + 1);
+            for (let i = 0; i < _a$1.sineWaveLength + 1; i++) {
+                wave[i] = Math.random() * 2.0 - 1.0;
+            }
+            return wave;
+        }
+        static generateOneBitWhiteNoiseFmWave() {
+            const wave = new Float32Array(_a$1.sineWaveLength + 1);
+            for (let i = 0; i < _a$1.sineWaveLength + 1; i++) {
+                wave[i] = Math.round(Math.random());
             }
             return wave;
         }
@@ -708,9 +725,7 @@ var beepbox = (function (exports) {
     Config.filterSimpleCutRange = 11;
     Config.filterSimplePeakRange = 8;
     Config.fadeInRange = 10;
-    Config.fadeOutTicks = [-240, -120, -60, -30, -10, 60, 120, 240, 480, 720, 960];
     Config.fadeOutNeutral = 4;
-    Config.drumsetFadeOutTicks = 240;
     Config.transitions = toNameMap([
         { name: "normal", isSeamless: false, continues: false, slides: false, slideTicks: 30, includeAdjacentPatterns: false },
         { name: "interrupt", isSeamless: true, continues: false, slides: false, slideTicks: 30, includeAdjacentPatterns: true },
@@ -1294,8 +1309,7 @@ var beepbox = (function (exports) {
         { name: "echo", pianoName: "Echo", maxRawVol: _a$1.echoSustainRange - 1, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 6, maxIndex: 0,
             promptName: "Instrument Echo Sustain", promptDesc: ["This setting controls the echo sustain (echo loudness) of your instrument, just like the echo slider.", "At $LO, your instrument will have no echo sustain and echo will not be audible. Echo sustain increases and the echo effect gets more noticeable up to the max value, $HI.", "[OVERWRITING] [$LO - $HI]"] },
         { name: "echo delay", pianoName: "Echo Delay", maxRawVol: _a$1.echoDelayRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 6, maxIndex: 0,
-            promptName: "Instrument Echo Delay", promptDesc: ["This setting controls the echo delay of your instrument, just like the echo delay slider.", "At $LO, your instrument will have very little echo delay, and this increases up to 2 beats of delay at $HI.", "[OVERWRITING] [$LO - $HI] [~beats ÷12]"]
-        },
+            promptName: "Instrument Echo Delay", promptDesc: ["This setting controls the echo delay of your instrument, just like the echo delay slider.", "At $LO, your instrument will have very little echo delay, and this increases up to 2 beats of delay at $HI.", "[OVERWRITING] [$LO - $HI] [~beats ÷12]"] },
         { name: "chorus", pianoName: "Chorus", maxRawVol: _a$1.chorusRange - 1, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 1, maxIndex: 0,
             promptName: "Instrument Chorus", promptDesc: ["This setting controls the chorus strength of your instrument, just like the chorus slider.", "At $LO, the chorus effect will be disabled. The strength of the chorus effect increases up to the max value, $HI.", "[OVERWRITING] [$LO - $HI]"] },
         { name: "eq filt cut", pianoName: "EQFlt Cut", maxRawVol: _a$1.filterSimpleCutRange - 1, newNoteVol: _a$1.filterSimpleCutRange - 1, forSong: false, convertRealFactor: 0, associatedEffect: 15, maxIndex: 0,
@@ -10188,7 +10202,8 @@ var beepbox = (function (exports) {
                         if (pointObject == undefined || pointObject["tick"] == undefined)
                             continue;
                         const interval = (pointObject["pitchBend"] == undefined) ? 0 : (pointObject["pitchBend"] | 0);
-                        const time = Math.round((+pointObject["tick"]) * Config.partsPerBeat / importedPartsPerBeat);
+                        const rawTime = (+pointObject["tick"]) * Config.partsPerBeat / importedPartsPerBeat;
+                        const time = Math.round(rawTime);
                         let volumeCap = song.getVolumeCapForSetting(isModChannel, instrument.modulators[mod], instrument.modFilterTypes[mod]);
                         let size;
                         if (pointObject["volume"] == undefined) {
@@ -13867,11 +13882,11 @@ var beepbox = (function (exports) {
                                 }
                             }
                             else if (((fromSlarmoosBox && beforeFour) || from41Box) || (fromUltraBox && beforeFive)) {
-                                const rhythmMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-                                this.rhythm = clamp(0, Config.rhythms.length, rhythmMap[base64CharCodeToInt[compressed.charCodeAt(charIndex++)]]);
+                                const rhythmMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+                                this.rhythm = clamp(0, Config.rhythms.length - 1, rhythmMap[base64CharCodeToInt[compressed.charCodeAt(charIndex++)]]);
                             }
                             else {
-                                this.rhythm = clamp(0, Config.rhythms.length, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                                this.rhythm = clamp(0, Config.rhythms.length - 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                             }
                         }
                         break;
