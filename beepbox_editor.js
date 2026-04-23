@@ -37813,6 +37813,9 @@ You should be redirected to the song at:<br /><br />
                 this._fileInput.removeEventListener("change", this._whenFileSelected);
                 this._cancelButton.removeEventListener("click", this._close);
             };
+            this.partsPerBeat = () => {
+                Config.partsPerBeat = 24;
+            };
             this._whenFileSelected = () => {
                 const file = this._fileInput.files[0];
                 if (!file)
@@ -37821,6 +37824,7 @@ You should be redirected to the song at:<br /><br />
                 if (extension == "json") {
                     const reader = new FileReader();
                     reader.addEventListener("load", (event) => {
+                        this.partsPerBeat();
                         this._doc.prompt = null;
                         this._doc.goBackToStart();
                         this._doc.record(new ChangeSong(this._doc, reader.result, this._modeImportSelect.value), true, true);
@@ -37831,6 +37835,7 @@ You should be redirected to the song at:<br /><br />
                     const reader = new FileReader();
                     reader.addEventListener("load", (event) => {
                         this._doc.prompt = null;
+                        this.partsPerBeat();
                         this._doc.goBackToStart();
                         this._parseMidiFile(reader.result);
                     });
