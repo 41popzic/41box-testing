@@ -13651,7 +13651,7 @@ li.select2-results__option[role=group] > strong:hover {
                 this.preset = instrumentObject["preset"] >>> 0;
             }
             if (instrumentObject["volume"] != undefined) {
-                if (format == "jummbox" || format == "midbox" || format == "synthbox" || format == "goldbox" || format == "paandorasbox" || format == "ultrabox" || format == "slarmoosbox") {
+                if (format == "jummbox" || format == "midbox" || format == "synthbox" || format == "goldbox" || format == "paandorasbox" || format == "ultrabox" || format == "slarmoosbox" || format == "41box") {
                     this.volume = clamp(-Config.volumeRange / 2, (Config.volumeRange / 2) + 1, instrumentObject["volume"] | 0);
                 }
                 else {
@@ -38569,7 +38569,7 @@ You should be redirected to the song at:<br /><br />
                     song.beatsPerBar = beatsPerBar;
                     song.key = key;
                     song.scale = 0;
-                    song.rhythm = 2;
+                    song.rhythm = 3;
                     song.layeredInstruments = false;
                     song.patternInstruments = pitchChannels.some(channel => channel.instruments.length > 1) || noiseChannels.some(channel => channel.instruments.length > 1);
                     removeDuplicatePatterns(pitchChannels);
@@ -47682,12 +47682,7 @@ You should be redirected to the song at:<br /><br />
             }, "Note Divisions:"), div({
                 class: "inputContainer",
                 style: "position: relative; display: inline-block;"
-            }, this._rhythmInput)), div({ class: "selectRow" }, button({
-                onclick: () => {
-                    this.doc.selection.forceRhythm();
-                    this.doc.notifier.changed();
-                }
-            }, "Snap To Rhythm")), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("songeq") }, span("Song EQ:")), this._songEqFilterZoom, this._songEqFilterEditor.container), this._sampleLoadingStatusContainer));
+            }, this._rhythmInput)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("songeq") }, span("Song EQ:")), this._songEqFilterZoom, this._songEqFilterEditor.container), this._sampleLoadingStatusContainer));
             this._instrumentSettingsArea = div({ class: "instrument-settings-area" }, this._instrumentSettingsGroup, this._modulatorGroup);
             this._settingsArea = div({ class: "settings-area noSelection" }, div({ class: "version-area" }, div({ style: `text-align: center; margin: 3px 0; color: ${ColorConfig.secondaryText};` }, this._songTitleInputBox.input)), div({ class: "play-pause-area" }, this._volumeBarBox, div({ class: "playback-bar-controls" }, this._playButton, this._pauseButton, this._recordButton, this._stopButton, this._prevBarButton, this._nextBarButton), div({ class: "playback-volume-controls" }, span({ class: "volume-speaker" }), this._volumeSlider.container), this._globalOscscopeContainer), this._menuArea, this._songSettingsArea, this._instrumentSettingsArea);
             this.mainLayer = div({ class: "beepboxEditor", tabIndex: "0" }, this._patternArea, this._trackArea, this._settingsArea, this._promptContainer);
@@ -49569,6 +49564,38 @@ You should be redirected to the song at:<br /><br />
                         this.doc.record(group);
                         event.preventDefault();
                         break;
+                    case 80:
+                        if (canPlayNotes)
+                            break;
+                        if (event.shiftKey && event.ctrlKey && event.altKey) {
+                            this.doc.prefs.autoPlay = false;
+                            this.doc.prefs.autoFollow = false;
+                            this.doc.prefs.enableNotePreview = true;
+                            this.doc.prefs.showFifth = true;
+                            this.doc.prefs.notesOutsideScale = false;
+                            this.doc.prefs.defaultScale = 0;
+                            this.doc.prefs.showLetters = true;
+                            this.doc.prefs.showChannels = true;
+                            this.doc.prefs.showScrollBar = true;
+                            this.doc.prefs.alwaysFineNoteVol = false;
+                            this.doc.prefs.enableChannelMuting = true;
+                            this.doc.prefs.displayBrowserUrl = true;
+                            this.doc.prefs.displayVolumeBar = true;
+                            this.doc.prefs.layout = "long";
+                            this.doc.prefs.visibleOctaves = 3;
+                            this.doc.prefs.closePromptByClickoff = true;
+                            this.doc.prefs.colorTheme = "energized";
+                            this.doc.prefs.frostedGlassBackground = true;
+                            this.doc.prefs.instrumentButtonsAtTop = false;
+                            this.doc.prefs.instrumentCopyPaste = true;
+                            this.doc.prefs.instrumentImportExport = true;
+                            this.doc.prefs.notesFlashWhenPlayed = true;
+                            this.doc.prefs.showOscilloscope = true;
+                            this.doc.prefs.save();
+                            event.preventDefault();
+                            location.reload();
+                        }
+                        break;
                     case 81:
                         if (canPlayNotes)
                             break;
@@ -49586,37 +49613,7 @@ You should be redirected to the song at:<br /><br />
                         }
                         break;
                     case 83:
-                        if (canPlayNotes)
-                            break;
-                        if (event.shiftKey && event.ctrlKey && event.altKey) {
-                            this.doc.prefs.autoPlay = false;
-                            this.doc.prefs.autoFollow = true;
-                            this.doc.prefs.enableNotePreview = true;
-                            this.doc.prefs.showFifth = true;
-                            this.doc.prefs.notesOutsideScale = false;
-                            this.doc.prefs.defaultScale = 0;
-                            this.doc.prefs.showLetters = true;
-                            this.doc.prefs.showChannels = true;
-                            this.doc.prefs.showScrollBar = true;
-                            this.doc.prefs.alwaysFineNoteVol = false;
-                            this.doc.prefs.enableChannelMuting = true;
-                            this.doc.prefs.displayBrowserUrl = true;
-                            this.doc.prefs.displayVolumeBar = true;
-                            this.doc.prefs.layout = "tall";
-                            this.doc.prefs.visibleOctaves = 5;
-                            this.doc.prefs.closePromptByClickoff = false;
-                            this.doc.prefs.colorTheme = "slarmoosbox";
-                            this.doc.prefs.frostedGlassBackground = false;
-                            this.doc.prefs.instrumentButtonsAtTop = true;
-                            this.doc.prefs.instrumentCopyPaste = true;
-                            this.doc.prefs.instrumentImportExport = true;
-                            this.doc.prefs.notesFlashWhenPlayed = true;
-                            this.doc.prefs.showOscilloscope = true;
-                            this.doc.prefs.save();
-                            event.preventDefault();
-                            location.reload();
-                        }
-                        else if (event.ctrlKey || event.metaKey) {
+                        if (event.ctrlKey || event.metaKey) {
                             this._openPrompt("export");
                             event.preventDefault();
                         }
