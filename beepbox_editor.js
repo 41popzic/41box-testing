@@ -577,7 +577,7 @@ var beepbox = (function (exports) {
     Config.instrumentCountMin = 1;
     Config.layeredInstrumentCountMax = 10;
     Config.patternInstrumentCountMax = 10;
-    Config.partsPerBeat = 240;
+    Config.partsPerBeat = 4;
     Config.ticksPerPart = 2;
     Config.ticksPerArpeggio = 30;
     Config.arpeggioPatterns = [[0], [0, 1], [0, 1, 2, 1], [0, 1, 2, 3], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5, 6, 7]];
@@ -592,14 +592,20 @@ var beepbox = (function (exports) {
         { name: "÷8", stepsPerBeat: 8, roundUpThresholds: null },
         { name: "÷9", stepsPerBeat: 9, roundUpThresholds: null },
         { name: "÷10", stepsPerBeat: 10, roundUpThresholds: null },
+        { name: "÷11", stepsPerBeat: 11, roundUpThresholds: null },
         { name: "÷12", stepsPerBeat: 12, roundUpThresholds: null },
+        { name: "÷13", stepsPerBeat: 13, roundUpThresholds: null },
+        { name: "÷14", stepsPerBeat: 14, roundUpThresholds: null },
         { name: "÷15", stepsPerBeat: 15, roundUpThresholds: null },
         { name: "÷16", stepsPerBeat: 16, roundUpThresholds: null },
+        { name: "÷17", stepsPerBeat: 17, roundUpThresholds: null },
+        { name: "÷18", stepsPerBeat: 18, roundUpThresholds: null },
+        { name: "÷19", stepsPerBeat: 19, roundUpThresholds: null },
         { name: "÷20", stepsPerBeat: 20, roundUpThresholds: null },
+        { name: "÷21", stepsPerBeat: 21, roundUpThresholds: null },
+        { name: "÷22", stepsPerBeat: 22, roundUpThresholds: null },
+        { name: "÷23", stepsPerBeat: 23, roundUpThresholds: null },
         { name: "÷24", stepsPerBeat: 24, roundUpThresholds: null },
-        { name: "÷30", stepsPerBeat: 30, roundUpThresholds: null },
-        { name: "÷40", stepsPerBeat: 40, roundUpThresholds: null },
-        { name: "÷48", stepsPerBeat: 48, roundUpThresholds: null },
     ]);
     Config.instrumentTypeNames = ["chip", "FM", "noise", "spectrum", "drumset", "harmonics", "PWM", "Picked String", "supersaw", "custom chip", "mod", "FM6op", "FM8op"];
     Config.instrumentTypeHasSpecialInterval = [true, true, false, false, false, true, false, false, false, false, false];
@@ -14678,12 +14684,12 @@ li.select2-results__option[role=group] > strong:hover {
             this.octave = 0;
             this.loopStart = 0;
             this.loopLength = 4;
-            this.tempo = 120;
+            this.tempo = 110;
             this.reverb = 0;
             this.beatsPerBar = 8;
             this.barCount = 16;
             this.patternsPerChannel = 8;
-            this.rhythm = 1;
+            this.rhythm = 3;
             this.layeredInstruments = false;
             this.patternInstruments = false;
             this.eqFilter.reset();
@@ -15769,7 +15775,7 @@ li.select2-results__option[role=group] > strong:hover {
                                 }
                             }
                             else if (((fromSlarmoosBox && beforeFour) || from41Box) || (fromUltraBox && beforeFive)) {
-                                const rhythmMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+                                const rhythmMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
                                 this.rhythm = clamp(0, Config.rhythms.length - 1, rhythmMap[base64CharCodeToInt[compressed.charCodeAt(charIndex++)]]);
                             }
                             else {
@@ -21659,7 +21665,11 @@ li.select2-results__option[role=group] > strong:hover {
                 limit = 0.0;
             this.limit = limit;
             if (playSong && !this.countInMetronome) {
-                this.playheadInternal = (((this.tick + 1.0 - this.tickSampleCountdown / samplesPerTick) / 2.0 + this.part) / Config.partsPerBeat + this.beat) / song.beatsPerBar + this.bar;
+                const tickProgress = this.tick + 1.0 - this.tickSampleCountdown / samplesPerTick;
+                const beats = this.beat +
+                    (this.part + tickProgress / Config.ticksPerPart) / Config.partsPerBeat;
+                const bars = (this.bar + beats / song.beatsPerBar);
+                this.playheadInternal = bars;
             }
         }
         freeTone(tone) {
@@ -29600,49 +29610,87 @@ li.select2-results__option[role=group] > strong:hover {
     class ChangeRhythm extends ChangeGroup {
         constructor(doc, newValue) {
             super();
-            this._oldRhythm = doc.song.rhythm;
-            this._oldPPB = Config.partsPerBeat;
             const rhythm = Config.rhythms[newValue];
             if (!rhythm)
                 return;
+            this._oldRhythm = doc.song.rhythm;
+            this._oldPPB = Config.partsPerBeat;
             this._newPPB = rhythm.stepsPerBeat;
-            if (this._oldRhythm !== newValue) {
-                const scale = this._newPPB / this._oldPPB;
-                this._scaleSong(doc, scale);
-                doc.song.rhythm = newValue;
-                Config.partsPerBeat = this._newPPB;
-                doc.notifier.changed();
-                this._didSomething();
-            }
+            if (this._oldRhythm === newValue)
+                return;
+            const synth = doc.synth;
+            const beatPosition = (synth.playheadInternal * doc.song.beatsPerBar);
+            doc.song.rhythm = newValue;
+            Config.partsPerBeat = this._newPPB;
+            const scale = this._newPPB / this._oldPPB;
+            this._scaleSong(doc, scale);
+            const newPlayhead = beatPosition / doc.song.beatsPerBar;
+            synth.playheadInternal = newPlayhead;
+            doc.notifier.changed();
+            this._didSomething();
         }
         _scaleSong(doc, scale) {
             for (const channel of doc.song.channels) {
                 for (const pattern of channel.patterns) {
-                    if (!pattern || !pattern.notes)
+                    if (!(pattern === null || pattern === void 0 ? void 0 : pattern.notes))
                         continue;
                     for (const note of pattern.notes) {
-                        note.start *= scale;
-                        note.end *= scale;
-                        note.start = Math.round(note.start);
-                        note.end = Math.round(note.end);
-                        if (note.end <= note.start) {
-                            note.end = note.start + 1;
-                        }
+                        const start = note.start * scale;
+                        const end = note.end * scale;
+                        note.start = start;
+                        note.end = end;
                         for (const pin of note.pins) {
-                            pin.time *= scale;
-                            pin.time = Math.round(pin.time);
-                        }
-                        if (note.pins.length > 1) {
-                            const lastPin = note.pins[note.pins.length - 1];
-                            lastPin.time = note.end - note.start;
+                            pin.time = pin.time * scale;
                         }
                     }
                 }
             }
+            for (const channel of doc.song.channels) {
+                for (const pattern of channel.patterns) {
+                    if (!(pattern === null || pattern === void 0 ? void 0 : pattern.notes))
+                        continue;
+                    for (const note of pattern.notes) {
+                        note.start = Math.round(note.start);
+                        note.end = Math.max(Math.round(note.end), note.start + 1);
+                        for (const pin of note.pins) {
+                            pin.time = Math.round(pin.time);
+                        }
+                        if (note.pins.length > 1) {
+                            const last = note.pins[note.pins.length - 1];
+                            last.time = note.end - note.start;
+                        }
+                    }
+                }
+            }
+            for (const channel of doc.song.channels) {
+                for (const pattern of channel.patterns) {
+                    if (!(pattern === null || pattern === void 0 ? void 0 : pattern.notes))
+                        continue;
+                    const seen = new Map();
+                    const filtered = [];
+                    for (const note of pattern.notes) {
+                        const key = `${note.start}_${note.end}`;
+                        if (!seen.has(key)) {
+                            seen.set(key, note);
+                            filtered.push(note);
+                        }
+                        else {
+                            const existing = seen.get(key);
+                            const existingLen = existing.end - existing.start;
+                            const newLen = note.end - note.start;
+                            if (newLen > existingLen) {
+                                const index = filtered.indexOf(existing);
+                                if (index !== -1)
+                                    filtered[index] = note;
+                                seen.set(key, note);
+                            }
+                        }
+                    }
+                    pattern.notes = filtered;
+                }
+            }
         }
         undo(doc) {
-            const scale = this._oldPPB / this._newPPB;
-            this._scaleSong(doc, scale);
             doc.song.rhythm = this._oldRhythm;
             Config.partsPerBeat = this._oldPPB;
             doc.notifier.changed();
@@ -47394,7 +47442,7 @@ You should be redirected to the song at:<br /><br />
             this._echoSustainRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("echoSustain") }, "Echo:"), this._echoSustainSlider.container);
             this._echoDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.echoDelayRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEchoDelay(this.doc, oldValue, newValue), false);
             this._echoDelayRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("echoDelay") }, "Echo Delay:"), this._echoDelaySlider.container);
-            this._rhythmInput = input({ type: "number", min: "1", max: "48", step: "1", style: "width: 8.9em;" });
+            this._rhythmInput = input({ type: "number", min: "1", max: "24", step: "1", style: "width: 6.65em;" });
             this._pitchedPresetSelect = buildPresetOptions(false, "pitchPresetSelect");
             this._drumPresetSelect = buildPresetOptions(true, "drumPresetSelect");
             this._algorithmSelect = buildOptions(select(), Config.algorithms.map(algorithm => algorithm.name));
@@ -47624,19 +47672,22 @@ You should be redirected to the song at:<br /><br />
             this._sampleLoadingBar = div({ style: `width: 0%; height: 100%; background-color: ${ColorConfig.indicatorPrimary};` });
             this._sampleLoadingBarContainer = div({ style: `width: 80%; height: 4px; overflow: hidden; margin-left: auto; margin-right: auto; margin-top: 0.5em; cursor: pointer; background-color: ${ColorConfig.indicatorSecondary};` }, this._sampleLoadingBar);
             this._sampleLoadingStatusContainer = div({ style: "cursor: pointer;" }, div({ style: `margin-top: 0.5em; text-align: center; color: ${ColorConfig.secondaryText};` }, "Sample Loading Status"), div({ class: "selectRow", style: "height: 6px; margin-bottom: 0.5em;" }, this._sampleLoadingBarContainer));
-            this._songSettingsArea = div({ class: "song-settings-area" }, div({ class: "editor-controls" }, div({ class: "editor-song-settings" }, div({ style: "margin: 3px 0; position: relative; text-align: center; color: ${ColorConfig.secondaryText};" }, div({ class: "tip", style: "flex-shrink: 0; position:absolute; left: 0; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedPattern") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "0.5em", viewBox: "-6 -6 12 12" }, this._usedPatternIndicator)), div({ class: "tip", style: "flex-shrink: 0; position: absolute; left: 14px; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedInstrument") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "1em", viewBox: "-6 -6 12 12" }, this._usedInstrumentIndicator)), "Song Settings", div({ style: "width: 100%; left: 0; top: -1px; position:absolute; overflow-x:clip;" }, this._jumpToModIndicator))), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("scale") }, "Scale: "), div({ class: "selectContainer" }, this._scaleSelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("key") }, "Key: "), div({ class: "selectContainer" }, this._keySelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("key_octave") }, "Octave: "), this._octaveStepper), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("tempo") }, "Tempo: "), span({ style: "display: flex;" }, this._tempoSlider.container, this._tempoStepper)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("rhythm") }, "Rhythm: "), div({
+            this._songSettingsArea = div({ class: "song-settings-area" }, div({ class: "editor-controls" }, div({ class: "editor-song-settings" }, div({ style: "margin: 3px 0; position: relative; text-align: center; color: ${ColorConfig.secondaryText};" }, div({ class: "tip", style: "flex-shrink: 0; position:absolute; left: 0; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedPattern") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "0.5em", viewBox: "-6 -6 12 12" }, this._usedPatternIndicator)), div({ class: "tip", style: "flex-shrink: 0; position: absolute; left: 14px; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedInstrument") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "1em", viewBox: "-6 -6 12 12" }, this._usedInstrumentIndicator)), "Song Settings", div({ style: "width: 100%; left: 0; top: -1px; position:absolute; overflow-x:clip;" }, this._jumpToModIndicator))), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("scale") }, "Scale: "), div({ class: "selectContainer" }, this._scaleSelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("key") }, "Key: "), div({ class: "selectContainer" }, this._keySelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("key_octave") }, "Octave: "), this._octaveStepper), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("tempo") }, "Tempo: "), span({ style: "display: flex;" }, this._tempoSlider.container, this._tempoStepper)), div({
+                class: "selectRow",
+                style: "display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;"
+            }, span({
+                class: "tip",
+                style: "white-space: nowrap;",
+                onclick: () => this._openPrompt("rhythm")
+            }, "Note Divisions:"), div({
                 class: "inputContainer",
                 style: "position: relative; display: inline-block;"
-            }, span({
-                style: `
-            position: absolute;
-            left: 32px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            opacity: 1;
-        `
-            }, "÷"), this._rhythmInput)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("songeq") }, span("Song EQ:")), this._songEqFilterZoom, this._songEqFilterEditor.container), this._sampleLoadingStatusContainer));
+            }, this._rhythmInput)), div({ class: "selectRow" }, button({
+                onclick: () => {
+                    this.doc.selection.forceRhythm();
+                    this.doc.notifier.changed();
+                }
+            }, "Snap To Rhythm")), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("songeq") }, span("Song EQ:")), this._songEqFilterZoom, this._songEqFilterEditor.container), this._sampleLoadingStatusContainer));
             this._instrumentSettingsArea = div({ class: "instrument-settings-area" }, this._instrumentSettingsGroup, this._modulatorGroup);
             this._settingsArea = div({ class: "settings-area noSelection" }, div({ class: "version-area" }, div({ style: `text-align: center; margin: 3px 0; color: ${ColorConfig.secondaryText};` }, this._songTitleInputBox.input)), div({ class: "play-pause-area" }, this._volumeBarBox, div({ class: "playback-bar-controls" }, this._playButton, this._pauseButton, this._recordButton, this._stopButton, this._prevBarButton, this._nextBarButton), div({ class: "playback-volume-controls" }, span({ class: "volume-speaker" }), this._volumeSlider.container), this._globalOscscopeContainer), this._menuArea, this._songSettingsArea, this._instrumentSettingsArea);
             this.mainLayer = div({ class: "beepboxEditor", tabIndex: "0" }, this._patternArea, this._trackArea, this._settingsArea, this._promptContainer);

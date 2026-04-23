@@ -563,7 +563,7 @@ var beepbox = (function (exports) {
     Config.instrumentCountMin = 1;
     Config.layeredInstrumentCountMax = 10;
     Config.patternInstrumentCountMax = 10;
-    Config.partsPerBeat = 240;
+    Config.partsPerBeat = 4;
     Config.ticksPerPart = 2;
     Config.ticksPerArpeggio = 30;
     Config.arpeggioPatterns = [[0], [0, 1], [0, 1, 2, 1], [0, 1, 2, 3], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5, 6], [0, 1, 2, 3, 4, 5, 6, 7]];
@@ -578,14 +578,20 @@ var beepbox = (function (exports) {
         { name: "÷8", stepsPerBeat: 8, roundUpThresholds: null },
         { name: "÷9", stepsPerBeat: 9, roundUpThresholds: null },
         { name: "÷10", stepsPerBeat: 10, roundUpThresholds: null },
+        { name: "÷11", stepsPerBeat: 11, roundUpThresholds: null },
         { name: "÷12", stepsPerBeat: 12, roundUpThresholds: null },
+        { name: "÷13", stepsPerBeat: 13, roundUpThresholds: null },
+        { name: "÷14", stepsPerBeat: 14, roundUpThresholds: null },
         { name: "÷15", stepsPerBeat: 15, roundUpThresholds: null },
         { name: "÷16", stepsPerBeat: 16, roundUpThresholds: null },
+        { name: "÷17", stepsPerBeat: 17, roundUpThresholds: null },
+        { name: "÷18", stepsPerBeat: 18, roundUpThresholds: null },
+        { name: "÷19", stepsPerBeat: 19, roundUpThresholds: null },
         { name: "÷20", stepsPerBeat: 20, roundUpThresholds: null },
+        { name: "÷21", stepsPerBeat: 21, roundUpThresholds: null },
+        { name: "÷22", stepsPerBeat: 22, roundUpThresholds: null },
+        { name: "÷23", stepsPerBeat: 23, roundUpThresholds: null },
         { name: "÷24", stepsPerBeat: 24, roundUpThresholds: null },
-        { name: "÷30", stepsPerBeat: 30, roundUpThresholds: null },
-        { name: "÷40", stepsPerBeat: 40, roundUpThresholds: null },
-        { name: "÷48", stepsPerBeat: 48, roundUpThresholds: null },
     ]);
     Config.instrumentTypeNames = ["chip", "FM", "noise", "spectrum", "drumset", "harmonics", "PWM", "Picked String", "supersaw", "custom chip", "mod", "FM6op", "FM8op"];
     Config.instrumentTypeHasSpecialInterval = [true, true, false, false, false, true, false, false, false, false, false];
@@ -12785,12 +12791,12 @@ var beepbox = (function (exports) {
             this.octave = 0;
             this.loopStart = 0;
             this.loopLength = 4;
-            this.tempo = 120;
+            this.tempo = 110;
             this.reverb = 0;
             this.beatsPerBar = 8;
             this.barCount = 16;
             this.patternsPerChannel = 8;
-            this.rhythm = 1;
+            this.rhythm = 3;
             this.layeredInstruments = false;
             this.patternInstruments = false;
             this.eqFilter.reset();
@@ -13876,7 +13882,7 @@ var beepbox = (function (exports) {
                                 }
                             }
                             else if (((fromSlarmoosBox && beforeFour) || from41Box) || (fromUltraBox && beforeFive)) {
-                                const rhythmMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+                                const rhythmMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
                                 this.rhythm = clamp(0, Config.rhythms.length - 1, rhythmMap[base64CharCodeToInt[compressed.charCodeAt(charIndex++)]]);
                             }
                             else {
@@ -19766,7 +19772,11 @@ var beepbox = (function (exports) {
                 limit = 0.0;
             this.limit = limit;
             if (playSong && !this.countInMetronome) {
-                this.playheadInternal = (((this.tick + 1.0 - this.tickSampleCountdown / samplesPerTick) / 2.0 + this.part) / Config.partsPerBeat + this.beat) / song.beatsPerBar + this.bar;
+                const tickProgress = this.tick + 1.0 - this.tickSampleCountdown / samplesPerTick;
+                const beats = this.beat +
+                    (this.part + tickProgress / Config.ticksPerPart) / Config.partsPerBeat;
+                const bars = (this.bar + beats / song.beatsPerBar);
+                this.playheadInternal = bars;
             }
         }
         freeTone(tone) {
