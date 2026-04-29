@@ -44620,7 +44620,7 @@ You should be redirected to the song at:<br /><br />
                     break;
                 case "rhythm":
                     {
-                        message = div$5(h2$4("Note Divisions"), p$1("This setting determines how beats are divided. The pattern editor helps you align notes to fractions of a beat based on this setting."), p$1("If you've already placed some notes but they don't align with the selected rhythm, you can select the \"magnet\" icon (Snap Notes To Rhythm) located next to the divisions value to force the notes in the song to align with the selected division."));
+                        message = div$5(h2$4("Note Divisions"), p$1("This setting determines how beats are divided. The pattern editor helps you align notes to fractions of a beat based on this setting."), p$1("If you've already placed some notes but they don't align with the selected rhythm, you can select the magnet icon (Snap Notes To Rhythm) located next to the divisions value to force the notes in the song to align with the selected division."), p$1("(Tip: If you imported a song and the tick-based values feel off, just change the Note Divisions value to 1 (without pressing Snap Notes to Rhythm) and it should feel relatively normal. Just make sure to use the visual arrow keys, not your keyboard.)"));
                     }
                     break;
                 case "instrumentIndex":
