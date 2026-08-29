@@ -14810,7 +14810,9 @@ html {
     color: ${ColorConfig.primaryText};
     background: ${ColorConfig.uiWidgetBackground};
 
-	border: 1px solid color-mix(in srgb, ${ColorConfig.primaryText} 30%, transparent);
+	border-left: 2px solid ${ColorConfig.uiWidgetFocus};
+	border-right: 2px solid ${ColorConfig.uiWidgetFocus};
+
 }
 
 .beepboxEditor .song-tab-close {
@@ -54227,6 +54229,9 @@ You should be redirected to the song at:<br /><br />
                 const newSong = new Song();
                 this._createTab("unnamed", newSong.toBase64String());
             });
+            document.addEventListener('contextmenu', function (event) {
+                event.preventDefault();
+            });
             this._load();
         }
         _createTab(title, song) {
@@ -55163,7 +55168,7 @@ You should be redirected to the song at:<br /><br />
             this._envelopeDropdown = button({ style: "margin-left:0em; margin-right: 1em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(7) }, "▼");
             this._drumsetGroup = div({ class: "editor-controls" });
             this._drumsetZoom = button({ style: "margin-left:0em; padding-left:0.3em; margin-right:0.5em; height:1.5em; max-width: 16px;", onclick: () => this._openPrompt("drumsetSettings") }, "+");
-            this._modulatorGroup = div({ class: "editor-controls" });
+            this._modulatorGroup = div({ class: "editor-controls-alt" });
             this._feedback6OpTypeSelect = buildOptions(select(), Config.feedbacks6Op.map(feedback => feedback.name));
             this._feedback6OpRow1 = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("feedbackType") }, "feedback"), div({ class: "selectContainer" }, this._feedback6OpTypeSelect));
             this._algorithmCanvasSwitch = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: (e) => this._toggleAlgorithmCanvas(e) }, "A");
