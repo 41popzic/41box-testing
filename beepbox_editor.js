@@ -14794,9 +14794,9 @@ html {
 	flex-shrink: 0;
     display: flex;
     align-items: center;
-	height: 100%;
+	height: 80%;
     gap: 9px;
-	margin-top: 5px;
+	margin-top: 7px;
     padding: 0 10px;
 	padding-bottom: 2px;
     border-radius: 4px 4px 0 0;
