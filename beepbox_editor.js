@@ -21458,6 +21458,7 @@ li.select2-results__option[role=group] > strong:hover {
             this.barCount = 8;
             this.patternsPerChannel = 9;
             this.rhythm = 3;
+            this.rhythmEnabled = true;
             this.layeredInstruments = false;
             this.patternInstruments = false;
             this.eqFilter.reset();
@@ -21528,6 +21529,7 @@ li.select2-results__option[role=group] > strong:hover {
             buffer.push(103, base64IntToCharCode[(this.barCount - 1) >> 6], base64IntToCharCode[(this.barCount - 1) & 0x3f]);
             buffer.push(106, base64IntToCharCode[(this.patternsPerChannel - 1) >> 6], base64IntToCharCode[(this.patternsPerChannel - 1) & 0x3f]);
             buffer.push(114, base64IntToCharCode[this.rhythm]);
+            buffer.push(74, base64IntToCharCode[this.rhythmEnabled ? 1 : 0]);
             buffer.push(79);
             if (this.compressionRatio != 1.0 || this.limitRatio != 1.0 || this.limitRise != 4000.0 || this.limitDecay != 4.0 || this.limitThreshold != 1.0 || this.compressionThreshold != 1.0 || this.masterGain != 1.0) {
                 buffer.push(base64IntToCharCode[Math.round(this.compressionRatio < 1 ? this.compressionRatio * 10 : 10 + (this.compressionRatio - 1) * 60)]);
@@ -22536,6 +22538,11 @@ li.select2-results__option[role=group] > strong:hover {
                             else {
                                 this.rhythm = clamp(0, Config.rhythms.length - 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                             }
+                        }
+                        break;
+                    case 74:
+                        {
+                            this.rhythmEnabled = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] != 0;
                         }
                         break;
                     case 111:
@@ -35603,6 +35610,16 @@ li.select2-results__option[role=group] > strong:hover {
             }
         }
     }
+    class ChangeRhythmEnabled extends ChangeGroup {
+        constructor(doc, newValue) {
+            super();
+            if (doc.song.rhythmEnabled != newValue) {
+                doc.song.rhythmEnabled = newValue;
+                doc.notifier.changed();
+                this._didSomething();
+            }
+        }
+    }
     class ChangePaste extends ChangeGroup {
         constructor(doc, pattern, notes, selectionStart, selectionEnd, oldPartDuration) {
             super();
@@ -47333,7 +47350,6 @@ You should be redirected to the song at:<br /><br />
             this._renderedNoiseChannelCount = -1;
             this._renderedModChannelCount = -1;
             this._followPlayheadBar = -1;
-            this.rhythmEnabled = true;
             this._patternBorderLeft = SVG.line({ x1: 0, y1: 0, x2: 0, y2: 0, stroke: ColorConfig.loopAccent, "stroke-width": 2, "pointer-events": "none", visibility: "hidden", });
             this._patternBorderRight = SVG.line({ x1: 0, y1: 0, x2: 0, y2: 0, stroke: ColorConfig.loopAccent, "stroke-width": 2, "pointer-events": "none", visibility: "hidden", });
             this._alternateBeatOverlays = [];
@@ -47448,7 +47464,7 @@ You should be redirected to the song at:<br /><br />
                         localPlayhead += (modPlayhead - localPlayhead) * 0.2;
                     }
                     this._svgPlayhead.setAttribute("x", "" + prettyNumber(localPlayhead * this._editorWidth - 2));
-                    this._svgPlayhead.style.opacity = '0.2';
+                    this._svgPlayhead.style.opacity = '0.3';
                     this._svgBeathead.setAttribute("visibility", "hidden");
                 }
                 else {
@@ -47644,26 +47660,35 @@ You should be redirected to the song at:<br /><br />
             return this._doc.song.getChannelIsMod(this._doc.channel) ? Config.modCount - 1 : (this._doc.song.getChannelIsNoise(this._doc.channel) ? Config.drumCount - 1 : Config.maxPitch);
         }
         _getMaxDivision() {
-            if (this.controlMode && this._mouseHorizontal)
+            if (!this._doc.synth.song.rhythmEnabled) {
+                return 1;
+            }
+            else if (this.controlMode && this._mouseHorizontal) {
                 return Config.partsPerBeat;
-            const rhythmStepsPerBeat = Config.rhythms[this._doc.song.rhythm].stepsPerBeat;
-            if (rhythmStepsPerBeat % 4 == 0) {
-                return Config.partsPerBeat / 2;
             }
-            else if (rhythmStepsPerBeat % 3 == 0) {
-                return Config.partsPerBeat / 3;
+            else {
+                const rhythmStepsPerBeat = Config.rhythms[this._doc.song.rhythm].stepsPerBeat;
+                if (rhythmStepsPerBeat % 4 == 0) {
+                    return Config.partsPerBeat / 2;
+                }
+                else if (rhythmStepsPerBeat % 3 == 0) {
+                    return Config.partsPerBeat / 3;
+                }
+                else if (rhythmStepsPerBeat % 2 == 0) {
+                    return Config.partsPerBeat / 2;
+                }
+                return Config.partsPerBeat;
             }
-            else if (rhythmStepsPerBeat % 2 == 0) {
-                return Config.partsPerBeat / 2;
-            }
-            return Config.partsPerBeat;
         }
         _getMinDivision() {
             if (this.controlMode && this._mouseHorizontal)
                 return 1;
-            if (!this.rhythmEnabled)
+            if (!this._doc.synth.song.rhythmEnabled) {
                 return 1;
-            return Math.round(Config.partsPerBeat / Config.rhythms[this._doc.song.rhythm].stepsPerBeat);
+            }
+            else {
+                return Math.round(Config.partsPerBeat / Config.rhythms[this._doc.song.rhythm].stepsPerBeat);
+            }
         }
         _snapToMinDivision(input) {
             const stepsPerBeat = Config.rhythms[this._doc.song.rhythm].stepsPerBeat;
@@ -55473,6 +55498,22 @@ You should be redirected to the song at:<br /><br />
                     this._zoomOutButton.style.display = "none";
                 }
                 this._patternEditor.render();
+                const rhythmEnabled = this.doc.synth.song.rhythmEnabled;
+                this._rhythmInput.disabled = !rhythmEnabled;
+                if (rhythmEnabled) {
+                    this._rhythmDisabledLabel.style.display = "none";
+                    this._rhythmInput.style.color = "";
+                    this._rhythmInput.style.removeProperty("appearance");
+                    this._rhythmInput.style.removeProperty("-moz-appearance");
+                }
+                else {
+                    this._rhythmDisabledLabel.style.display = "block";
+                    this._rhythmDisabledLabel.style.color = "#c77";
+                    this._rhythmInput.style.color = "transparent";
+                    this._rhythmInput.style.setProperty("appearance", "textfield");
+                    this._rhythmInput.style.setProperty("-moz-appearance", "textfield");
+                }
+                this._rhythmActionOption.textContent = rhythmEnabled ? "disable subgrid" : "enable subgrid";
                 const textOnIcon = ColorConfig.getComputed("--text-enabled-icon");
                 const textOffIcon = ColorConfig.getComputed("--text-disabled-icon");
                 const channel = this.doc.song.channels[this.doc.channel];
@@ -57738,18 +57779,19 @@ You should be redirected to the song at:<br /><br />
                 const isFactorOfPartsPerBeat = rhythm > 0 && Config.partsPerBeat % rhythm === 0;
                 switch (this._rhythmActionSelect.value) {
                     case "forceRhythm":
-                        if (this._patternEditor.rhythmEnabled && (rhythm <= 12 || isFactorOfPartsPerBeat)) {
+                        if (this.doc.synth.song.rhythmEnabled && (rhythm <= 12 || isFactorOfPartsPerBeat)) {
                             this.doc.selection.forceRhythm();
                         }
                         break;
                     case "forceRhythmAll":
-                        if (this._patternEditor.rhythmEnabled && (rhythm <= 12 || isFactorOfPartsPerBeat)) {
+                        if (this.doc.synth.song.rhythmEnabled && (rhythm <= 12 || isFactorOfPartsPerBeat)) {
                             this.doc.selection.forceRhythmAllPatterns();
                         }
                         break;
                     case "toggleRhythm":
-                        this._patternEditor.rhythmEnabled = !this._patternEditor.rhythmEnabled;
-                        if (this._patternEditor.rhythmEnabled) {
+                        const rhythmEnabled = !this.doc.synth.song.rhythmEnabled;
+                        this.doc.record(new ChangeRhythmEnabled(this.doc, rhythmEnabled));
+                        if (rhythmEnabled) {
                             this._rhythmInput.disabled = false;
                             this._rhythmDisabledLabel.style.display = "none";
                             this._rhythmInput.style.color = "";
@@ -57764,10 +57806,7 @@ You should be redirected to the song at:<br /><br />
                             this._rhythmInput.style.setProperty("appearance", "textfield");
                             this._rhythmInput.style.setProperty("-moz-appearance", "textfield");
                         }
-                        this._rhythmActionOption.textContent =
-                            this._patternEditor.rhythmEnabled
-                                ? "disable subgrid"
-                                : "enable subgrid";
+                        this._rhythmActionOption.textContent = rhythmEnabled ? "disable subgrid" : "enable subgrid";
                         break;
                     case "toggleFavoriteRhythm": {
                         const stepsPerBeat = Config.rhythms[this.doc.song.rhythm].stepsPerBeat;
@@ -58142,6 +58181,22 @@ You should be redirected to the song at:<br /><br />
             this._rhythmActionSelect.appendChild(optgroup({ label: "edit" }, option({ value: "forceRhythm" }, "quantize selected patterns"), option({ value: "forceRhythmAll" }, "quantize all notes"), this._favoriteRhythmOption, this._rhythmActionOption));
             this._rhythmActionSelect.appendChild(this._favoriteRhythmGroup);
             this._refreshFavoriteRhythms();
+            const rhythmEnabled = this.doc.synth.song.rhythmEnabled;
+            this._rhythmInput.disabled = !rhythmEnabled;
+            if (rhythmEnabled) {
+                this._rhythmDisabledLabel.style.display = "none";
+                this._rhythmInput.style.color = "";
+                this._rhythmInput.style.removeProperty("appearance");
+                this._rhythmInput.style.removeProperty("-moz-appearance");
+            }
+            else {
+                this._rhythmDisabledLabel.style.display = "block";
+                this._rhythmDisabledLabel.style.color = "#c77";
+                this._rhythmInput.style.color = "transparent";
+                this._rhythmInput.style.setProperty("appearance", "textfield");
+                this._rhythmInput.style.setProperty("-moz-appearance", "textfield");
+            }
+            this._rhythmActionOption.textContent = rhythmEnabled ? "disable subgrid" : "enable subgrid";
             this._vibratoSelect.appendChild(option({ hidden: true, value: 5 }, "custom"));
             this._unisonSelect.appendChild(option({ hidden: true, value: Config.unisons.length }, "custom"));
             this._showModSliders = new Array(Config.modulators.length);
