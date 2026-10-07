@@ -564,7 +564,7 @@ var beepbox = (function (exports) {
     Config.phaserMaxStages = 32;
     Config.flangerDelayRange = 24;
     Config.flangerDepthRange = 32;
-    Config.flangerRateRange = 56;
+    Config.flangerRateRange = 57;
     Config.flangerFeedbackRange = 32;
     Config.flangerMixRange = 51;
     Config.beatsPerBarMin = 1;
@@ -1633,6 +1633,7 @@ var beepbox = (function (exports) {
     }
     const flangerRateValues = [
         0,
+        0.0078125,
         0.015625,
         0.03125,
         0.046875,
@@ -2914,7 +2915,7 @@ var beepbox = (function (exports) {
     }
     ColorConfig.colorLookup = new Map();
     ColorConfig.usesColorFormula = false;
-    ColorConfig.defaultTheme = "41box";
+    ColorConfig.defaultTheme = "energized";
     ColorConfig.themes = {
         "dark classic": `
 			:root {
@@ -15665,6 +15666,13 @@ html {
 	justify-content: space-between;
 }
 
+.beepboxEditor .effectContainer {
+	background: color-mix(in srgb, ${ColorConfig.editorBackground} 50%, black);
+	//border: 1px solid color-mix(in srgb, ${ColorConfig.blackPianoKey} 40%, transparent);
+	border-radius: 6px;
+	margin: 3px 0;
+}
+
 .beepboxEditor .selectRow > :last-child {
 	width: 62.5%;
 	flex-shrink: 0;
@@ -17396,7 +17404,7 @@ li.select2-results__option[role=group] > strong:hover {
             this.type = type;
             this.preset = type;
             this.volume = 0;
-            this.effects = (1 << 2);
+            this.effects = 0;
             this.chorus = Config.chorusRange - 1;
             this.reverb = 0;
             this.echoSustain = Math.floor((Config.echoSustainRange - 1) * 0.5);
@@ -17427,8 +17435,8 @@ li.select2-results__option[role=group] > strong:hover {
             this.grainRange = 40;
             this.flangerDelay = 8;
             this.flangerDepth = 12;
-            this.flangerRate = 2;
-            this.flangerFeedback = 13;
+            this.flangerRate = 3;
+            this.flangerFeedback = 6;
             this.flangerMix = 26;
             this.pan = Config.panCenter;
             this.panDelay = 0;
@@ -21455,7 +21463,7 @@ li.select2-results__option[role=group] > strong:hover {
             this.tempo = 111;
             this.reverb = 0;
             this.beatsPerBar = 8;
-            this.barCount = 8;
+            this.barCount = 16;
             this.patternsPerChannel = 9;
             this.rhythm = 3;
             this.rhythmEnabled = true;
@@ -23240,7 +23248,9 @@ li.select2-results__option[role=group] > strong:hover {
                                 else if (effectsIncludeReverb(instrument.effects)) {
                                     instrument.reverb = legacyGlobalReverb;
                                 }
-                                instrument.effects |= 1 << 2;
+                                if (instrument.pan != Config.panCenter) {
+                                    instrument.effects |= 1 << 2;
+                                }
                                 if (instrument.vibrato != Config.vibratos.dictionary["none"].index) {
                                     instrument.effects |= 1 << 9;
                                 }
@@ -29380,7 +29390,7 @@ li.select2-results__option[role=group] > strong:hover {
                     let flangerPhase = instrumentState.flangerPhase;
                     let flangerMix = +instrumentState.flangerMix;
                     const flangerMixDelta = +instrumentState.flangerMixDelta;
-                    let flangerFeedback = instrumentState.flangerFeedback / (Config.flangerFeedbackRange - 1);
+                    let flangerFeedback = (instrumentState.flangerFeedback / (Config.flangerFeedbackRange - 1)) * 0.9685; // Couldn't find any other way to limit the feedback.
 
                     const flangerBaseDelay = synth.samplesPerSecond * instrumentState.flangerDelay;
 
@@ -33037,7 +33047,7 @@ li.select2-results__option[role=group] > strong:hover {
             if (!usesSelectiveRandom)
                 selectiveRandom.instrumentType = true;
             if (selectiveRandom.effects) {
-                instrument.effects = 1 << 2;
+                instrument.effects = 0;
                 instrument.aliases = false;
             }
             if (selectiveRandom.envelopes)
@@ -34288,7 +34298,6 @@ li.select2-results__option[role=group] > strong:hover {
                                     const preset = EditorConfig.valueToPreset(presetValue);
                                     instrument.fromJsonObject(preset.settings, isNoise, isMod, doc.song.rhythm == 0 || doc.song.rhythm == 2, doc.song.rhythm >= 2);
                                     instrument.preset = presetValue;
-                                    instrument.effects |= 1 << 2;
                                 }
                                 else {
                                     instrument.setTypeAndReset(10, isNoise, isMod);
@@ -35435,7 +35444,6 @@ li.select2-results__option[role=group] > strong:hover {
             const instrument = new Instrument(isNoise, isMod);
             instrument.fromJsonObject(preset.settings, isNoise, isMod, false, false, 1);
             instrument.preset = presetValue;
-            instrument.effects |= 1 << 2;
             instrument.volume = 0;
             channel.instruments.push(instrument);
             if (!isMod) {
@@ -36495,20 +36503,11 @@ li.select2-results__option[role=group] > strong:hover {
                 let presetName;
                 {
                     switch (channelIndex) {
-                        case 0:
-                            presetName = "square wave";
-                            break;
-                        case 1:
-                            presetName = "square wave";
-                            break;
-                        case 2:
-                            presetName = "square wave";
-                            break;
                         case 3:
-                            presetName = "chiseled noise";
+                            presetName = "colored noise";
                             break;
                         case 4:
-                            presetName = "colored noise";
+                            presetName = "chiseled noise";
                             break;
                         default:
                             presetName = "square wave";
@@ -36519,7 +36518,6 @@ li.select2-results__option[role=group] > strong:hover {
                 const preset = EditorConfig.valueToPreset(presetValue);
                 instrument.fromJsonObject(preset.settings, isNoise, isMod, song.rhythm == 0 || song.rhythm == 2, song.rhythm >= 2, 1);
                 instrument.preset = presetValue;
-                instrument.effects |= 1 << 2;
             }
         }
     }
@@ -49647,7 +49645,7 @@ You should be redirected to the song at:<br /><br />
             for (let j = 0; j < Config.pitchesPerOctave; j++) {
                 let scale = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
                 this._backgroundPitchRows[j].style.visibility = "visible";
-                this._backgroundPitchRows[j].style.opacity = scale[j] ? "1" : "0.2";
+                this._backgroundPitchRows[j].style.opacity = scale[j] ? "1" : "0";
             }
             if (this._doc.song.getChannelIsNoise(this._doc.channel)) {
                 if (!this._renderedDrums) {
@@ -51213,6 +51211,7 @@ You should be redirected to the song at:<br /><br />
         constructor(_doc, type) {
             this._doc = _doc;
             this._closeButton = button$6({ class: "cancelButton" });
+            this._okayButton = button$6({ class: "okayButton", style: "width:45%; margin-left: auto; margin-top: 0em;" }, "Okay");
             this._close = () => {
                 this._doc.undo();
             };
@@ -51246,6 +51245,11 @@ You should be redirected to the song at:<br /><br />
                         message = div$6(h2$5("Reverb"), p$2("Reverb is like a continuous echo effect. A little bit helps instruments sound more natural. Adding a lot of reverb can add sense of depth or mystery, but too much reverb can kinda \"smear\" sounds so that it's harder to distinguish notes or instruments, especially for lower \"bass\" notes."));
                     }
                     break;
+                case "reverbMix":
+                    {
+                        message = div$6(h2$5("Reverb Mix"), p$2("This setting controls the wet/dry mix of the reverb effect."));
+                    }
+                    break;
                 case "rhythm":
                     {
                         message = div$6(h2$5("Subgrid"), p$2("This setting determines how beats are divided. The pattern editor helps you align notes to an independent grid based on this setting."), p$2("If you've already placed some notes but they don't align with the subgrid, you can either select the \"Quantize All Notes\" option or the \"Quantize Selected Patterns\" to align your notes with the current subgrid value."));
@@ -51253,7 +51257,7 @@ You should be redirected to the song at:<br /><br />
                     break;
                 case "instrumentIndex":
                     {
-                        message = div$6(h2$5("Instrument Number"), p$2("In the \"Channel Settings\" option from Slarmoo's Box's \"Edit\" menu, there are a few ways to enable multiple instruments per channel."), p$2("First, you could enable multiple simultaneous instruments per channel. All of the channel's instruments will play all of the notes in the channel at the same time, and you can click an instrument number to view and edit its settings."), p$2("Second, you could enable different instruments per pattern. Only one of the instruments will play at any given time, but you can click the instrument number to change which instrument is used for the currently selected pattern(s)."), p$2("Finally, you can enable them both, in which case you can click an instrument number once to view it, and again to toggle whether the instrument is used for the currently selected pattern(s)."), p$2("Either way, you can click the + button to add more instruments to a channel, and you can press shift and a number key on your keyboard to select an instrument as if you had clicked the corresponding button here."));
+                        message = div$6(h2$5("Instrument Number"), p$2("In the \"Channel Settings\" option from 41Box's \"Edit\" menu, there are a few ways to enable multiple instruments per channel."), p$2("First, you could enable multiple simultaneous instruments per channel. All of the channel's instruments will play all of the notes in the channel at the same time, and you can click an instrument number to view and edit its settings."), p$2("Second, you could enable different instruments per pattern. Only one of the instruments will play at any given time, but you can click the instrument number to change which instrument is used for the currently selected pattern(s)."), p$2("Finally, you can enable them both, in which case you can click an instrument number once to view it, and again to toggle whether the instrument is used for the currently selected pattern(s)."), p$2("Either way, you can click the + button to add more instruments to a channel, and you can press shift and a number key on your keyboard to select an instrument as if you had clicked the corresponding button here."));
                     }
                     break;
                 case "instrumentVolume":
@@ -51288,12 +51292,12 @@ You should be redirected to the song at:<br /><br />
                     break;
                 case "detune":
                     {
-                        message = div$6(h2$5("Detune"), p$2("This setting can be used to finely control the pitch of your instrument. It is in units of 'cents', 100 of which equal a pitch shift of one semitone."), p$2("Careful - you can quickly get very dissonant sounding songs by using this setting."));
+                        message = div$6(h2$5("Detune"), p$2("This setting can be used to finely control the pitch of your instrument. It is in units of 'cents', 100 of which equal a pitch shift of one semitone."), p$2("Careful; you can quickly get very dissonant sounding songs by using this setting."));
                     }
                     break;
                 case "instrumentType":
                     {
-                        message = div$6(h2$5("Instrument Type"), p$2("Slarmoo's Box comes with many instrument presets, try them out! You can also create your own custom instruments!"), p$2("There are also options for generating random instruments towards the top of the instrument type menu and for copying and pasting instrument settings in preferences."));
+                        message = div$6(h2$5("Instrument Type"), p$2("41Box comes with many instrument presets, try them out! You can also create your own custom instruments!"), p$2("There are also options for generating random instruments towards the top of the instrument type menu and for copying and pasting instrument settings in preferences."));
                     }
                     break;
                 case "eqFilter":
@@ -51318,12 +51322,12 @@ You should be redirected to the song at:<br /><br />
                     break;
                 case "chipWave":
                     {
-                        message = div$6(h2$5("Chip Wave"), p$2("Slarmoo's Box comes with some sound waves based on classic electronic sound chips, as well as several unique waves. This is the basic source of the sound of the instrument, which is modified by the other instrument settings."));
+                        message = div$6(h2$5("Chip Wave"), p$2("41Box comes with some sound waves based on classic electronic sound chips, as well as several unique waves. This is the basic source of the sound of the instrument, which is modified by the other instrument settings."));
                     }
                     break;
                 case "chipNoise":
                     {
-                        message = div$6(h2$5("Noise"), p$2("Slarmoo's Box comes with several basic noise sounds. These do not have any distinct musical pitch, and can be used like drums to create beats and emphasize your song's rhythm."));
+                        message = div$6(h2$5("Noise"), p$2("41Box comes with several basic noise sounds. These do not have any distinct musical pitch, and can be used like drums to create beats and emphasize your song's rhythm."));
                     }
                     break;
                 case "supersawDynamism":
@@ -51353,7 +51357,7 @@ You should be redirected to the song at:<br /><br />
                     break;
                 case "chords":
                     {
-                        message = div$6(h2$5("Chords"), p$2("When multiple different notes occur at the same time, this is called a chord. Chords can be created in Slarmoo's Box's pattern editor by adding notes above or below another note."), p$2("This setting determines how chords are played. The standard option is \"simultaneous\" which starts playing all of the pitches in a chord at the same instant. The \"strum\" option is similar, but plays the notes starting at slightly different times. The \"arpeggio\" option is used in \"chiptune\" style music and plays a single tone that rapidly alternates between all of the pitches in the chord. The \"monophonic\" option allows you to have only one tone in a chord play at a time. "), p$2("Some Slarmoo's Box instruments have an option called \"custom interval\" which uses the chord notes to control the interval between the waves of a single tone. This can create strange sound effects when combined with FM modulators."));
+                        message = div$6(h2$5("Chords"), p$2("When multiple different notes occur at the same time, this is called a chord. Chords can be created in 41Box's pattern editor by adding notes above or below another note."), p$2("This setting determines how chords are played. The standard option is \"simultaneous\" which starts playing all of the pitches in a chord at the same instant. The \"strum\" option is similar, but plays the notes starting at slightly different times. The \"arpeggio\" option is used in \"chiptune\" style music and plays a single tone that rapidly alternates between all of the pitches in the chord. The \"monophonic\" option allows you to have only one tone in a chord play at a time. "), p$2("Some 41Box instruments have an option called \"custom interval\" which uses the chord notes to control the interval between the waves of a single tone. This can create strange sound effects when combined with FM modulators."));
                     }
                     break;
                 case "vibrato":
@@ -51418,7 +51422,7 @@ You should be redirected to the song at:<br /><br />
                     break;
                 case "effects":
                     {
-                        message = div$6(h2$5("Effects"), p$2("Slarmoo's Box has many different kinds of special effects you can add to instruments. You can turn on multiple effects at once, and they can be configured individually. Try them all out!"));
+                        message = div$6(h2$5("Effects"), p$2("41Box has many different kinds of special effects you can add to instruments. You can turn on multiple effects at once, and they can be configured individually. Try them all out!"));
                     }
                     break;
                 case "drumsetEnvelope":
@@ -51436,14 +51440,24 @@ You should be redirected to the song at:<br /><br />
                         message = div$6(h2$5("Chorus"), p$2("The chorus effect combines multiple copies of the instrument's sound and adds a bit of vibrato to simulate an ensemble of instruments or voices. Drag the slider to control how much chorus is added."));
                     }
                     break;
+                case "chorusMix":
+                    {
+                        message = div$6(h2$5("Chorus Mix"), p$2("This setting controls the wet/dry mix of the Chorus effect."));
+                    }
+                    break;
+                case "echo":
+                    {
+                        message = div$6(h2$5("Echo"), p$2("The echo effect repeats the instrument's sound after a delay, and each echo is a little bit quieter than the last."));
+                    }
+                    break;
                 case "echoSustain":
                     {
-                        message = div$6(h2$5("Echo Volume"), p$2("The echo effect repeats the instrument's sound after a delay. Each echo is a little bit quieter than the last, and this setting controls how much quieter."));
+                        message = div$6(h2$5("Echo Volume"), p$2("This setting controls the volume of each echo."));
                     }
                     break;
                 case "echoDelay":
                     {
-                        message = div$6(h2$5("Echo Delay"), p$2("The echo effect repeats the instrument's sound after a delay, and this setting controls how long the delay is."));
+                        message = div$6(h2$5("Echo Delay"), p$2("This setting controls the length of each echo delay."));
                     }
                     break;
                 case "pitchShift":
@@ -51454,6 +51468,11 @@ You should be redirected to the song at:<br /><br />
                 case "distortion":
                     {
                         message = div$6(h2$5("Distortion"), p$2("This is the famous electric guitar effect! However, there are some things to be aware of."), p$2("First, most chords don't sound right when combined with heavy distortion. The only chords commonly used with distorted electric guitars are \"power chords\" which consist of a root note, a \"fifth\" note above that, and/or any octaves of those two notes."), p$2("Second, the distortion sound depends a lot on filtering. In particular, I recommend enabling the note filter effect, and adding both high-pass and low-pass points to the note filter. (Note filters are applied first, then distortion which transforms the sound based on that filtering, then the EQ filter is applied last.)"), p$2("Finally, I recommend adjusting the fade-out setting to allow the end of each note to overlap a little bit with the beginning of the next, but not too much!"));
+                    }
+                    break;
+                case "distortionMix":
+                    {
+                        message = div$6(h2$5("Distortion Mix"), p$2("This setting controls the wet/dry mix of the distortion effect."));
                     }
                     break;
                 case "bitcrusherQuantization":
@@ -51528,7 +51547,7 @@ You should be redirected to the song at:<br /><br />
                     break;
                 case "aliases":
                     {
-                        message = div$6(h2$5("Aliasing"), p$2("Slarmoo's Box applies a technique called 'anti-aliasing' to instruments normally to help them sound cleaner even at high frequencies and low sample rates."), p$2("When this setting is ticked that technique is disabled, so you may hear strange audio artifacts especially at high pitches and when bending notes. However, this can lend a grungy sound to an instrument that could be desirable."));
+                        message = div$6(h2$5("Aliasing"), p$2("41Box applies a technique called 'anti-aliasing' to instruments normally to help them sound cleaner even at high frequencies and low sample rates."), p$2("When this setting is ticked that technique is disabled, so you may hear strange audio artifacts especially at high pitches and when bending notes. However, this can lend a grungy sound to an instrument that could be desirable."));
                     }
                     break;
                 case "operatorWaveform":
@@ -51543,7 +51562,7 @@ You should be redirected to the song at:<br /><br />
                     break;
                 case "filterCutoff":
                     {
-                        message = div$6(h2$5("Low-Pass Filter Cutoff Frequency"), p$2("The lowest setting feels \"muffled\" or \"dark\", and the highest setting feels \"harsh\" or \"bright\"."), p$2("Most sounds include a range of frequencies from low to high. Slarmoo's Box instruments have a filter that allows the lowest frequencies to pass through at full volume, but can reduce the volume of the higher frequencies that are above a cutoff frequency. This setting controls the cutoff frequency and thus the range of higher frequencies that are reduced."), p$2("This cutoff setting also determines which frequency resonates when the resonance peak setting is used."));
+                        message = div$6(h2$5("Low-Pass Filter Cutoff Frequency"), p$2("The lowest setting feels \"muffled\" or \"dark\", and the highest setting feels \"harsh\" or \"bright\"."), p$2("Most sounds include a range of frequencies from low to high. 41Box instruments have a filter that allows the lowest frequencies to pass through at full volume, but can reduce the volume of the higher frequencies that are above a cutoff frequency. This setting controls the cutoff frequency and thus the range of higher frequencies that are reduced."), p$2("This cutoff setting also determines which frequency resonates when the resonance peak setting is used."));
                     }
                     break;
                 case "filterResonance":
@@ -51678,7 +51697,12 @@ You should be redirected to the song at:<br /><br />
                     break;
                 case "granular":
                     {
-                        message = div$6(h2$5("Granular Synthesis"), p$2(`This effect is based on granular synthesis! It takes random points from a wave and rearranges them to form "sonic clouds".`), p$2(`This particular slider controls the wet/dry mix of the granulation.`));
+                        message = div$6(h2$5("Granular Synthesis"), p$2(`This effect is based on granular synthesis! It takes random points from a wave and rearranges them to form "sonic clouds".`));
+                    }
+                    break;
+                case "granularMix":
+                    {
+                        message = div$6(h2$5("Granular Mix"), p$2("This setting controls the wet/dry mix of the granular effect."));
                     }
                     break;
                 case "grainSize":
@@ -51694,6 +51718,11 @@ You should be redirected to the song at:<br /><br />
                 case "grainRange":
                     {
                         message = div$6(h2$5("Grain Range"), p$2(`This setting controls the range of randomization for grain sizes. `));
+                    }
+                    break;
+                case "flanger":
+                    {
+                        message = div$6(h2$5("Flanger"), p$2(`This effect creates a sweep-like sound! It takes the audio and duplicates it by the depth, and the depth is modulated, creating a swoosh-like sound.`));
                     }
                     break;
                 case "flangerMix":
@@ -51740,9 +51769,10 @@ You should be redirected to the song at:<br /><br />
                         throw new Error("Unhandled TipPrompt type: " + type);
                     }
             }
-            this.container = div$6({ class: "prompt", style: "width: 300px;" }, message, this._closeButton);
+            this.container = div$6({ class: "prompt", style: "width: 300px;" }, message, this._closeButton, this._okayButton);
             setTimeout(() => this._closeButton.focus());
             this._closeButton.addEventListener("click", this._close);
+            this._okayButton.addEventListener("click", this._close);
         }
     }
 
@@ -53633,7 +53663,7 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$1, label, div: div$1, p, h2, h3, form, input: input$1, select: select$1, option: option$1, optgroup: optgroup$1 } = HTML;
+    const { button: button$1, label, div: div$1, p, h2, h3, form, input: input$1, select: select$1, option: option$1 } = HTML;
     function buildOptions$1(menu, items) {
         for (let index = 0; index < items.length; index++) {
             menu.appendChild(option$1({ value: index }, items[index]));
@@ -54083,7 +54113,7 @@ You should be redirected to the song at:<br /><br />
 				}
 			}`,
             });
-            this._themeSelect = select$1({ style: "width: 100%;" }, optgroup$1({ label: "41Box Themes" }, option$1({ value: "41box" }, "Inter Toxic"), option$1({ value: "inter-energized" }, "Inter Energized"), option$1({ value: "inter-nebula" }, "Inter Nebula"), option$1({ value: "inter-autumn" }, "Inter Autumn"), option$1({ value: "inter-forest" }, "Inter Forest"), option$1({ value: "inter-moonlight" }, "Inter Moonlight")), optgroup$1({ label: "BeepBox Themes" }, option$1({ value: "dark classic" }, "BeepBox Dark"), option$1({ value: "dark competition" }, "BeepBox Competition Dark")), optgroup$1({ label: "JummBox Themes" }, option$1({ value: "forest" }, "Forest"), option$1({ value: "canyon" }, "Canyon"), option$1({ value: "midnight" }, "Midnight"), option$1({ value: "beachcombing" }, "Beachcombing"), option$1({ value: "violet verdant" }, "Violet Verdant"), option$1({ value: "sunset" }, "Sunset"), option$1({ value: "autumn" }, "Autumn"), option$1({ value: "fruit" }, "Shadowfruit"), option$1({ value: "toxic" }, "Toxic"), option$1({ value: "roe" }, "Roe"), option$1({ value: "moonlight" }, "Moonlight"), option$1({ value: "portal" }, "Portal"), option$1({ value: "fusion" }, "Fusion"), option$1({ value: "nebula" }, "Nebula"), option$1({ value: "amoled dark" }, "High Contrast Dark"), option$1({ value: "energized" }, "Energized"), option$1({ value: "neapolitan" }, "Neapolitan"), option$1({ value: "poly" }, "Poly"), option$1({ value: "blutonium" }, "Blutonium"), option$1({ value: "greyscale" }, "Greyscale"), option$1({ value: "slushie" }, "Slushie")), optgroup$1({ label: "ModBox Themes" }, option$1({ value: "modbox classic" }, "Modbox"), option$1({ value: "modbox 2" }, "Modbox 2.0"), option$1({ value: "modbox arctic" }, "Arctic"), option$1({ value: "modbox cinnamon" }, "Cinammon Roll [!]"), option$1({ value: "modbox ocean" }, "Ocean"), option$1({ value: "modbox rainbow" }, "Rainbow [!]"), option$1({ value: "modbox float" }, "Float [!]"), option$1({ value: "modbox windows" }, "Windows"), option$1({ value: "modbox grassland" }, "Grassland"), option$1({ value: "modbox dessert" }, "Dessert"), option$1({ value: "modbox kahoot" }, "Kahootiest"), option$1({ value: "modbox bitbeam" }, "Beam to the Bit [!]"), option$1({ value: "modbox egg" }, "Pretty Egg"), option$1({ value: "modbox pony" }, "Poniryoshka"), option$1({ value: "modbox gameboy" }, "Gameboy [!]"), option$1({ value: "modbox woodkid" }, "Woodkid [!]"), option$1({ value: "modbox midnight" }, "MIdnight [!]"), option$1({ value: "modbox snedbox" }, "Snedbox"), option$1({ value: "modbox unnamed" }, "unnamed [!]"), option$1({ value: "modbox halloween" }, "Halloween [!]"), option$1({ value: "modbox frozen" }, "FrozenOver❄️ [!]")), optgroup$1({ label: "Mod Themes" }, option$1({ value: "jummbox classic" }, "JummBox Dark"), option$1({ value: "sandbox classic" }, "Sandbox"), option$1({ value: "harrybox" }, "Haileybox"), option$1({ value: "brucebox" }, "Brucebox"), option$1({ value: "shitbox 3.0" }, "Shitbox 1.0/3.0"), option$1({ value: "shitbox 2.0" }, "Shitbox 2.0"), option$1({ value: "nerdbox" }, "NerdBox"), option$1({ value: "zefbox" }, "Zefbox"), option$1({ value: "cardboardbox classic" }, "Cardboardbox"), option$1({ value: "blubox classic" }, "Blubox"), option$1({ value: "dogebox classic" }, "Dogebox"), option$1({ value: "wackybox" }, "Wackybox"), option$1({ value: "todbox dark mode" }, "Todbox Dark Mode"), option$1({ value: "mainbox 1.0" }, "Mainbox"), option$1({ value: "microbox" }, "MicroBox"), option$1({ value: "paandorasbox" }, "PaandorasBox"), option$1({ value: "foxbox" }, "FoxBox"), option$1({ value: "midbox" }, "Midbox"), option$1({ value: "dogebox2" }, "Dogebox2"), option$1({ value: "abyssbox classic" }, "AbyssBox Classic"), option$1({ value: "piano abyss" }, "AbyssBox Piano"), option$1({ value: "nepbox" }, "Nepbox"), option$1({ value: "nepbox laffey" }, "Nepbox Laffey"), option$1({ value: "slarmoosbox" }, "Slarmoo's Box"), option$1({ value: "ultrabox dark" }, "UltraBox")), optgroup$1({ label: "Light Themes" }, option$1({ value: "inverse" }, "Inverse"), option$1({ value: "roe light" }, "Roe Light"), option$1({ value: "jummbox light" }, "JummBox Light"), option$1({ value: "abyssbox light" }, "AbyssBox Light"), option$1({ value: "light classic" }, "BeepBox Light")), optgroup$1({ label: "Misc" }, option$1({ value: "custom" }, "Custom")));
+            this._themeSelect = select$1({ style: "width: 100%;" }, option$1({ value: "forest" }, "Forest"), option$1({ value: "canyon" }, "Canyon"), option$1({ value: "midnight" }, "Midnight"), option$1({ value: "beachcombing" }, "Beachcombing"), option$1({ value: "violet verdant" }, "Violet Verdant"), option$1({ value: "sunset" }, "Sunset"), option$1({ value: "autumn" }, "Autumn"), option$1({ value: "fruit" }, "Shadowfruit"), option$1({ value: "toxic" }, "Toxic"), option$1({ value: "roe" }, "Roe"), option$1({ value: "moonlight" }, "Moonlight"), option$1({ value: "portal" }, "Portal"), option$1({ value: "fusion" }, "Fusion"), option$1({ value: "nebula" }, "Nebula"), option$1({ value: "amoled dark" }, "High Contrast Dark"), option$1({ value: "energized" }, "Energized"), option$1({ value: "neapolitan" }, "Neapolitan"), option$1({ value: "poly" }, "Poly"), option$1({ value: "blutonium" }, "Blutonium"), option$1({ value: "greyscale" }, "Greyscale"), option$1({ value: "slushie" }, "Slushie"));
             this._customThemeFileInput = input$1({ type: "file", accept: "image/*", text: "choose editor background image" });
             this._customThemeFileInput2 = input$1({ type: "file", accept: "image/*", text: "choose website background image" });
             this._colorInput = input$1({ type: "text", style: "width: auto" });
@@ -55086,21 +55116,24 @@ You should be redirected to the song at:<br /><br />
             this._songEqFilterEditor = new FilterEditor(this.doc, false, false, true);
             this._songEqFilterZoom = button({ style: "margin-left:0em; padding-left:0.2em; height:1.5em; max-width: 12px;", onclick: () => this._openPrompt("customSongEQFilterSettings") }, "+");
             this._chorusSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.chorusRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeChorus(this.doc, oldValue, newValue), false);
-            this._chorusRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chorus") }, "chorus"), this._chorusSlider.container);
+            this._chorusRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chorusMix") }, "mix"), this._chorusSlider.container);
+            this._chorusContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("chorus") }, "chorus"), this._chorusRow);
             this._reverbSlider = new Slider(input({ style: "margin: 0; position: sticky,", type: "range", min: "0", max: Config.reverbRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeReverb(this.doc, oldValue, newValue), false);
-            this._reverbRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("reverb") }, "reverb"), this._reverbSlider.container);
+            this._reverbRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("reverbMix") }, "mix"), this._reverbSlider.container);
+            this._reverbContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("reverb") }, "reverb"), this._reverbRow);
             this._ringModWaveSelect = buildOptions(select({}), Config.operatorWaves.map(wave => wave.name));
             this._ringModPulsewidthSlider = new Slider(input({ style: "margin-left: 10px; width: 85%;", type: "range", min: "0", max: Config.pwmOperatorWaves.length - 1, value: "0", step: "1", title: "pulse width" }), this.doc, (oldValue, newValue) => new ChangeRingModPulseWidth(this.doc, oldValue, newValue), true);
             this._ringModSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.ringModRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeRingMod(this.doc, oldValue, newValue), false);
-            this._ringModRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("ringMod") }, "ring mod."), this._ringModSlider.container);
+            this._ringModRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("ringMod") }, "mix"), this._ringModSlider.container);
             this._ringModHzSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.ringModHzRange - 1, value: (Config.ringModHzRange - (Config.ringModHzRange / 2)), step: "1" }), this.doc, (oldValue, newValue) => new ChangeRingModHz(this.doc, oldValue, newValue), true);
             this.ringModHzNum = div({ style: "font-size: 80%; ", id: "ringModHzNum" });
-            this._ringModHzSliderRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("RingModHz") }, "r. hertz "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.ringModHzNum)), this._ringModHzSlider.container);
-            this._ringModWaveText = span({ class: "tip", onclick: () => this._openPrompt("ringModChipWave") }, "wave: ");
+            this._ringModHzSliderRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("RingModHz") }, "hertz "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.ringModHzNum)), this._ringModHzSlider.container);
+            this._ringModWaveText = span({ class: "tip", onclick: () => this._openPrompt("ringModChipWave") }, "wave ");
             this._ringModWaveSelectRow = div({ class: "selectRow", style: "width: 100%;" }, this._ringModWaveText, this._ringModPulsewidthSlider.container, div({ class: "selectContainer", style: "width:40%;" }, this._ringModWaveSelect));
             this._ringModContainerRow = div({ class: "", style: "display:flex; flex-direction:column;" }, this._ringModRow, this._ringModHzSliderRow, this._ringModWaveSelectRow);
+            this._ringModContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("ringMod") }, "ring modulation"), this._ringModContainerRow);
             this._granularSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.granularRange, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeGranular(this.doc, oldValue, newValue), false);
-            this._granularRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("granular") }, "granular "), this._granularSlider.container);
+            this._granularRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("granularMix") }, "mix "), this._granularSlider.container);
             this._grainSizeSlider = new Slider(input({ style: "margin: 0;", type: "range", min: Config.grainSizeMin / Config.grainSizeStep, max: Config.grainSizeMax / Config.grainSizeStep, value: Config.grainSizeMin / Config.grainSizeStep, step: "1" }), this.doc, (oldValue, newValue) => new ChangeGrainSize(this.doc, oldValue, newValue), false);
             this.grainSizeNum = div({ style: "font-size: 80%; ", id: "grainSizeNum" });
             this._grainSizeSliderRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("grainSize") }, "grain "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.grainSizeNum)), this._grainSizeSlider.container);
@@ -55108,12 +55141,14 @@ You should be redirected to the song at:<br /><br />
             this._grainAmountsRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("grainAmount") }, "grain freq"), this._grainAmountsSlider.container);
             this._grainRangeSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.grainRangeMax / Config.grainSizeStep, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeGrainRange(this.doc, oldValue, newValue), false);
             this.grainRangeNum = div({ style: "font-size: 80%; ", id: "grainRangeNum" });
-            this._grainRangeSliderRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("grainRange") }, "range: "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.grainRangeNum)), this._grainRangeSlider.container);
+            this._grainRangeSliderRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("grainRange") }, "range "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.grainRangeNum)), this._grainRangeSlider.container);
             this._granularContainerRow = div({ class: "", style: "display:flex; flex-direction:column;" }, this._granularRow, this._grainAmountsRow, this._grainSizeSliderRow, this._grainRangeSliderRow);
+            this._granularContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("granular") }, "granular"), this._granularContainerRow);
             this._echoSustainSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.echoSustainRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEchoSustain(this.doc, oldValue, newValue), false);
-            this._echoSustainRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("echoSustain") }, "echo"), this._echoSustainSlider.container);
+            this._echoSustainRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("echoSustain") }, "mix"), this._echoSustainSlider.container);
             this._echoDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.echoDelayRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEchoDelay(this.doc, oldValue, newValue), false);
-            this._echoDelayRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("echoDelay") }, "e. delay"), this._echoDelaySlider.container);
+            this._echoDelayRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("echoDelay") }, "delay"), this._echoDelaySlider.container);
+            this._echoContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("echo") }, "echo"), this._echoSustainRow, this._echoDelayRow);
             this._rhythmInput = input({ type: "number", min: "1", max: "32", style: "width: 5em;" });
             this._rhythmActionSelect = select({ type: "button", style: "width: 1.7em; height: 1.7em; margin-left: 5px;", }, "");
             this._rhythmActionOption = option({ value: "toggleRhythm" }, "disable subgrid");
@@ -55123,16 +55158,18 @@ You should be redirected to the song at:<br /><br />
             this._favoriteRhythmGroup = optgroup({ label: "favorites" });
             this.flangerRateNum = div({ style: "font-size: 80%;", id: "flangerRateNum" });
             this.flangerDelayNum = div({ style: "font-size: 80%;", id: "flangerDelayNum" });
+            this.flangerDepthNum = div({ style: "font-size: 80%;", id: "flangerDepthNum" });
             this._flangerMixSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.flangerMixRange - 1, value: 0, step: "1" }), this.doc, (oldValue, newValue) => new ChangeFlangerMix(this.doc, oldValue, newValue), true);
-            this._flangerMixRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("flangerMix"), }, span("f. mix")), this._flangerMixSlider.container);
+            this._flangerMixRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ style: "text-align: left", class: "tip", onclick: () => this._openPrompt("flangerMix"), }, span("mix")), this._flangerMixSlider.container);
             this._flangerDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.flangerDelayRange - 1, value: "0", step: "1", }), this.doc, (oldValue, newValue) => new ChangeFlangerDelay(this.doc, oldValue, newValue), false);
-            this._flangerDelayRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("flangerDelay"), }, span("delay "), this.flangerDelayNum), this._flangerDelaySlider.container);
+            this._flangerDelayRow = div({ class: "selectRow" }, span({ style: "text-align: left", class: "tip", onclick: () => this._openPrompt("flangerDelay"), }, span("delay "), this.flangerDelayNum), this._flangerDelaySlider.container);
             this._flangerDepthSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.flangerDepthRange - 1, value: "0", step: "1", }), this.doc, (oldValue, newValue) => new ChangeFlangerDepth(this.doc, oldValue, newValue), false);
-            this._flangerDepthRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("flangerDepth"), }, span("depth")), this._flangerDepthSlider.container);
+            this._flangerDepthRow = div({ class: "selectRow" }, span({ style: "text-align: left", class: "tip", onclick: () => this._openPrompt("flangerDepth"), }, span("depth"), this.flangerDepthNum), this._flangerDepthSlider.container);
             this._flangerRateSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.flangerRateRange - 1, value: "0", step: "1", }), this.doc, (oldValue, newValue) => new ChangeFlangerRate(this.doc, oldValue, newValue), false);
-            this._flangerRateRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("flangerRate"), }, span("rate "), div({ style: `color: ${ColorConfig.secondaryText};` }, this.flangerRateNum)), this._flangerRateSlider.container);
+            this._flangerRateRow = div({ class: "selectRow" }, span({ style: "text-align: left", class: "tip", onclick: () => this._openPrompt("flangerRate"), }, span("rate "), div({ style: `color: ${ColorConfig.secondaryText};` }, this.flangerRateNum)), this._flangerRateSlider.container);
             this._flangerFeedbackSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.flangerFeedbackRange - 1, value: "0", step: "1", }), this.doc, (oldValue, newValue) => new ChangeFlangerFeedback(this.doc, oldValue, newValue), false);
-            this._flangerFeedbackRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("flangerFeedback"), }, span("feedback")), this._flangerFeedbackSlider.container);
+            this._flangerFeedbackRow = div({ class: "selectRow" }, span({ style: "text-align: left", class: "tip", onclick: () => this._openPrompt("flangerFeedback"), }, span("feedback")), this._flangerFeedbackSlider.container);
+            this._flangerContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("flanger") }, "flanger"), this._flangerMixRow, this._flangerDelayRow, this._flangerDepthRow, this._flangerRateRow, this._flangerFeedbackRow);
             this._pitchedPresetSelect = buildPresetOptions(false, "pitchPresetSelect");
             this._drumPresetSelect = buildPresetOptions(true, "drumPresetSelect");
             this._algorithmSelect = buildOptions(select(), Config.algorithms.map(algorithm => algorithm.name));
@@ -55149,10 +55186,11 @@ You should be redirected to the song at:<br /><br />
             this._panSlider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: Config.panMax, value: Config.panCenter, step: "1" }), this.doc, (oldValue, newValue) => new ChangePan(this.doc, oldValue, newValue), true);
             this._panDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(1) }, "▼");
             this._panSliderInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "panSliderInputBox", type: "number", step: "1", min: "0", max: "100", value: "0" });
-            this._panSliderRow = div({ class: "selectRow" }, div({}, span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("pan") }, "pan: "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._panSliderInputBox)), this._panDropdown, this._panSlider.container);
+            this._panSliderRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, div({}, span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("pan") }, "pan: "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._panSliderInputBox)), this._panDropdown, this._panSlider.container);
             this._panDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.modulators.dictionary["pan delay"].maxRawVol, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePanDelay(this.doc, oldValue, newValue), false);
             this._panDelayRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("panDelay") }, "‣ delay"), this._panDelaySlider.container);
             this._panDropdownGroup = div({ class: "editor-controls-alt", style: "display: none;" }, this._panDelayRow);
+            this._panContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("pan") }, "panning"), this._panSliderRow, this._panDropdownGroup);
             this._chipWaveSelect = buildOptions(select(), Config.chipWaves.map(wave => wave.name));
             this._chipNoiseSelect = buildOptions(select(), Config.chipNoises.map(wave => wave.name));
             this._useChipWaveAdvancedLoopControlsBox = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: 0.4em; margin-right: 4em;" });
@@ -55162,7 +55200,7 @@ You should be redirected to the song at:<br /><br />
             this._setChipWaveLoopEndToEndButton = button({ type: "button", style: "width: 1.5em; height: 1.5em; padding: 0; margin-left: 0.5em;" }, SVG.svg({ width: "16", height: "16", viewBox: "-13 -14 26 26", "pointer-events": "none", style: "width: 100%; height: 100%;" }, SVG.rect({ x: "4", y: "-6", width: "2", height: "12", fill: ColorConfig.primaryText }), SVG.path({ d: "M -6 -6 L -6 6 L 3 0 z", fill: ColorConfig.primaryText })));
             this._chipWaveStartOffsetStepper = input({ type: "number", min: "0", step: "1", value: "0", style: "width: 100%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;" });
             this._chipWavePlayBackwardsBox = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: 0.4em; margin-right: 4em;" });
-            this._chipWaveSelectRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chipWave") }, "wave: "), div({ class: "selectContainer" }, this._chipWaveSelect));
+            this._chipWaveSelectRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chipWave") }, "wave "), div({ class: "selectContainer" }, this._chipWaveSelect));
             this._chipNoiseSelectRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chipNoise") }, "noise: "), div({ class: "selectContainer" }, this._chipNoiseSelect));
             this._visualLoopControlsButton = button({ style: "margin-left: 0em; padding-left: 0.2em; height: 1.5em; max-width: 12px;", onclick: () => this._openPrompt("visualLoopControls") }, "+");
             this._useChipWaveAdvancedLoopControlsRow = div({ class: "selectRow" }, span({ class: "tip", style: "flex-shrink: 0;", onclick: () => this._openPrompt("loopControls") }, "loop controls: "), this._useChipWaveAdvancedLoopControlsBox);
@@ -55175,10 +55213,11 @@ You should be redirected to the song at:<br /><br />
             this._fadeInOutRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("fadeInOut") }, "fade"), this._fadeInOutEditor.container);
             this._transitionSelect = buildOptions(select(), Config.transitions.map(transition => transition.name));
             this._transitionDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(3) }, "▼");
-            this._transitionRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("transition") }, "transition"), this._transitionDropdown, div({ class: "selectContainer", style: "width: 52.5%;" }, this._transitionSelect));
+            this._transitionRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("transition") }, "transition"), this._transitionDropdown, div({ class: "selectContainer", style: "width: 52.5%;" }, this._transitionSelect));
             this._clicklessTransitionBox = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
             this._clicklessTransitionRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("clicklessTransition") }, "‣ clickless"), this._clicklessTransitionBox);
             this._transitionDropdownGroup = div({ class: "editor-controls-alt", style: "display: none;" }, this._clicklessTransitionRow);
+            this._transitionContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("transition") }, "transition"), this._transitionRow, this._transitionDropdownGroup);
             this._effectsSelect = select(option({ selected: true, disabled: true, hidden: false }));
             this._eqFilterSimpleButton = button({ style: "font-size: x-small; width: 50%; height: 40%", class: "no-underline", onclick: () => this._switchEQFilterType(true) }, "noob");
             this._eqFilterAdvancedButton = button({ style: "font-size: x-small; width: 50%; height: 40%", class: "last-button no-underline", onclick: () => this._switchEQFilterType(false) }, "pro");
@@ -55187,19 +55226,20 @@ You should be redirected to the song at:<br /><br />
             this._eqFilterZoom = button({ style: "margin-left:0em; padding-left:0.2em; height:1.5em; max-width: 12px;", onclick: () => this._openPrompt("customEQFilterSettings") }, "+");
             this._eqFilterRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("eqFilter") }, "EQ filt"), this._eqFilterZoom, this._eqFilterEditor.container);
             this._eqFilterSimpleCutSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.filterSimpleCutRange - 1, value: "6", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEQFilterSimpleCut(this.doc, oldValue, newValue), false);
-            this._eqFilterSimpleCutRow = div({ class: "selectRow", title: "Low-pass Filter Cutoff Frequency" }, span({ class: "tip", onclick: () => this._openPrompt("filterCutoff") }, "filt. cut"), this._eqFilterSimpleCutSlider.container);
+            this._eqFilterSimpleCutRow = div({ class: "selectRow", title: "low-pass filter cutoff frequency" }, span({ class: "tip", onclick: () => this._openPrompt("filterCutoff") }, "filt. cut"), this._eqFilterSimpleCutSlider.container);
             this._eqFilterSimplePeakSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.filterSimplePeakRange - 1, value: "6", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEQFilterSimplePeak(this.doc, oldValue, newValue), false);
-            this._eqFilterSimplePeakRow = div({ class: "selectRow", title: "Low-pass Filter Peak Resonance" }, span({ class: "tip", onclick: () => this._openPrompt("filterResonance") }, "filt. peak"), this._eqFilterSimplePeakSlider.container);
+            this._eqFilterSimplePeakRow = div({ class: "selectRow", title: "low-pass filter eak resonance" }, span({ class: "tip", onclick: () => this._openPrompt("filterResonance") }, "filt. peak"), this._eqFilterSimplePeakSlider.container);
             this._noteFilterSimpleButton = button({ style: "font-size: x-small; width: 50%; height: 40%", class: "no-underline", onclick: () => this._switchNoteFilterType(true) }, "noob");
             this._noteFilterAdvancedButton = button({ style: "font-size: x-small; width: 50%; height: 40%", class: "last-button no-underline", onclick: () => this._switchNoteFilterType(false) }, "pro");
-            this._noteFilterTypeRow = div({ class: "selectRow", style: "padding-top: 4px; margin-bottom: 0px;" }, span({ style: "", class: "tip", onclick: () => this._openPrompt("filterType") }, "n. filt. type"), div({ class: "instrument-bar" }, this._noteFilterSimpleButton, this._noteFilterAdvancedButton));
+            this._noteFilterTypeRow = div({ class: "selectRow", style: "padding-top: 4px; margin-bottom: 0px;" }, span({ style: "", class: "tip", onclick: () => this._openPrompt("filterType") }, "filter type"), div({ class: "instrument-bar" }, this._noteFilterSimpleButton, this._noteFilterAdvancedButton));
             this._noteFilterEditor = new FilterEditor(this.doc, true);
             this._noteFilterZoom = button({ style: "margin-left:0em; padding-left:0.2em; height:1.5em; max-width: 12px;", onclick: () => this._openPrompt("customNoteFilterSettings") }, "+");
-            this._noteFilterRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("noteFilter") }, "n. filter"), this._noteFilterZoom, this._noteFilterEditor.container);
+            this._noteFilterRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("noteFilter") }, "filter"), this._noteFilterZoom, this._noteFilterEditor.container);
             this._noteFilterSimpleCutSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.filterSimpleCutRange - 1, value: "6", step: "1" }), this.doc, (oldValue, newValue) => new ChangeNoteFilterSimpleCut(this.doc, oldValue, newValue), false);
-            this._noteFilterSimpleCutRow = div({ class: "selectRow", title: "Low-pass Filter Cutoff Frequency" }, span({ class: "tip", onclick: () => this._openPrompt("filterCutoff") }, "filter cut"), this._noteFilterSimpleCutSlider.container);
+            this._noteFilterSimpleCutRow = div({ class: "selectRow", title: "low-pass filter cutoff frequency" }, span({ class: "tip", onclick: () => this._openPrompt("filterCutoff") }, "filter cut"), this._noteFilterSimpleCutSlider.container);
             this._noteFilterSimplePeakSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.filterSimplePeakRange - 1, value: "6", step: "1" }), this.doc, (oldValue, newValue) => new ChangeNoteFilterSimplePeak(this.doc, oldValue, newValue), false);
-            this._noteFilterSimplePeakRow = div({ class: "selectRow", title: "Low-pass Filter Peak Resonance" }, span({ class: "tip", onclick: () => this._openPrompt("filterResonance") }, "filter peak"), this._noteFilterSimplePeakSlider.container);
+            this._noteFilterSimplePeakRow = div({ class: "selectRow", title: "low-pass filter peak resonance" }, span({ class: "tip", onclick: () => this._openPrompt("filterResonance") }, "filter peak"), this._noteFilterSimplePeakSlider.container);
+            this._noteFilterContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em;" }, span({ style: "", class: "tip", onclick: () => this._openPrompt("noteFilter") }, "note filter"), this._noteFilterTypeRow, this._noteFilterRow, this._noteFilterSimpleCutRow, this._noteFilterSimplePeakRow);
             this._supersawDynamismSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.supersawDynamismMax, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeSupersawDynamism(this.doc, oldValue, newValue), false);
             this._supersawDynamismRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("supersawDynamism") }, "dynamism"), this._supersawDynamismSlider.container);
             this._supersawSpreadSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.supersawSpreadMax, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeSupersawSpread(this.doc, oldValue, newValue), false);
@@ -55217,18 +55257,22 @@ You should be redirected to the song at:<br /><br />
             this._pitchShiftTonicMarkers = [div({ class: "pitchShiftMarker", style: { color: ColorConfig.tonic } }), div({ class: "pitchShiftMarker", style: { color: ColorConfig.tonic, left: "50%" } }), div({ class: "pitchShiftMarker", style: { color: ColorConfig.tonic, left: "100%" } })];
             this._pitchShiftFifthMarkers = [div({ class: "pitchShiftMarker", style: { color: ColorConfig.fifthNote, left: (100 * 7 / 24) + "%" } }), div({ class: "pitchShiftMarker", style: { color: ColorConfig.fifthNote, left: (100 * 19 / 24) + "%" } })];
             this._pitchShiftMarkerContainer = div({ style: "display: flex; position: relative;" }, this._pitchShiftSlider.container, div({ class: "pitchShiftMarkerContainer" }, this._pitchShiftTonicMarkers, this._pitchShiftFifthMarkers));
-            this._pitchShiftRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("pitchShift") }, "transpose"), this._pitchShiftMarkerContainer);
+            this._pitchShiftRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("pitchShift") }, "transpose"), this._pitchShiftMarkerContainer);
+            this._pitchShiftContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "", class: "tip", onclick: () => this._openPrompt("pitchShift") }, "pitch shift"), this._pitchShiftRow);
             this._detuneSlider = new Slider(input({ style: "margin: 0;", type: "range", min: Config.detuneMin - Config.detuneCenter, max: Config.detuneMax - Config.detuneCenter, value: 0, step: "4" }), this.doc, (oldValue, newValue) => new ChangeDetune(this.doc, oldValue, newValue), true);
             this._detuneSliderInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "detuneSliderInputBox", type: "number", step: "1", min: Config.detuneMin - Config.detuneCenter, max: Config.detuneMax - Config.detuneCenter, value: 0 });
-            this._detuneSliderRow = div({ class: "selectRow" }, div({}, span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("detune") }, "detune "), div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._detuneSliderInputBox)), this._detuneSlider.container);
+            this._detuneSliderRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, div({}, span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("detune") }, "cents "), div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._detuneSliderInputBox)), this._detuneSlider.container);
+            this._detuneContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("detune") }, "detune"), this._detuneSliderRow);
             this._distortionSlider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: Config.distortionRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeDistortion(this.doc, oldValue, newValue), false);
-            this._distortionRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("distortion") }, "distortion"), this._distortionSlider.container);
+            this._distortionRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("distortionMix") }, "mix"), this._distortionSlider.container);
             this._aliasingBox = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
             this._aliasingRow = div({ class: "selectRow" }, span({ class: "tip", style: "margin-left:10px;", onclick: () => this._openPrompt("aliases") }, "aliasing"), this._aliasingBox);
+            this._distortionContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("distortion") }, "distortion"), this._distortionRow, this._aliasingRow);
             this._bitcrusherQuantizationSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.bitcrusherQuantizationRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeBitcrusherQuantization(this.doc, oldValue, newValue), false);
-            this._bitcrusherQuantizationRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("bitcrusherQuantization") }, "bitcrush"), this._bitcrusherQuantizationSlider.container);
+            this._bitcrusherQuantizationRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("bitcrusherQuantization") }, "bitcrush"), this._bitcrusherQuantizationSlider.container);
             this._bitcrusherFreqSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.bitcrusherFreqRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeBitcrusherFreq(this.doc, oldValue, newValue), false);
             this._bitcrusherFreqRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("bitcrusherFreq") }, "freq-crush"), this._bitcrusherFreqSlider.container);
+            this._bitcrusherContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("bitcrusherQuantization") }, "bitcrush"), this._bitcrusherQuantizationRow, this._bitcrusherFreqRow);
             this._stringSustainSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.stringSustainRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeStringSustain(this.doc, oldValue, newValue), false);
             this._stringSustainLabel = span({ class: "tip", onclick: () => this._openPrompt("stringSustain") }, "sustain");
             this._stringSustainRow = div({ class: "selectRow" }, this._stringSustainLabel, this._stringSustainSlider.container);
@@ -55250,16 +55294,17 @@ You should be redirected to the song at:<br /><br />
             this._chordDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(2) }, "▼");
             this._monophonicNoteInputBox = input({ style: "width: 2.35em; height: 1.5em; font-size: 80%; margin: 0.5em; vertical-align: middle;", id: "unisonSignInputBox", type: "number", step: "1", min: 1, max: Config.maxChordSize, value: 1.0 });
             this._chordSelectContainer = div({ class: "selectContainer", style: "width=100%" }, this._chordSelect);
-            this._chordSelectRow = div({ class: "selectRow", style: "display: flex; flex-direction: row" }, span({ class: "tip", onclick: () => this._openPrompt("chords") }, "chord typ. "), this._monophonicNoteInputBox, this._chordDropdown, this._chordSelectContainer);
+            this._chordSelectRow = div({ style: "margin-top: 0.667em; display: flex; flex-direction: row;", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chords") }, "type "), this._monophonicNoteInputBox, this._chordDropdown, this._chordSelectContainer);
             this._arpeggioSpeedDisplay = span({ style: `color: ${ColorConfig.secondaryText}; font-size: smaller; text-overflow: clip;` }, "x1");
             this._arpeggioSpeedSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.modulators.dictionary["arp speed"].maxRawVol, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeArpeggioSpeed(this.doc, oldValue, newValue), false);
             this._arpeggioSpeedRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("arpeggioSpeed") }, "‣ spd"), this._arpeggioSpeedDisplay, this._arpeggioSpeedSlider.container);
             this._twoNoteArpBox = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
             this._twoNoteArpRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("twoNoteArpeggio") }, "‣ fast two-note"), this._twoNoteArpBox);
             this._chordDropdownGroup = div({ class: "editor-controls-alt", style: "display: none;" }, this._arpeggioSpeedRow, this._twoNoteArpRow);
+            this._chordContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("chords") }, "chord type"), this._chordSelectRow, this._chordDropdownGroup);
             this._vibratoSelect = buildOptions(select(), Config.vibratos.map(vibrato => vibrato.name));
             this._vibratoDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(0) }, "▼");
-            this._vibratoSelectRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("vibrato") }, "vibrato "), this._vibratoDropdown, div({ class: "selectContainer", style: "width: 61.5%;" }, this._vibratoSelect));
+            this._vibratoSelectRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("vibrato") }, "vibrato "), this._vibratoDropdown, div({ class: "selectContainer", style: "width: 61.5%;" }, this._vibratoSelect));
             this._vibratoDepthSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.modulators.dictionary["vibrato depth"].maxRawVol, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeVibratoDepth(this.doc, oldValue, newValue), false);
             this._vibratoDepthRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("vibratoDepth") }, "‣ depth"), this._vibratoDepthSlider.container);
             this._vibratoSpeedDisplay = span({ style: `color: ${ColorConfig.secondaryText}; font-size: smaller; text-overflow: clip;` }, "x1");
@@ -55270,6 +55315,7 @@ You should be redirected to the song at:<br /><br />
             this._vibratoTypeSelect = buildOptions(select(), Config.vibratoTypes.map(vibrato => vibrato.name));
             this._vibratoTypeSelectRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("vibratoType") }, "‣ type"), div({ class: "selectContainer", style: "width: 61.5%;" }, this._vibratoTypeSelect));
             this._vibratoDropdownGroup = div({ class: "editor-controls-alt", style: `display: none;` }, this._vibratoDepthRow, this._vibratoSpeedRow, this._vibratoDelayRow, this._vibratoTypeSelectRow);
+            this._vibratoContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ style: "padding-bottom: 1em;", class: "tip", onclick: () => this._openPrompt("vibrato") }, "vibrato"), this._vibratoSelectRow, this._vibratoDropdownGroup);
             this._phaseModGroup = div({ class: "editor-controls-alt" });
             this._feedbackTypeSelect = buildOptions(select(), Config.feedbacks.map(feedback => feedback.name));
             this.envelopeEditor = new EnvelopeEditor(this.doc, (id, submenu, subtype) => this._toggleDropdownMenu(id, submenu), (name) => this._openPrompt(name));
@@ -55332,7 +55378,7 @@ You should be redirected to the song at:<br /><br />
             this._feedbackAmplitudeSlider = new Slider(input({ type: "range", min: "0", max: Config.operatorAmplitudeMax, value: "0", step: "1", title: "Feedback Amplitude" }), this.doc, (oldValue, newValue) => new ChangeFeedbackAmplitude(this.doc, oldValue, newValue), false);
             this._feedbackRow2 = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("feedbackVolume") }, "feed. vol."), this._feedbackAmplitudeSlider.container);
             this._addEnvelopeButton = button({ type: "button", class: "add-envelope" });
-            this._customInstrumentSettingsGroup = div({ class: "editor-controls-alt" }, this._eqFilterTypeRow, this._eqFilterRow, this._eqFilterSimpleCutRow, this._eqFilterSimplePeakRow, this._fadeInOutRow, this._algorithmSelectRow, this._algorithm6OpSelectRow, this._phaseModGroup, this._feedbackRow1, this._feedback6OpRow1, this._feedbackRow2, this._chipWaveSelectRow, this._chipNoiseSelectRow, this._customWaveDraw, this._spectrumRow, this._harmonicsRow, this._drumsetGroup, this._supersawDynamismRow, this._supersawSpreadRow, this._supersawShapeRow, this._pulseWidthRow, this._pulseWidthDropdownGroup, this._stringSustainRow, this._unisonSelectRow, this._unisonDropdownGroup, this._useChipWaveAdvancedLoopControlsRow, this._chipWaveLoopModeSelectRow, this._chipWaveLoopStartRow, this._chipWaveLoopEndRow, this._chipWaveStartOffsetRow, this._chipWavePlayBackwardsRow, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("effects") }, "effects")), div({ class: "effects-menu" }, this._effectsSelect)), this._panSliderRow, this._panDropdownGroup, this._transitionRow, this._transitionDropdownGroup, this._chordSelectRow, this._chordDropdownGroup, this._pitchShiftRow, this._detuneSliderRow, this._vibratoSelectRow, this._vibratoDropdownGroup, this._noteFilterTypeRow, this._noteFilterRow, this._noteFilterSimpleCutRow, this._noteFilterSimplePeakRow, this._granularContainerRow, this._distortionRow, this._aliasingRow, this._bitcrusherQuantizationRow, this._bitcrusherFreqRow, this._chorusRow, this._echoSustainRow, this._echoDelayRow, this._reverbRow, this._ringModContainerRow, this._flangerMixRow, this._flangerDepthRow, this._flangerDelayRow, this._flangerRateRow, this._flangerFeedbackRow, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("envelopes") }, "envelopes")), this._envelopeDropdown, this._addEnvelopeButton), this._envelopeDropdownGroup, this.envelopeEditor.container);
+            this._customInstrumentSettingsGroup = div({ class: "editor-controls-alt" }, this._eqFilterTypeRow, this._eqFilterRow, this._eqFilterSimpleCutRow, this._eqFilterSimplePeakRow, this._fadeInOutRow, this._algorithmSelectRow, this._algorithm6OpSelectRow, this._phaseModGroup, this._feedbackRow1, this._feedback6OpRow1, this._feedbackRow2, this._chipWaveSelectRow, this._chipNoiseSelectRow, this._customWaveDraw, this._spectrumRow, this._harmonicsRow, this._drumsetGroup, this._supersawDynamismRow, this._supersawSpreadRow, this._supersawShapeRow, this._pulseWidthRow, this._pulseWidthDropdownGroup, this._stringSustainRow, this._unisonSelectRow, this._unisonDropdownGroup, this._useChipWaveAdvancedLoopControlsRow, this._chipWaveLoopModeSelectRow, this._chipWaveLoopStartRow, this._chipWaveLoopEndRow, this._chipWaveStartOffsetRow, this._chipWavePlayBackwardsRow, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("effects") }, "effects")), div({ class: "effects-menu" }, this._effectsSelect)), this._panContainer, this._transitionContainer, this._chordContainer, this._pitchShiftContainer, this._detuneContainer, this._vibratoContainer, this._noteFilterContainer, this._granularContainer, this._distortionContainer, this._bitcrusherContainer, this._chorusContainer, this._echoContainer, this._reverbContainer, this._ringModContainer, this._flangerContainer, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("envelopes") }, "envelopes")), this._envelopeDropdown, this._addEnvelopeButton), this._envelopeDropdownGroup, this.envelopeEditor.container);
             this._instrumentCopyGroup = div({ class: "editor-controls-alt" }, div({ class: "selectRow" }, this._instrumentCopyButton, this._instrumentPasteButton));
             this._instrumentExportGroup = div({ class: "editor-controls-alt" }, div({ class: "selectRow" }, this._instrumentExportButton, this._instrumentImportButton));
             this._instrumentSettingsTextRow = div({ id: "instrumentSettingsText", style: `padding: 3px 0; max-width: 15em; text-align: center; color: ${ColorConfig.secondaryText};` }, "instrument settings");
@@ -55362,9 +55408,9 @@ You should be redirected to the song at:<br /><br />
             this._sampleLoadingBar = div({ style: `width: 0%; height: 100%; background-color: ${ColorConfig.indicatorPrimary};` });
             this._sampleLoadingBarContainer = div({ style: `width: 80%; height: 4px; overflow: hidden; margin-left: auto; margin-right: auto; margin-top: 0.5em; cursor: pointer; background-color: ${ColorConfig.indicatorSecondary};` }, this._sampleLoadingBar);
             this._sampleLoadingStatusContainer = div({ style: "cursor: pointer;" }, div({ style: `margin-top: 0.5em; text-align: center; color: ${ColorConfig.secondaryText};` }, "sample loading status"), div({ class: "selectRow", style: "height: 6px; margin-bottom: 0.5em;" }, this._sampleLoadingBarContainer));
-            this._songSettingsArea = div({ class: "song-settings-area" }, div({ class: "editor-controls" }, div({ class: "editor-song-settings" }, div({ style: "margin: 3px 0; position: relative; text-align: center; color: ${ColorConfig.secondaryText};" }, div({ class: "tip", style: "flex-shrink: 0; position:absolute; left: 0; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedPattern") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "0.5em", viewBox: "-6 -6 12 12" }, this._usedPatternIndicator)), div({ class: "tip", style: "flex-shrink: 0; position: absolute; left: 14px; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedInstrument") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "1em", viewBox: "-6 -6 12 12" }, this._usedInstrumentIndicator)), "song settings", div({ style: "width: 100%; left: 0; top: -1px; position:absolute; overflow-x:clip;" }, this._jumpToModIndicator))), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("scale") }, "scale: "), div({ class: "selectContainer" }, this._scaleSelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("key") }, "key: "), this._octaveStepper, div({ class: "selectContainer" }, this._keySelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("tempo") }, "tempo: "), span({ style: "display: flex;" }, this._tempoSlider.container, this._tempoStepper)), div({ class: "selectRow" }, span({ class: "tip", style: "white-space: nowrap;", onclick: () => this._openPrompt("rhythm") }, "subgrid: "), div({ style: "position: relative; display: inline-block;" }, this._rhythmInput, this._rhythmDisabledLabel), this._rhythmActionSelect), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("songeq") }, span("song EQ")), this._songEqFilterZoom, this._songEqFilterEditor.container), this._sampleLoadingStatusContainer));
+            this._songSettingsArea = div({ class: "song-settings-area" }, div({ class: "editor-controls" }, div({ class: "editor-song-settings" }, div({ style: "margin: 3px 0; position: relative; text-align: center; color: ${ColorConfig.secondaryText};" }, div({ class: "tip", style: "flex-shrink: 0; position:absolute; left: 0; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedPattern") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "0.5em", viewBox: "-6 -6 12 12" }, this._usedPatternIndicator)), div({ class: "tip", style: "flex-shrink: 0; position: absolute; left: 14px; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedInstrument") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "1em", viewBox: "-6 -6 12 12" }, this._usedInstrumentIndicator)), "song settings", div({ style: "width: 100%; left: 0; top: -1px; position:absolute; overflow-x:clip;" }, this._jumpToModIndicator))), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("scale") }, "scale "), div({ class: "selectContainer" }, this._scaleSelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("key") }, "key "), this._octaveStepper, div({ class: "selectContainer" }, this._keySelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("tempo") }, "tempo "), span({ style: "display: flex;" }, this._tempoSlider.container, this._tempoStepper)), div({ class: "selectRow" }, span({ class: "tip", style: "white-space: nowrap;", onclick: () => this._openPrompt("rhythm") }, "subgrid "), div({ style: "position: relative; display: inline-block;" }, this._rhythmInput, this._rhythmDisabledLabel), this._rhythmActionSelect), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("songeq") }, span("song EQ")), this._songEqFilterZoom, this._songEqFilterEditor.container), this._sampleLoadingStatusContainer));
             this._instrumentSettingsArea = div({ class: "instrument-settings-area" }, this._instrumentSettingsGroup, this._modulatorGroup);
-            this._otherSettingsArea = div({ class: "other-settings-area" }, div({ class: "version-area", }, div({ style: `text-align: center; margin: 3px 0; color: ${ColorConfig.secondaryText};` }, this._songTitleInputBox.input)), div({ class: "play-pause-area" }, this._volumeBarBoxL, this._volumeBarBoxR, div({ class: "playback-bar-controls" }, this._playButton, this._pauseButton, this._recordButton, this._stopButton, this._prevBarButton, this._nextBarButton), div({ class: "playback-volume-controls" }, span({ class: "volume-speaker" }), this._volumeSlider.container), this._globalOscscopeContainer), this._menuArea);
+            this._otherSettingsArea = div({ class: "other-settings-area" }, div({ class: "version-area", }, div({ style: `text-align: center; margin: 3px 0; color: ${ColorConfig.secondaryText};` }, this._songTitleInputBox.input)), div({ class: "play-pause-area" }, div({ class: "playback-bar-controls" }, this._playButton, this._pauseButton, this._recordButton, this._stopButton, this._prevBarButton, this._nextBarButton), div({ class: "playback-volume-controls" }, span({ class: "volume-speaker" }), this._volumeSlider.container), this._globalOscscopeContainer, this._volumeBarBoxL, this._volumeBarBoxR), this._menuArea);
             this._settingsArea = div({ class: "settings-area noSelection" }, this._otherSettingsArea, this._songSettingsArea, this._instrumentSettingsArea);
             this.mainLayer = div({ class: "beepboxEditor", tabIndex: "0" }, this._patternArea, this._trackArea, this._settingsArea, this._promptContainer);
             this._wasPlaying = false;
@@ -55570,7 +55616,9 @@ You should be redirected to the song at:<br /><br />
                     this._customInstrumentSettingsGroup.style.display = "";
                     this._panSliderRow.style.display = "";
                     this._panDropdownGroup.style.display = (this._openPanDropdown ? "" : "none");
+                    this._panContainer.style.display = "";
                     this._detuneSliderRow.style.display = "";
+                    this._detuneContainer.style.display = "";
                     this._instrumentVolumeSliderRow.style.display = "";
                     this._instrumentTypeSelectRow.style.setProperty("display", "");
                     if (prefs.instrumentButtonsAtTop) {
@@ -55822,6 +55870,7 @@ You should be redirected to the song at:<br /><br />
                     this._pulseWidthSlider.input.title = prettyNumber(instrument.pulseWidth) + "%";
                     if (effectsIncludeTransition(instrument.effects)) {
                         this._transitionRow.style.display = "";
+                        this._transitionContainer.style.display = "";
                         if (this._openTransitionDropdown)
                             this._transitionDropdownGroup.style.display = "";
                         setSelectedValue(this._transitionSelect, instrument.transition);
@@ -55829,8 +55878,10 @@ You should be redirected to the song at:<br /><br />
                     else {
                         this._transitionDropdownGroup.style.display = "none";
                         this._transitionRow.style.display = "none";
+                        this._transitionContainer.style.display = "none";
                     }
                     if (effectsIncludeChord(instrument.effects)) {
+                        this._chordContainer.style.display = "";
                         this._chordSelectRow.style.display = "flex";
                         this._chordDropdown.style.display = instrument.chord == Config.chords.dictionary["arpeggio"].index ? "" : "none";
                         if (this._openChordDropdown) {
@@ -55856,9 +55907,11 @@ You should be redirected to the song at:<br /><br />
                         this._chordSelectRow.style.display = "none";
                         this._chordDropdown.style.display = "none";
                         this._chordDropdownGroup.style.display = "none";
+                        this._chordContainer.style.display = "none";
                     }
                     if (effectsIncludePitchShift(instrument.effects)) {
                         this._pitchShiftRow.style.display = "";
+                        this._pitchShiftContainer.style.display = "";
                         this._pitchShiftSlider.updateValue(instrument.pitchShift);
                         this._pitchShiftSlider.input.title = (instrument.pitchShift - Config.pitchShiftCenter) + " semitone(s)";
                         for (const marker of this._pitchShiftFifthMarkers) {
@@ -55867,24 +55920,29 @@ You should be redirected to the song at:<br /><br />
                     }
                     else {
                         this._pitchShiftRow.style.display = "none";
+                        this._pitchShiftContainer.style.display = "none";
                     }
                     if (effectsIncludeDetune(instrument.effects)) {
                         this._detuneSliderRow.style.display = "";
+                        this._detuneContainer.style.display = "";
                         this._detuneSlider.updateValue(instrument.detune - Config.detuneCenter);
                         this._detuneSlider.input.title = (Synth.detuneToCents(instrument.detune)) + " cent(s)";
                     }
                     else {
                         this._detuneSliderRow.style.display = "none";
+                        this._detuneContainer.style.display = "none";
                     }
                     if (effectsIncludeVibrato(instrument.effects)) {
                         this._vibratoSelectRow.style.display = "";
                         if (this._openVibratoDropdown)
                             this._vibratoDropdownGroup.style.display = "";
                         setSelectedValue(this._vibratoSelect, instrument.vibrato);
+                        this._vibratoContainer.style.display = "";
                     }
                     else {
                         this._vibratoDropdownGroup.style.display = "none";
                         this._vibratoSelectRow.style.display = "none";
+                        this._vibratoContainer.style.display = "none";
                     }
                     if (effectsIncludeNoteFilter(instrument.effects)) {
                         this._noteFilterTypeRow.style.setProperty("--text-color-lit", colors.primaryNote);
@@ -55892,6 +55950,7 @@ You should be redirected to the song at:<br /><br />
                         this._noteFilterTypeRow.style.setProperty("--background-color-lit", colors.primaryChannel);
                         this._noteFilterTypeRow.style.setProperty("--background-color-dim", colors.secondaryChannel);
                         this._noteFilterTypeRow.style.display = "";
+                        this._noteFilterContainer.style.display = "";
                         if (this.doc.synth.isFilterModActive(true, this.doc.channel, this.doc.getCurrentInstrument())) {
                             this._noteFilterEditor.render(true, this._ctrlHeld || this._shiftHeld);
                         }
@@ -55918,9 +55977,11 @@ You should be redirected to the song at:<br /><br />
                         this._noteFilterSimpleCutRow.style.display = "none";
                         this._noteFilterSimplePeakRow.style.display = "none";
                         this._noteFilterTypeRow.style.display = "none";
+                        this._noteFilterContainer.style.display = "none";
                     }
                     if (effectsIncludeDistortion(instrument.effects)) {
                         this._distortionRow.style.display = "";
+                        this._distortionContainer.style.display = "";
                         if (instrument.type == 0 || instrument.type == 9 || instrument.type == 6 || instrument.type == 8)
                             this._aliasingRow.style.display = "";
                         else
@@ -55930,44 +55991,53 @@ You should be redirected to the song at:<br /><br />
                     else {
                         this._distortionRow.style.display = "none";
                         this._aliasingRow.style.display = "none";
+                        this._distortionContainer.style.display = "none";
                     }
                     if (effectsIncludeBitcrusher(instrument.effects)) {
                         this._bitcrusherQuantizationRow.style.display = "";
                         this._bitcrusherFreqRow.style.display = "";
+                        this._bitcrusherContainer.style.display = "";
                         this._bitcrusherQuantizationSlider.updateValue(instrument.bitcrusherQuantization);
                         this._bitcrusherFreqSlider.updateValue(instrument.bitcrusherFreq);
                     }
                     else {
                         this._bitcrusherQuantizationRow.style.display = "none";
                         this._bitcrusherFreqRow.style.display = "none";
+                        this._bitcrusherContainer.style.display = "none";
                     }
                     if (effectsIncludePanning(instrument.effects)) {
                         this._panSliderRow.style.display = "";
                         if (this._openPanDropdown)
                             this._panDropdownGroup.style.display = "";
                         this._panSlider.updateValue(instrument.pan);
+                        this._panContainer.style.display = "";
                     }
                     else {
                         this._panSliderRow.style.display = "none";
                         this._panDropdownGroup.style.display = "none";
+                        this._panContainer.style.display = "none";
                     }
                     if (effectsIncludeChorus(instrument.effects)) {
                         this._chorusRow.style.display = "";
+                        this._chorusContainer.style.display = "";
                         this._chorusSlider.updateValue(instrument.chorus);
                     }
                     else {
                         this._chorusRow.style.display = "none";
+                        this._chorusContainer.style.display = "none";
                     }
                     if (effectsIncludeEcho(instrument.effects)) {
                         this._echoSustainRow.style.display = "";
                         this._echoSustainSlider.updateValue(instrument.echoSustain);
                         this._echoDelayRow.style.display = "";
                         this._echoDelaySlider.updateValue(instrument.echoDelay);
+                        this._echoContainer.style.display = "";
                         this._echoDelaySlider.input.title = (Math.round((instrument.echoDelay + 1) * Config.echoDelayStepTicks / (Config.ticksPerPart * Config.partsPerBeat) * 1000) / 1000) + " beat(s)";
                     }
                     else {
                         this._echoSustainRow.style.display = "none";
                         this._echoDelayRow.style.display = "none";
+                        this._echoContainer.style.display = "none";
                     }
                     if (effectsIncludeFlanger(instrument.effects)) {
                         this._flangerMixRow.style.display = "";
@@ -55980,10 +56050,13 @@ You should be redirected to the song at:<br /><br />
                         this._flangerRateSlider.updateValue(instrument.flangerRate);
                         this._flangerFeedbackRow.style.display = "";
                         this._flangerFeedbackSlider.updateValue(instrument.flangerFeedback);
+                        this._flangerContainer.style.display = "";
                         const rateIndex = Math.round(instrument.flangerRate / (Config.flangerRateRange - 1) * (flangerRateValues.length - 1));
-                        this.flangerRateNum.innerHTML = " (" + prettyNumber(flangerRateValues[rateIndex]) + " Hz)";
+                        this.flangerRateNum.innerHTML = " (" + (prettyNumber(flangerRateValues[rateIndex] * 1)) + " beats)";
                         const delayMs = (instrument.flangerDelay / (Config.flangerDelayRange - 1)) * 10;
                         this.flangerDelayNum.innerHTML = " (" + prettyNumber(delayMs) + " ms)";
+                        const depthMs = (instrument.flangerDepth / (Config.flangerDepthRange - 1)) * 10;
+                        this.flangerDepthNum.innerHTML = " (" + prettyNumber(depthMs) + "ms)";
                     }
                     else {
                         this._flangerMixRow.style.display = "none";
@@ -55991,16 +56064,20 @@ You should be redirected to the song at:<br /><br />
                         this._flangerRateRow.style.display = "none";
                         this._flangerDepthRow.style.display = "none";
                         this._flangerFeedbackRow.style.display = "none";
+                        this._flangerContainer.style.display = "none";
                     }
                     if (effectsIncludeReverb(instrument.effects)) {
                         this._reverbRow.style.display = "";
+                        this._reverbContainer.style.display = "";
                         this._reverbSlider.updateValue(instrument.reverb);
                     }
                     else {
                         this._reverbRow.style.display = "none";
+                        this._reverbContainer.style.display = "none";
                     }
                     if (effectsIncludeRingModulation(instrument.effects)) {
                         this._ringModContainerRow.style.display = "";
+                        this._ringModContainer.style.display = "";
                         this._ringModSlider.updateValue(instrument.ringModulation);
                         this._ringModHzSlider.updateValue(instrument.ringModulationHz);
                         setSelectedValue(this._ringModWaveSelect, instrument.ringModWaveformIndex);
@@ -56008,9 +56085,11 @@ You should be redirected to the song at:<br /><br />
                     }
                     else {
                         this._ringModContainerRow.style.display = "none";
+                        this._ringModContainer.style.display = "none";
                     }
                     if (effectsIncludeGranular(instrument.effects)) {
                         this._granularContainerRow.style.display = "";
+                        this._granularContainer.style.display = "";
                         this._granularSlider.updateValue(instrument.granular);
                         this._grainSizeSlider.updateValue(instrument.grainSize);
                         this._grainAmountsSlider.updateValue(instrument.grainAmounts);
@@ -56018,6 +56097,7 @@ You should be redirected to the song at:<br /><br />
                     }
                     else {
                         this._granularContainerRow.style.display = "none";
+                        this._granularContainer.style.display = "none";
                     }
                     if (instrument.type != 10) {
                         this._unisonSelectRow.style.display = "";
@@ -56125,8 +56205,10 @@ You should be redirected to the song at:<br /><br />
                     this._spectrumRow.style.display = "none";
                     this._harmonicsRow.style.display = "none";
                     this._transitionRow.style.display = "none";
+                    this._transitionContainer.style.display = "none";
                     this._chordSelectRow.style.display = "none";
                     this._chordDropdownGroup.style.display = "none";
+                    this._chordContainer.style.display = "none";
                     this._drumsetGroup.style.display = "none";
                     this._customWaveDraw.style.display = "none";
                     this._supersawDynamismRow.style.display = "none";
@@ -56139,10 +56221,13 @@ You should be redirected to the song at:<br /><br />
                     this._pulseWidthRow.style.display = "none";
                     this._vibratoSelectRow.style.display = "none";
                     this._vibratoDropdownGroup.style.display = "none";
+                    this._vibratoContainer.style.display = "none";
                     this._envelopeDropdownGroup.style.display = "none";
                     this._detuneSliderRow.style.display = "none";
+                    this._detuneContainer.style.display = "none";
                     this._panSliderRow.style.display = "none";
                     this._panDropdownGroup.style.display = "none";
+                    this._panContainer.style.display = "none";
                     this._pulseWidthDropdownGroup.style.display = "none";
                     this._unisonDropdownGroup.style.display = "none";
                     this._modulatorGroup.style.display = "";
