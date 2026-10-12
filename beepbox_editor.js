@@ -523,8 +523,8 @@ var beepbox = (function (exports) {
         { group: "misc", name: "No Dabbing (MB)", realName: "no dabbing", flags: [true, true, false, true, true, true, true, true, true, false, true, false] },
         { group: "misc", name: "Jacked Toad (TB)", realName: "jacked toad", flags: [true, false, true, true, false, true, true, true, true, false, true, true] },
         { group: "misc", name: "Test Scale (TB)", realName: "**t", flags: [true, true, false, false, false, true, true, false, false, true, true, false] },
-        { group: "misc", name: "Custom", realName: "custom", flags: [true, false, true, true, false, false, false, true, true, false, true, true] },
         { group: "misc", name: "Blues Phrygian", realName: "blues phrygian", flags: [true, true, false, true, true, true, false, false, true, false, true, false] },
+        { group: "misc", name: "Custom", realName: "custom", flags: [true, false, true, true, false, false, false, true, true, false, true, true] },
     ]);
     Config.keys = toNameMap([
         { name: "C", isWhiteKey: true, basePitch: 12 },
@@ -14221,12 +14221,10 @@ html {
 .beepboxEditor {
 	display: grid;
     grid-template-columns: minmax(0, 1fr) max-content;
-    grid-template-rows: max-content 1fr;
+    grid-template-rows: max-content 1fr; /* max-content minmax(0, 1fr); Chrome 80 grid layout regression. https://bugs.chromium.org/p/chromium/issues/detail?id=1050307 */
     grid-template-areas: "pattern-area settings-area" "track-area settings-area";
 	grid-column-gap: 6px;
 	grid-row-gap: 6px;
-	//padding: 5px;
-    box-sizing: border-box;
 	position: relative;
 	touch-action: manipulation;
 	cursor: default;
@@ -14335,24 +14333,15 @@ html {
 
 .beepboxEditor .pattern-area {
 	grid-area: pattern-area;
-	//margin-top: 10px;
 	height: 481px;
 	display: flex;
 	flex-direction: row;
 	position: relative;
-
-	//background: color-mix(in srgb, ${ColorConfig.uiWidgetBackground} 33%, transparent);
-	//border: 1px solid ${ColorConfig.uiWidgetFocus} !important;
 }
 
 .beepboxEditor .track-area {
 	grid-area: track-area;
 	background-image: url(${getLocalStorageItem("customThemeImage", "")});
-	//margin-top: 10px;
-
-	//background: color-mix(in srgb, ${ColorConfig.uiWidgetBackground} 33%, transparent);
-	//border: 1px solid ${ColorConfig.uiWidgetFocus} !important;
-	margin-right: -2px;
 }
 
 .beepboxEditor .loopEditor {
@@ -15758,23 +15747,19 @@ html {
 .beepboxEditor .instrument-settings-area {
 	display: flex;
 	flex-direction: column;
-	
-	//background: color-mix(in srgb, ${ColorConfig.uiWidgetBackground} 33%, transparent);
-	//border: 1px solid ${ColorConfig.uiWidgetFocus} !important;
-
-	//margin-left: 2px !important;
-	//margin-right: 2px !important;
 
 	overflow-x: clip;
 
 	box-sizing: border-box;
 
 	min-width: 0;
-
-    //width: calc(100% - 6px);
-
-	//border-radius: 2px;
 }
+
+@media (max-width: 710px) {
+	.beepboxEditor .layoutAreaButton, .layoutArea {
+		display: none;
+	}
+}	
 
 .beepboxEditor .editor-right-side-top > *, .beepboxEditor .editor-right-side-bottom > * {
 	flex-shrink: 0;
@@ -17803,7 +17788,7 @@ li.select2-results__option[role=group] > strong:hover {
             }
             if (this.type != 4) {
                 instrumentObject["fadeInSeconds"] = Math.round(10000 * fadeInSettingToSeconds(this.fadeIn)) / 10000;
-                instrumentObject["fadeOutTicks"] = fadeOutSettingToTicks(this.fadeOut) / 10;
+                instrumentObject["fadeOutTicks"] = fadeOutSettingToTicks(this.fadeOut);
             }
             if (this.type != 10) {
                 instrumentObject["unison"] = this.unison == Config.unisons.length ? "custom" : Config.unisons[this.unison].name;
@@ -18023,9 +18008,7 @@ li.select2-results__option[role=group] > strong:hover {
                 this.fadeIn = secondsToFadeInSetting(+instrumentObject["fadeInSeconds"]);
             }
             if (instrumentObject["fadeOutTicks"] != undefined) {
-                let fadeOutTicks = +instrumentObject["fadeOutTicks"];
-                fadeOutTicks *= 10;
-                this.fadeOut = ticksToFadeOutSetting(fadeOutTicks);
+                this.fadeOut = ticksToFadeOutSetting(+instrumentObject["fadeOutTicks"] * (jsonFormat == "41box" ? 1 : 10));
             }
             {
                 const chordProperty = instrumentObject["chord"];
@@ -22600,7 +22583,7 @@ li.select2-results__option[role=group] > strong:hover {
                         {
                             if (!fromUltraBox && !fromSlarmoosBox && !from41Box) {
                                 let newRhythm = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
-                                this.rhythm = clamp(0, Config.rhythms.length - 1, newRhythm);
+                                this.rhythm = clamp(0, Config.rhythms.length, newRhythm);
                                 if (fromJummBox && beforeThree || fromBeepBox) {
                                     const rhythmObj = (_a = Config.rhythms[this.rhythm]) !== null && _a !== void 0 ? _a : Config.rhythms[3];
                                     if (rhythmObj.stepsPerBeat == 3 || rhythmObj.stepsPerBeat == 6) {
@@ -55297,6 +55280,7 @@ You should be redirected to the song at:<br /><br />
             this._volumeBarContainerR = SVG.svg({ style: `touch-action: none; overflow: visible; margin: auto; max-width: 20vw;`, width: "160px", height: "100%", preserveAspectRatio: "none", viewBox: "0 0 160 12" }, this._defs, this._outVolumeBarBgR, this._outVolumeBarR, this._outVolumeCapR);
             this._volumeBarBoxL = div({ class: "playback-volume-bar", style: "height: 12px; align-self: center;" }, this._volumeBarContainerL);
             this._volumeBarBoxR = div({ class: "playback-volume-bar", style: "height: 12px; margin-top: -5px; align-self: center;" }, this._volumeBarContainerR);
+            this._volumeBarBox = div({}, this._volumeBarBoxL, this._volumeBarBoxR);
             this._fileMenu = select({ style: "width: 100%;" }, option({ selected: true, disabled: true, hidden: false }, "options"), option({ value: "copyUrl" }, "Copy Song URL"), option({ value: "shareUrl" }, "Share Song URL"), option({ value: "configureShortener" }, "Customize URL Shortener..."), option({ value: "shortenUrl" }, "Shorten Song URL"), option({ value: "viewPlayer" }, "View in Song Player (⇧P)"), option({ value: "copyEmbed" }, "Copy HTML Embed Code"), option({ value: "songRecovery" }, "Recover Recent Song... (`)"), option({ value: "preferences" }, "Preferences..."));
             this._editMenu = select({ style: "width: 100%;" }, option({ selected: true, disabled: true, hidden: false }, "edit"), option({ value: "undo" }, "Undo (Z)"), option({ value: "redo" }, "Redo (Y)"), option({ value: "copy" }, "Copy Pattern (C)"), option({ value: "pasteNotes" }, "Paste Pattern Notes (V)"), option({ value: "pasteNumbers" }, "Paste Pattern Numbers (" + EditorConfig.ctrlSymbol + "⇧V)"), option({ value: "pasteSelective" }, "Selective Instrument Paste (Alt+V)"), option({ value: "customizePasteSelective" }, "Customize Selective Paste (" + EditorConfig.ctrlSymbol + "Alt+V)"), option({ value: "insertBars" }, "Insert Bar (⏎)"), option({ value: "deleteBars" }, "Delete Selected Bars (⌫)"), option({ value: "insertChannel" }, "Insert Channel (" + EditorConfig.ctrlSymbol + "⏎)"), option({ value: "deleteChannel" }, "Delete Selected Channels (" + EditorConfig.ctrlSymbol + "⌫)"), option({ value: "selectChannel" }, "Select Channel (⇧A)"), option({ value: "selectAll" }, "Select All (A)"), option({ value: "duplicatePatterns" }, "Duplicate Reused Patterns (D)"), option({ value: "transposeUp" }, "Move Notes Up (+ or ⇧+)"), option({ value: "transposeDown" }, "Move Notes Down (- or ⇧-)"), option({ value: "moveNotesSideways" }, "Move All Notes Sideways... (W)"), option({ value: "generateEuclideanRhythm" }, "Generate Euclidean Rhythm... (" + EditorConfig.ctrlSymbol + "E)"), option({ value: "beatsPerBar" }, "Change Beats Per Bar... (⇧B)"), option({ value: "barCount" }, "Change Song Length... (L)"), option({ value: "channelSettings" }, "Channel Settings... (Q)"), option({ value: "limiterSettings" }, "Limiter Settings... (⇧L)"), option({ value: "addExternal" }, "Add Custom Samples... (⇧Q)"));
             this._newSong = button({ style: "width: 49%; font-size: smaller; padding-left: 24px", class: "new", type: "button", onclick: () => this._newBlankSong() }, "new song");
@@ -55620,8 +55604,7 @@ You should be redirected to the song at:<br /><br />
             this._sampleLoadingStatusContainer = div({ style: "cursor: pointer;" }, div({ style: `margin-top: 0.5em; text-align: center; color: ${ColorConfig.secondaryText};` }, "sample loading status"), div({ class: "selectRow", style: "height: 6px; margin-bottom: 0.5em;" }, this._sampleLoadingBarContainer));
             this._songSettingsArea = div({ class: "song-settings-area" }, div({ class: "editor-controls" }, div({ class: "editor-song-settings" }, div({ style: "margin: 3px 0; position: relative; text-align: center; color: ${ColorConfig.secondaryText};" }, div({ class: "tip", style: "flex-shrink: 0; position:absolute; left: 0; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedPattern") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "0.5em", viewBox: "-6 -6 12 12" }, this._usedPatternIndicator)), div({ class: "tip", style: "flex-shrink: 0; position: absolute; left: 14px; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedInstrument") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "1em", viewBox: "-6 -6 12 12" }, this._usedInstrumentIndicator)), "song settings", div({ style: "width: 100%; left: 0; top: -1px; position:absolute; overflow-x:clip;" }, this._jumpToModIndicator))), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("scale") }, "scale "), div({ class: "selectContainer" }, this._scaleSelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("key") }, "key "), this._octaveStepper, div({ class: "selectContainer" }, this._keySelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("tempo") }, "tempo "), span({ style: "display: flex;" }, this._tempoSlider.container, this._tempoStepper)), div({ class: "selectRow" }, span({ class: "tip", style: "white-space: nowrap;", onclick: () => this._openPrompt("rhythm") }, "subgrid "), div({ style: "position: relative; display: inline-block;" }, this._rhythmInput, this._rhythmDisabledLabel), this._rhythmActionSelect), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("songeq") }, span("song EQ")), this._songEqFilterZoom, this._songEqFilterEditor.container), this._sampleLoadingStatusContainer));
             this._instrumentSettingsArea = div({ class: "instrument-settings-area" }, this._instrumentSettingsGroup, this._modulatorGroup);
-            this._otherSettingsArea = div({ class: "other-settings-area" }, div({ class: "version-area", }, div({ style: `text-align: center; margin: 3px 0; color: ${ColorConfig.secondaryText};` }, this._songTitleInputBox.input)), div({ class: "play-pause-area" }, div({ class: "playback-bar-controls" }, this._playButton, this._pauseButton, this._recordButton, this._stopButton, this._prevBarButton, this._nextBarButton), div({ class: "playback-volume-controls" }, span({ class: "volume-speaker" }), this._volumeSlider.container), this._globalOscscopeContainer, this._volumeBarBoxL, this._volumeBarBoxR), this._menuArea);
-            this._settingsArea = div({ class: "settings-area noSelection" }, this._otherSettingsArea, this._songSettingsArea, this._instrumentSettingsArea);
+            this._settingsArea = div({ class: "settings-area noSelection" }, div({ class: "version-area" }, div({ style: `text-align: center; margin: 3px 0; color: ${ColorConfig.secondaryText};` }, this._songTitleInputBox.input)), div({ class: "play-pause-area" }, this._volumeBarBox, div({ class: "playback-bar-controls" }, this._playButton, this._pauseButton, this._recordButton, this._stopButton, this._prevBarButton, this._nextBarButton), div({ class: "playback-volume-controls" }, span({ class: "volume-speaker" }), this._volumeSlider.container), this._globalOscscopeContainer), this._menuArea, this._songSettingsArea, this._instrumentSettingsArea);
             this.mainLayer = div({ class: "beepboxEditor", tabIndex: "0" }, this._patternArea, this._trackArea, this._settingsArea, this._promptContainer);
             this._wasPlaying = false;
             this._currentPromptName = null;
