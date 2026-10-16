@@ -561,6 +561,11 @@ var beepbox = (function (exports) {
     Config.reverbDelayBufferMask = _a$1.reverbDelayBufferSize - 1;
     Config.reverbDelayRange = 24;
     Config.reverbDelayStepTicks = _a$1.echoDelayStepTicks;
+    Config.flangerDelayRange = 24;
+    Config.flangerDepthRange = 32;
+    Config.flangerRateRange = 57;
+    Config.flangerFeedbackRange = 32;
+    Config.flangerMixRange = 51;
     Config.phaserMixRange = 32;
     Config.phaserFeedbackRange = 32;
     Config.phaserFreqRange = 32;
@@ -568,11 +573,6 @@ var beepbox = (function (exports) {
     Config.phaserMaxFreq = 20000.0;
     Config.phaserMinStages = 0;
     Config.phaserMaxStages = 32;
-    Config.flangerDelayRange = 24;
-    Config.flangerDepthRange = 32;
-    Config.flangerRateRange = 57;
-    Config.flangerFeedbackRange = 32;
-    Config.flangerMixRange = 51;
     Config.maxSlideTicks = 48;
     Config.maxStrumSpeed = 48;
     Config.beatsPerBarMin = 1;
@@ -833,8 +833,8 @@ var beepbox = (function (exports) {
         { name: "corrupt", voices: 2, spread: 18.0, offset: 48.0, expression: 0.7, sign: 0.7 },
     ]);
     Config.customUnisonIndex = 63;
-    Config.effectNames = ["reverb", "chorus", "panning", "distortion", "bitcrusher", "note filter", "echo", "pitch shift", "detune", "vibrato", "transition type", "chord type", "", "ring mod", "granular", "flanger",];
-    Config.effectOrder = [2, 10, 11, 7, 8, 9, 5, 14, 3, 4, 1, 6, 0, 13, 15,];
+    Config.effectNames = ["reverb", "chorus", "panning", "distortion", "bitcrusher", "note filter", "echo", "pitch shift", "detune", "vibrato", "transition type", "chord type", "", "ring mod", "granular", "flanger", "phaser"];
+    Config.effectOrder = [2, 10, 11, 7, 8, 9, 5, 14, 3, 4, 1, 6, 0, 13, 15, 16];
     Config.noteSizeMax = 6;
     Config.volumeRange = 50;
     Config.volumeLogScale = 0.1428;
@@ -1252,7 +1252,7 @@ var beepbox = (function (exports) {
         { name: "noteVolume", computeIndex: 0, displayName: "note volume", perNote: true, interleave: false, isFilter: false, maxCount: 1, effect: null, compatibleInstruments: null },
         { name: "pulseWidth", computeIndex: 2, displayName: "pulse width", perNote: true, interleave: false, isFilter: false, maxCount: 1, effect: null, compatibleInstruments: [6, 8] },
         { name: "stringSustain", computeIndex: 3, displayName: "sustain", perNote: true, interleave: false, isFilter: false, maxCount: 1, effect: null, compatibleInstruments: [7] },
-        { name: "unison", computeIndex: 4, displayName: "unison", perNote: true, interleave: false, isFilter: false, maxCount: 1, effect: null, compatibleInstruments: [0, 5, 7, 9, 6, 2, 3, 4] },
+        { name: "unison", computeIndex: 4, displayName: "unison", perNote: true, interleave: false, isFilter: false, maxCount: 1, effect: null, compatibleInstruments: null },
         { name: "operatorFrequency", computeIndex: 5, displayName: "fm# freq", perNote: true, interleave: true, isFilter: false, maxCount: _a$1.operatorCount + 2, effect: null, compatibleInstruments: [1, 11] },
         { name: "operatorAmplitude", computeIndex: 11, displayName: "fm# volume", perNote: true, interleave: false, isFilter: false, maxCount: _a$1.operatorCount + 2, effect: null, compatibleInstruments: [1, 11] },
         { name: "feedbackAmplitude", computeIndex: 17, displayName: "fm feedback", perNote: true, interleave: false, isFilter: false, maxCount: 1, effect: null, compatibleInstruments: [1, 11] },
@@ -1281,6 +1281,10 @@ var beepbox = (function (exports) {
         { name: "grainRange", computeIndex: 54, displayName: "grain range", perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: 14, compatibleInstruments: null },
         { name: "echoDelay", computeIndex: 55, displayName: "echo delay", perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: 6, compatibleInstruments: null },
         { name: "flangerMix", computeIndex: 56, displayName: "flanger mix", perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: 15, compatibleInstruments: null },
+        { name: "phaserFreq", computeIndex: 57, displayName: "phaser freq", perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: 16, compatibleInstruments: null },
+        { name: "phaserMix", computeIndex: 58, displayName: "phaser", perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: 16, compatibleInstruments: null },
+        { name: "phaserFeedback", computeIndex: 59, displayName: "phaser feedback", perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: 16, compatibleInstruments: null },
+        { name: "phaserStages", computeIndex: 60, displayName: "phaser stages", perNote: false, interleave: false, isFilter: false, maxCount: 1, effect: 16, compatibleInstruments: null },
     ]);
     Config.operatorWaves = toNameMap([
         { name: "sine", samples: _a$1.sineWave },
@@ -1308,17 +1312,17 @@ var beepbox = (function (exports) {
     ]);
     Config.barEditorHeight = 10;
     Config.modulators = toNameMap([
-        { name: "none", pianoName: "None", maxRawVol: 6, newNoteVol: 6, forSong: true, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "none", pianoName: "None", maxRawVol: 6, newNoteVol: 6, forSong: true, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "No Mod Setting", promptDesc: ["No setting has been chosen yet, so this modulator will have no effect. Try choosing a setting with the dropdown, then click this '?' again for more info.", "[$LO - $HI]"] },
-        { name: "song volume", pianoName: "Volume", maxRawVol: 100, newNoteVol: 100, forSong: true, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "song volume", pianoName: "Volume", maxRawVol: 100, newNoteVol: 100, forSong: true, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "Song Volume", promptDesc: ["This setting affects the overall volume of the song, just like the main volume slider.", "At $HI, the volume will be unchanged from default, and it will get gradually quieter down to $LO.", "[MULTIPLICATIVE] [$LO - $HI] [%]"] },
-        { name: "tempo", pianoName: "Tempo", maxRawVol: _a$1.tempoMax - _a$1.tempoMin, newNoteVol: Math.ceil((_a$1.tempoMax - _a$1.tempoMin) / 2), forSong: true, convertRealFactor: _a$1.tempoMin, associatedEffect: 16, maxIndex: 0,
+        { name: "tempo", pianoName: "Tempo", maxRawVol: _a$1.tempoMax - _a$1.tempoMin, newNoteVol: Math.ceil((_a$1.tempoMax - _a$1.tempoMin) / 2), forSong: true, convertRealFactor: _a$1.tempoMin, associatedEffect: 17, maxIndex: 0,
             promptName: "Song Tempo", promptDesc: ["This setting controls the speed your song plays at, just like the tempo slider.", "When you first make a note for this setting, it will default to your current tempo. Raising it speeds up the song, up to $HI BPM, and lowering it slows it down, to a minimum of $LO BPM.", "Note that you can make a 'swing' effect by rapidly changing between two tempo values.", "[OVERWRITING] [$LO - $HI] [BPM]"] },
-        { name: "song reverb", pianoName: "Reverb", maxRawVol: _a$1.reverbRange * 2, newNoteVol: _a$1.reverbRange, forSong: true, convertRealFactor: -_a$1.reverbRange, associatedEffect: 16, maxIndex: 0,
+        { name: "song reverb", pianoName: "Reverb", maxRawVol: _a$1.reverbRange * 2, newNoteVol: _a$1.reverbRange, forSong: true, convertRealFactor: -_a$1.reverbRange, associatedEffect: 17, maxIndex: 0,
             promptName: "Song Reverb", promptDesc: ["This setting affects the overall reverb of your song. It works by multiplying existing reverb for instruments, so those with no reverb set will be unaffected.", "At $MID, all instruments' reverb will be unchanged from default. This increases up to double the reverb value at $HI, or down to no reverb at $LO.", "[MULTIPLICATIVE] [$LO - $HI]"] },
-        { name: "next bar", pianoName: "Next Bar", maxRawVol: 1, newNoteVol: 1, forSong: true, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "next bar", pianoName: "Next Bar", maxRawVol: 1, newNoteVol: 1, forSong: true, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "Go To Next Bar", promptDesc: ["This setting functions a little different from most. Wherever a note is placed, the song will jump immediately to the next bar when it is encountered.", "This jump happens at the very start of the note, so the length of a next-bar note is irrelevant. Also, the note can be value 0 or 1, but the value is also irrelevant - wherever you place a note, the song will jump.", "You can make mixed-meter songs or intro sections by cutting off unneeded beats with a next-bar modulator.", "[$LO - $HI]"] },
-        { name: "note volume", pianoName: "Note Vol.", maxRawVol: _a$1.volumeRange, newNoteVol: Math.ceil(_a$1.volumeRange / 2), forSong: false, convertRealFactor: Math.ceil(-_a$1.volumeRange / 2.0), associatedEffect: 16, maxIndex: 0,
+        { name: "note volume", pianoName: "Note Vol.", maxRawVol: _a$1.volumeRange, newNoteVol: Math.ceil(_a$1.volumeRange / 2), forSong: false, convertRealFactor: Math.ceil(-_a$1.volumeRange / 2.0), associatedEffect: 17, maxIndex: 0,
             promptName: "Note Volume", promptDesc: ["This setting affects the volume of your instrument as if its note size had been scaled.", "At $MID, an instrument's volume will be unchanged from default. This means you can still use the volume sliders to mix the base volume of instruments. The volume gradually increases up to $HI, or decreases down to mute at $LO.", "This setting was the default for volume modulation in JummBox for a long time. Due to some new effects like distortion and bitcrush, note volume doesn't always allow fine volume control. Also, this modulator affects the value of FM modulator waves instead of just carriers. This can distort the sound which may be useful, but also may be undesirable. In those cases, use the 'mix volume' modulator instead, which will always just scale the volume with no added effects.", "For display purposes, this mod will show up on the instrument volume slider, as long as there is not also an active 'mix volume' modulator anyhow. However, as mentioned, it works more like changing note volume.", "[MULTIPLICATIVE] [$LO - $HI]"] },
         { name: "pan", pianoName: "Pan", maxRawVol: _a$1.panMax, newNoteVol: Math.ceil(_a$1.panMax / 2), forSong: false, convertRealFactor: 0, associatedEffect: 2, maxIndex: 0,
             promptName: "Instrument Panning", promptDesc: ["This setting controls the panning of your instrument, just like the panning slider.", "At $LO, your instrument will sound like it is coming fully from the left-ear side. At $MID it will be right in the middle, and at $HI, it will sound like it's on the right.", "[OVERWRITING] [$LO - $HI] [L-R]"] },
@@ -1326,23 +1330,23 @@ var beepbox = (function (exports) {
             promptName: "Instrument Reverb", promptDesc: ["This setting controls the reverb of your insturment, just like the reverb slider.", "At $LO, your instrument will have no reverb. At $HI, it will be at maximum.", "[OVERWRITING] [$LO - $HI]"] },
         { name: "distortion", pianoName: "Distortion", maxRawVol: _a$1.distortionRange - 1, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 3, maxIndex: 0,
             promptName: "Instrument Distortion", promptDesc: ["This setting controls the amount of distortion for your instrument, just like the distortion slider.", "At $LO, your instrument will have no distortion. At $HI, it will be at maximum.", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "fm slider 1", pianoName: "FM 1", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "fm slider 1", pianoName: "FM 1", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "FM Slider 1", promptDesc: ["This setting affects the strength of the first FM slider, just like the corresponding slider on your instrument.", "It works in a multiplicative way, so at $HI your slider will sound the same is its default value, and at $LO it will sound like it has been moved all the way to the left.", "For the full range of control with this mod, move your underlying slider all the way to the right.", "[MULTIPLICATIVE] [$LO - $HI] [%]"] },
-        { name: "fm slider 2", pianoName: "FM 2", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "fm slider 2", pianoName: "FM 2", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "FM Slider 2", promptDesc: ["This setting affects the strength of the second FM slider, just like the corresponding slider on your instrument.", "It works in a multiplicative way, so at $HI your slider will sound the same is its default value, and at $LO it will sound like it has been moved all the way to the left.", "For the full range of control with this mod, move your underlying slider all the way to the right.", "[MULTIPLICATIVE] [$LO - $HI] [%]"] },
-        { name: "fm slider 3", pianoName: "FM 3", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "fm slider 3", pianoName: "FM 3", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "FM Slider 3", promptDesc: ["This setting affects the strength of the third FM slider, just like the corresponding slider on your instrument.", "It works in a multiplicative way, so at $HI your slider will sound the same is its default value, and at $LO it will sound like it has been moved all the way to the left.", "For the full range of control with this mod, move your underlying slider all the way to the right.", "[MULTIPLICATIVE] [$LO - $HI] [%]"] },
-        { name: "fm slider 4", pianoName: "FM 4", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "fm slider 4", pianoName: "FM 4", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "FM Slider 4", promptDesc: ["This setting affects the strength of the fourth FM slider, just like the corresponding slider on your instrument.", "It works in a multiplicative way, so at $HI your slider will sound the same is its default value, and at $LO it will sound like it has been moved all the way to the left.", "For the full range of control with this mod, move your underlying slider all the way to the right.", "[MULTIPLICATIVE] [$LO - $HI] [%]"] },
-        { name: "fm feedback", pianoName: "FM Feedbck", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "fm feedback", pianoName: "FM Feedbck", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "FM Feedback", promptDesc: ["This setting affects the strength of the FM feedback slider, just like the corresponding slider on your instrument.", "It works in a multiplicative way, so at $HI your slider will sound the same is its default value, and at $LO it will sound like it has been moved all the way to the left.", "For the full range of control with this mod, move your underlying slider all the way to the right.", "[MULTIPLICATIVE] [$LO - $HI] [%]"] },
-        { name: "pulse width", pianoName: "Pulse Width", maxRawVol: _a$1.pulseWidthRange, newNoteVol: _a$1.pulseWidthRange, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "pulse width", pianoName: "Pulse Width", maxRawVol: _a$1.pulseWidthRange, newNoteVol: _a$1.pulseWidthRange, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "Pulse Width", promptDesc: ["This setting controls the width of this instrument's pulse wave, just like the pulse width slider.", "At $HI, your instrument will sound like a pure square wave (on 50% of the time). It will gradually sound narrower down to $LO, where it will be inaudible (as it is on 0% of the time).", "Changing pulse width randomly between a few values is a common strategy in chiptune music to lend some personality to a lead instrument.", "[OVERWRITING] [$LO - $HI] [%Duty]"] },
         { name: "detune", pianoName: "Detune", maxRawVol: _a$1.detuneMax - _a$1.detuneMin, newNoteVol: _a$1.detuneCenter, forSong: false, convertRealFactor: -_a$1.detuneCenter, associatedEffect: 8, maxIndex: 0,
             promptName: "Instrument Detune", promptDesc: ["This setting controls the detune for this instrument, just like the detune slider.", "At $MID, your instrument will have no detune applied. Each tick corresponds to one cent, or one-hundredth of a pitch. Thus, each change of 100 ticks corresponds to one half-step of detune, up to two half-steps up at $HI, or two half-steps down at $LO.", "[OVERWRITING] [$LO - $HI] [cents]"] },
         { name: "vibrato depth", pianoName: "Vibrato Depth", maxRawVol: 50, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 9, maxIndex: 0,
             promptName: "Vibrato Depth", promptDesc: ["This setting controls the amount that your pitch moves up and down by during vibrato, just like the vibrato depth slider.", "At $LO, your instrument will have no vibrato depth so its vibrato would be inaudible. This increases up to $HI, where an extreme pitch change will be noticeable.", "[OVERWRITING] [$LO - $HI] [pitch ÷25]"] },
-        { name: "song detune", pianoName: "Detune", maxRawVol: _a$1.songDetuneMax - _a$1.songDetuneMin, newNoteVol: Math.ceil((_a$1.songDetuneMax - _a$1.songDetuneMin) / 2), forSong: true, convertRealFactor: -250, associatedEffect: 16, maxIndex: 0,
+        { name: "song detune", pianoName: "Detune", maxRawVol: _a$1.songDetuneMax - _a$1.songDetuneMin, newNoteVol: Math.ceil((_a$1.songDetuneMax - _a$1.songDetuneMin) / 2), forSong: true, convertRealFactor: -250, associatedEffect: 17, maxIndex: 0,
             promptName: "Song Detune", promptDesc: ["This setting controls the overall detune of the entire song. There is no associated slider.", "At $MID, your song will have no extra detune applied and sound unchanged from default. Each tick corresponds to four cents, or four hundredths of a pitch. Thus, each change of 25 ticks corresponds to one half-step of detune, up to 10 half-steps up at $HI, or 10 half-steps down at $LO.", "[MULTIPLICATIVE] [$LO - $HI] [cents x4]"] },
         { name: "vibrato speed", pianoName: "Vibrato Speed", maxRawVol: 30, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 9, maxIndex: 0,
             promptName: "Vibrato Speed", promptDesc: ["This setting controls the speed your instrument will vibrato at, just like the slider.", "A setting of $LO means there will be no oscillation, and vibrato will be disabled. Higher settings will increase the speed, up to a dramatic trill at the max value, $HI.", "[OVERWRITING] [$LO - $HI]"] },
@@ -1355,7 +1359,7 @@ var beepbox = (function (exports) {
             promptName: "Panning Delay", promptDesc: ["This setting controls the delay applied to panning for your instrument, just like the pan delay slider.", "With more delay, the panning effect will generally be more pronounced. $MID is the default value, whereas $LO will remove any delay at all. No delay can be desirable for chiptune songs.", "[OVERWRITING] [$LO - $HI]"] },
         { name: "reset arp", pianoName: "Reset Arp", maxRawVol: 1, newNoteVol: 1, forSong: false, convertRealFactor: 0, associatedEffect: 11, maxIndex: 0,
             promptName: "Reset Arpeggio", promptDesc: ["This setting functions a little different from most. Wherever a note is placed, the arpeggio of this instrument will reset at the very start of that note. This is most noticeable with lower arpeggio speeds. The lengths and values of notes for this setting don't matter, just the note start times.", "This mod can be used to sync up your apreggios so that they always sound the same, even if you are using an odd-ratio arpeggio speed or modulating arpeggio speed.", "[$LO - $HI]"] },
-        { name: "eq filter", pianoName: "EQFlt", maxRawVol: 10, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "eq filter", pianoName: "EQFlt", maxRawVol: 10, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "EQ Filter", promptDesc: ["This setting controls a few separate things for your instrument's EQ filter.", "When the option 'morph' is selected, your modulator values will indicate a sub-filter index of your EQ filter to 'morph' to over time. For example, a change from 0 to 1 means your main filter (default) will morph to sub-filter 1 over the specified duration. You can shape the main filter and sub-filters in the large filter editor ('+' button). If your two filters' number, type, and order of filter dots all match up, the morph will happen smoothly and you'll be able to hear them changing. If they do not match up, the filters will simply jump between each other.", "Note that filters will morph based on endpoints in the pattern editor. So, if you specify a morph from sub-filter 1 to 4 but do not specifically drag in new endpoints for 2 and 3, it will morph directly between 1 and 4 without going through the others.", "If you target Dot X or Dot Y, you can finely tune the coordinates of a single dot for your filter. The number of available dots to choose is dependent on your main filter's dot count.", "[OVERWRITING] [$LO - $HI]"] },
         { name: "note filter", pianoName: "N.Flt", maxRawVol: 10, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 5, maxIndex: 0,
             promptName: "Note Filter", promptDesc: ["This setting controls a few separate things for your instrument's note filter.", "When the option 'morph' is selected, your modulator values will indicate a sub-filter index of your note filter to 'morph' to over time. For example, a change from 0 to 1 means your main filter (default) will morph to sub-filter 1 over the specified duration. You can shape the main filter and sub-filters in the large filter editor ('+' button). If your two filters' number, type, and order of filter dots all match up, the morph will happen smoothly and you'll be able to hear them changing. If they do not match up, the filters will simply jump between each other.", "Note that filters will morph based on endpoints in the pattern editor. So, if you specify a morph from sub-filter 1 to 4 but do not specifically drag in new endpoints for 2 and 3, it will morph directly between 1 and 4 without going through the others.", "If you target Dot X or Dot Y, you can finely tune the coordinates of a single dot for your filter. The number of available dots to choose is dependent on your main filter's dot count.", "[OVERWRITING] [$LO - $HI]"] },
@@ -1369,9 +1373,9 @@ var beepbox = (function (exports) {
             promptName: "Instrument Echo Delay", promptDesc: ["This setting controls the echo delay of your instrument, just like the echo delay slider.", "At $LO, your instrument will have very little echo delay, and this increases up to 2 beats of delay at $HI.", "[OVERWRITING] [$LO - $HI] [~beats ÷12]"] },
         { name: "chorus", pianoName: "Chorus", maxRawVol: _a$1.chorusRange - 1, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 1, maxIndex: 0,
             promptName: "Instrument Chorus", promptDesc: ["This setting controls the chorus strength of your instrument, just like the chorus slider.", "At $LO, the chorus effect will be disabled. The strength of the chorus effect increases up to the max value, $HI.", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "eq filt cut", pianoName: "EQFlt Cut", maxRawVol: _a$1.filterSimpleCutRange - 1, newNoteVol: _a$1.filterSimpleCutRange - 1, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "eq filt cut", pianoName: "EQFlt Cut", maxRawVol: _a$1.filterSimpleCutRange - 1, newNoteVol: _a$1.filterSimpleCutRange - 1, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "EQ Filter Cutoff Frequency", promptDesc: ["This setting controls the filter cut position of your instrument, just like the filter cut slider.", "This setting is roughly analagous to the horizontal position of a single low-pass dot on the advanced filter editor. At lower values, a wider range of frequencies is cut off.", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "eq filt peak", pianoName: "EQFlt Peak", maxRawVol: _a$1.filterSimplePeakRange - 1, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "eq filt peak", pianoName: "EQFlt Peak", maxRawVol: _a$1.filterSimplePeakRange - 1, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "EQ Filter Peak Gain", promptDesc: ["This setting controls the filter peak position of your instrument, just like the filter peak slider.", "This setting is roughly analagous to the vertical position of a single low-pass dot on the advanced filter editor. At lower values, the cutoff frequency will not be emphasized, and at higher values you will hear emphasis on the cutoff frequency.", "[OVERWRITING] [$LO - $HI]"] },
         { name: "note filt cut", pianoName: "N.Flt Cut", maxRawVol: _a$1.filterSimpleCutRange - 1, newNoteVol: _a$1.filterSimpleCutRange - 1, forSong: false, convertRealFactor: 0, associatedEffect: 5, maxIndex: 0,
             promptName: "Note Filter Cutoff Frequency", promptDesc: ["This setting controls the filter cut position of your instrument, just like the filter cut slider.", "This setting is roughly analagous to the horizontal position of a single low-pass dot on the advanced filter editor. At lower values, a wider range of frequencies is cut off.", "[OVERWRITING] [$LO - $HI]"] },
@@ -1379,31 +1383,31 @@ var beepbox = (function (exports) {
             promptName: "Note Filter Peak Gain", promptDesc: ["This setting controls the filter peak position of your instrument, just like the filter peak slider.", "This setting is roughly analagous to the vertical position of a single low-pass dot on the advanced filter editor. At lower values, the cutoff frequency will not be emphasized, and at higher values you will hear emphasis on the cutoff frequency.", "[OVERWRITING] [$LO - $HI]"] },
         { name: "pitch shift", pianoName: "Pitch Shift", maxRawVol: _a$1.pitchShiftRange - 1, newNoteVol: _a$1.pitchShiftCenter, forSong: false, convertRealFactor: -_a$1.pitchShiftCenter, associatedEffect: 7, maxIndex: 0,
             promptName: "Pitch Shift", promptDesc: ["This setting controls the pitch offset of your instrument, just like the pitch shift slider.", "At $MID your instrument will have no pitch shift. This increases as you decrease toward $LO pitches (half-steps) at the low end, or increases towards +$HI pitches at the high end.", "[OVERWRITING] [$LO - $HI] [pitch]"] },
-        { name: "sustain", pianoName: "Sustain", maxRawVol: _a$1.stringSustainRange - 1, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "sustain", pianoName: "Sustain", maxRawVol: _a$1.stringSustainRange - 1, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "Picked String Sustain", promptDesc: ["This setting controls the sustain of your picked string instrument, just like the sustain slider.", "At $LO, your instrument will have minimum sustain and sound 'plucky'. This increases to a more held sound as your modulator approaches the maximum, $HI.", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "mix volume", pianoName: "Mix Vol.", maxRawVol: _a$1.volumeRange, newNoteVol: Math.ceil(_a$1.volumeRange / 2), forSong: false, convertRealFactor: Math.ceil(-_a$1.volumeRange / 2.0), associatedEffect: 16, maxIndex: 0,
+        { name: "mix volume", pianoName: "Mix Vol.", maxRawVol: _a$1.volumeRange, newNoteVol: Math.ceil(_a$1.volumeRange / 2), forSong: false, convertRealFactor: Math.ceil(-_a$1.volumeRange / 2.0), associatedEffect: 17, maxIndex: 0,
             promptName: "Mix Volume", promptDesc: ["This setting affects the volume of your instrument as if its volume slider had been moved.", "At $MID, an instrument's volume will be unchanged from default. This means you can still use the volume sliders to mix the base volume of instruments, since this setting and the default value work multiplicatively. The volume gradually increases up to $HI, or decreases down to mute at $LO.", "Unlike the 'note volume' setting, mix volume is very straightforward and simply affects the resultant instrument volume after all effects are applied.", "[MULTIPLICATIVE] [$LO - $HI]"] },
-        { name: "fm slider 5", pianoName: "FM 5", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "fm slider 5", pianoName: "FM 5", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "FM Slider 5", promptDesc: ["This setting affects the strength of the fifth FM slider, just like the corresponding slider on your instrument.", "It works in a multiplicative way, so at $HI your slider will sound the same is its default value, and at $LO it will sound like it has been moved all the way to the left.", "For the full range of control with this mod, move your underlying slider all the way to the right.", "[MULTIPLICATIVE] [$LO - $HI] [%]"] },
-        { name: "fm slider 6", pianoName: "FM 6", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "fm slider 6", pianoName: "FM 6", maxRawVol: 15, newNoteVol: 15, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "FM Slider 6", promptDesc: ["This setting affects the strength of the sixth FM slider, just like the corresponding slider on your instrument.", "It works in a multiplicative way, so at $HI your slider will sound the same is its default value, and at $LO it will sound like it has been moved all the way to the left.", "For the full range of control with this mod, move your underlying slider all the way to the right.", "[MULTIPLICATIVE] [$LO - $HI] [%]"] },
-        { name: "decimal offset", pianoName: "Decimal Offset", maxRawVol: 99, newNoteVol: 0, forSong: false, convertRealFactor: 0, invertSliderIndicator: true, associatedEffect: 16, maxIndex: 0,
+        { name: "decimal offset", pianoName: "Decimal Offset", maxRawVol: 99, newNoteVol: 0, forSong: false, convertRealFactor: 0, invertSliderIndicator: true, associatedEffect: 17, maxIndex: 0,
             promptName: "Decimal Offset", promptDesc: ["This setting controls the decimal offset that is subtracted from the pulse width; use this for creating values like 12.5 or 6.25.", "[$LO - $HI]"] },
-        { name: "envelope speed", pianoName: "EnvelopeSpd", maxRawVol: 50, newNoteVol: 12, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "envelope speed", pianoName: "EnvelopeSpd", maxRawVol: 50, newNoteVol: 12, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "Envelope Speed", promptDesc: ["This setting controls how fast all of the envelopes for the instrument play.", "At $LO, your instrument's envelopes will be frozen, and at values near there they will change very slowly. At 12, the envelopes will work as usual, performing at normal speed. This increases up to $HI, where the envelopes will change very quickly. The speeds are given below:",
                 "[0-4]: x0, x1/16, x⅛, x⅕, x¼,", "[5-9]: x⅓, x⅖, x½, x⅔, x¾,", "[10-14]: x⅘, x0.9, x1, x1.1, x1.2,", "[15-19]: x1.3, x1.4, x1.5, x1.6, x1.7,", "[20-24]: x1.8, x1.9, x2, x2.1, x2.2,", "[25-29]: x2.3, x2.4, x2.5, x2.6, x2.7,", "[30-34]: x2.8, x2.9, x3, x3.1, x3.2,", "[35-39]: x3.3, x3.4, x3.5, x3.6, x3.7,", "[40-44]: x3.8, x3.9, x4, x4.15, x4.3,", "[45-50]: x4.5, x4.8, x5, x5.5, x6, x8", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "dynamism", pianoName: "Dynamism", maxRawVol: _a$1.supersawDynamismMax, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "dynamism", pianoName: "Dynamism", maxRawVol: _a$1.supersawDynamismMax, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "Supersaw Dynamism", promptDesc: ["This setting controls the supersaw dynamism of your instrument, just like the dynamism slider.", "At $LO, your instrument will have only a single pulse contributing. Increasing this will raise the contribution of other waves which is similar to a chorus effect. The effect gets more noticeable up to the max value, $HI.", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "spread", pianoName: "Spread", maxRawVol: _a$1.supersawSpreadMax, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "spread", pianoName: "Spread", maxRawVol: _a$1.supersawSpreadMax, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "Supersaw Spread", promptDesc: ["This setting controls the supersaw spread of your instrument, just like the spread slider.", "At $LO, all the pulses in your supersaw will be at the same frequency. Increasing this value raises the frequency spread of the contributing waves, up to a dissonant spread at the max value, $HI.", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "saw shape", pianoName: "Saw Shape", maxRawVol: _a$1.supersawShapeMax, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "saw shape", pianoName: "Saw Shape", maxRawVol: _a$1.supersawShapeMax, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "Supersaw Shape", promptDesc: ["This setting controls the supersaw shape of your instrument, just like the Saw↔Pulse slider.", "As the slider's name implies, this effect will give you a sawtooth wave at $LO, and a full pulse width wave at $HI. Values in between will be a blend of the two.", "[OVERWRITING] [$LO - $HI] [%]"] },
-        { name: "individual envelope speed", pianoName: "IndvEnvSpd", maxRawVol: 63, newNoteVol: 23, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: _a$1.maxEnvelopeCount - 1,
+        { name: "individual envelope speed", pianoName: "IndvEnvSpd", maxRawVol: 63, newNoteVol: 23, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: _a$1.maxEnvelopeCount - 1,
             promptName: "Individual Envelope Speed", promptDesc: ["This setting controls how fast the specified envelope of the instrument will play.", "At $LO, your the envelope will be frozen, and at values near there they will change very slowly. At 23, the envelope will work as usual, performing at normal speed. This increases up to $HI, where the envelope will change very quickly. The speeds are given below:",
                 "[0-4]: x0, x0.01, x0.02, x0.03, x0.04,", "[5-9]: x0.05, x0.06, x0.07, x0.08, x0.09,", "[10-14]: x0.1, x0.2, x0.25, x0.3, x0.33,", "[15-19]: x0.4, x0.5, x0.6, x0.6667, x0.7,", "[20-24]: x0.75, x0.8, x0.9, x1, x1.25,", "[25-29]: x1.3333, x1.5, x1.6667, x1.75, x2,", "[30-34]: x2.25, x2.5, x2.75, x3, x3.5,", "[35-39]: x4, x4.5, x5, x5.5, x6,", "[40-44]: x6.5, x7, x7.5, x8, x8.5,", "[45-49]: x9, x9.5, x10, x11, x12", "[50-54]: x13, x14, x15, x16, x17", "[55-59]: x18, x19, x20, x24, x32", "[60-63]: x40, x64, x128, x256", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "song eq", pianoName: "Song EQ", maxRawVol: 10, newNoteVol: 0, forSong: true, convertRealFactor: 0, associatedEffect: 16, maxIndex: 0,
+        { name: "song eq", pianoName: "Song EQ", maxRawVol: 10, newNoteVol: 0, forSong: true, convertRealFactor: 0, associatedEffect: 17, maxIndex: 0,
             promptName: "Song EQ Filter", promptDesc: ["This setting overwrites every instrument's eq filter. You can do this in a few separate ways, similar to the per instrument eq filter modulator.", "When the option 'morph' is selected, your modulator values will indicate a sub-filter index of your EQ filter to 'morph' to over time. For example, a change from 0 to 1 means your main filter (default) will morph to sub-filter 1 over the specified duration. You can shape the main filter and sub-filters in the large filter editor ('+' button). If your two filters' number, type, and order of filter dots all match up, the morph will happen smoothly and you'll be able to hear them changing. If they do not match up, the filters will simply jump between each other.", "Note that filters will morph based on endpoints in the pattern editor. So, if you specify a morph from sub-filter 1 to 4 but do not specifically drag in new endpoints for 2 and 3, it will morph directly between 1 and 4 without going through the others.", "If you target Dot X or Dot Y, you can finely tune the coordinates of a single dot for your filter. The number of available dots to choose is dependent on your main filter's dot count.", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "reset envelope", pianoName: "ResetEnv", maxRawVol: 1, newNoteVol: 1, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: _a$1.maxEnvelopeCount - 1,
+        { name: "reset envelope", pianoName: "ResetEnv", maxRawVol: 1, newNoteVol: 1, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: _a$1.maxEnvelopeCount - 1,
             promptName: "Reset Envelope", promptDesc: ["This setting functions a lot like the reset arp modulator. Wherever a note is placed, the envelope of this instrument at the specified index will reset at the very start of that note. ", "[$LO - $HI]",] },
         { name: "ring modulation", pianoName: "Ring Mod", maxRawVol: _a$1.ringModRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 13, maxIndex: 0,
             promptName: "Ring Modulation", promptDesc: ["This setting controls the Ring Modulation effect in your instrument.", "[OVERWRITING] [$LO - $HI]"] },
@@ -1417,12 +1421,20 @@ var beepbox = (function (exports) {
             promptName: "Grain Size", promptDesc: ["This setting controls the grain size of the granular effect in your instrument.", "The number shown in the mod channel is multiplied by " + _a$1.grainSizeStep + " to get the actual grain size.", "[OVERWRITING] [$LO - $HI]"] },
         { name: "grain range", pianoName: "Grain Range", maxRawVol: _a$1.grainRangeMax / _a$1.grainSizeStep, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 14, maxIndex: 0,
             promptName: "Grain Range", promptDesc: ["This setting controls the range of values for your grain size of the granular effect in your instrument, from no variation to a lot", "The number shown in the mod channel is multiplied by " + _a$1.grainSizeStep + " to get the actual grain size.", "[OVERWRITING] [$LO - $HI]"] },
-        { name: "individual envelope lower bound", pianoName: "IndvEnvLow", maxRawVol: _a$1.perEnvelopeBoundMax * 10, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: _a$1.maxEnvelopeCount - 1,
+        { name: "individual envelope lower bound", pianoName: "IndvEnvLow", maxRawVol: _a$1.perEnvelopeBoundMax * 10, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: _a$1.maxEnvelopeCount - 1,
             promptName: "Individual Envelope Lower Bound", promptDesc: ["This setting controls the envelope lower bound", "At $LO, your the envelope will output an upper envelope bound to 0, and at $HI your envelope will output an upper envelope bound to 2.", "This settings will not work if your lower envelope bound is higher than your upper envelope bound",] },
-        { name: "individual envelope upper bound", pianoName: "IndvEnvUp", maxRawVol: _a$1.perEnvelopeBoundMax * 10, newNoteVol: 10, forSong: false, convertRealFactor: 0, associatedEffect: 16, maxIndex: _a$1.maxEnvelopeCount - 1,
+        { name: "individual envelope upper bound", pianoName: "IndvEnvUp", maxRawVol: _a$1.perEnvelopeBoundMax * 10, newNoteVol: 10, forSong: false, convertRealFactor: 0, associatedEffect: 17, maxIndex: _a$1.maxEnvelopeCount - 1,
             promptName: "Individual Envelope Upper Bound", promptDesc: ["This setting controls the envelope upper bound", "At $LO, your the envelope will output a 0 to lower envelope bound, and at $HI your envelope will output a 2 to lower envelope bound.", "This settings will not work if your lower envelope bound is higher than your upper envelope bound",] },
         { name: "flanger mix", pianoName: "Flanger Mix", maxRawVol: _a$1.flangerMixRange - 1, newNoteVol: Math.ceil((_a$1.flangerMixRange - 1) / 2), forSong: false, convertRealFactor: 0, associatedEffect: 15, maxIndex: 0,
             promptName: "Flanger Mix", promptDesc: ["This setting controls the flanger mix of your instrument, just like the flanger mix slider.", "At $LO, the flanger will be completely dry. At $HI, the flanger will be at maximum mix.", "[OVERWRITING] [$LO - $HI]"] },
+        { name: "phaser", pianoName: "Phaser", maxRawVol: _a$1.phaserMixRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16,
+            promptName: "Instrument Phaser", promptDesc: ["This setting controls the Phaser Mix of your insturment, just like the Phaser slider.", "At $LO, your instrument will have no phaser. At $HI, it will be at maximum.", "[OVERWRITING] [$LO - $HI]"], maxIndex: 0, },
+        { name: "phaser frequency", pianoName: "Phaser Frequency", maxRawVol: _a$1.phaserFreqRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16,
+            promptName: "Phaser Frequency", promptDesc: ["This setting controls the phaser frequency of your insturment, just like the phaser freq slider.", "At $LO, your instrument will have no phaser freq. At $HI, it will be at maximum.", "[OVERWRITING] [$LO - $HI]"], maxIndex: 0, },
+        { name: "phaser feedback", pianoName: "Phaser Feedback", maxRawVol: _a$1.phaserFeedbackRange, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16,
+            promptName: "Phaser Feedback", promptDesc: ["This setting controls the phaser feedback of your insturment, just like the phaser feedback slider.", "At $LO, your instrument will have no phaser feedback. At $HI, it will be at maximum.", "[OVERWRITING] [$LO - $HI]"], maxIndex: 0, },
+        { name: "phaser stages", pianoName: "Phaser Stages", maxRawVol: _a$1.phaserMaxStages, newNoteVol: 0, forSong: false, convertRealFactor: 0, associatedEffect: 16,
+            promptName: "Phaser Stages", promptDesc: ["This setting controls the number of phaser stages in your insturment, just like the phaser stages slider.", "At $LO, your instrument will have no phaser stages. At $HI, it will be at maximum.", "[OVERWRITING] [$LO - $HI]"], maxIndex: 0, },
     ]);
     function centerWave(wave) {
         let sum = 0.0;
@@ -1763,6 +1775,9 @@ var beepbox = (function (exports) {
     function effectsIncludeGranular(effects) {
         return (effects & (1 << 14)) != 0;
     }
+    function effectsIncludePhaser(effects) {
+        return (effects & (1 << 16)) != 0;
+    }
     function effectsIncludeFlanger(effects) {
         return (effects & (1 << 15)) != 0;
     }
@@ -1836,6 +1851,7 @@ var beepbox = (function (exports) {
     EditorConfig.isOnMac = /^Mac/i.test(navigator.platform) || /Mac OS X/i.test(navigator.userAgent) || /^(iPhone|iPad|iPod)/i.test(navigator.platform) || /(iPhone|iPad|iPod)/i.test(navigator.userAgent);
     EditorConfig.ctrlSymbol = EditorConfig.isOnMac ? "⌘" : "Ctrl+";
     EditorConfig.ctrlName = EditorConfig.isOnMac ? "command" : "control";
+    EditorConfig.showSongDetailsAlert = true;
     EditorConfig.presetCategories = toNameMap([
         {
             name: "Custom Instruments", presets: toNameMap([
@@ -14126,6 +14142,9 @@ var beepbox = (function (exports) {
 	--internal-add-symbol: var(--add-symbol, url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="-13 -13 26 26"><path fill="gray" d="M -8 -1 L -1 -1 L -1 -8  L 1 -8 L 1 -1 L 8 -1 L 8 1 L 1 1 L 1 8 L -1 8 L -1 1 L -8 1 z"/></svg>'));
 	--internal-zoom-in-symbol: var(--zoom-in-symbol, url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="-10 -10 20 20"><circle cx="-1" cy="-1" r="6" stroke-width="2" stroke="gray" fill="none"></circle><path stroke="gray" stroke-width="2" d="M 3 3 L 7 7 M -1 -4 L -1 2 M -4 -1 L 2 -1" fill="none"></path></svg>'));
 	--internal-zoom-out-symbol: var(--zoom-out-symbol, url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="-10 -10 20 20"><circle cx="-1" cy="-1" r="6" stroke-width="2" stroke="gray" fill="none"></circle><path stroke="gray" stroke-width="2" d="M 3 3 L 7 7 M -4 -1 L 2 -1" fill="none"></path></svg>'));
+	--loop-within-bar-symbol: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="2 -0.5 12 12"><path d="M 5 2 C 3 2 2 3 2 5 L 2 6 C 2 8 3 9 5 9 L 11 9 C 13 9 14 8 14 6 L 14 5 C 14 3 13 2 11 2 L 8 2 L 8 4 L 11 4 C 11 4 12 4 12 5 L 12 6 C 12 7 11 7 11 7 L 5 7 C 5 7 4 7 4 6 L 4 5 C 4 4 5 4 5 4 L 8 4 L 8 2"/></svg>');
+	--loop-full-song-symbol: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="2 -2 15 15"><path d="M 3 3 C 2 3 2 3 2 3 L 4 6 L 6 3 L 5 3 C 5 3 5 1 7 1 L 12 1 C 14 1 14 3 14 3 L 13 8 L 15 5 L 17 8 L 16 8 C 16 12 12 12 12 12 L 7 12 C 3 12 3 8 3 8 C 3 7 5 7 5 8 C 5 8 5 10 7 10 L 12 10 C 14 10 14 8 14 8 L 13 8 L 14 3 C 14 4 16 4 16 3 C 16 -1 12 -1 12 -1 L 7 -1 C 3 -1 3 3 3 3 Z Z"/></svg>');
+	--dont-loop-symbol: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="2 -2 15 15"><path d="M 3 3 C 2 3 2 3 2 3 L 4 6 L 6 3 L 5 3 C 5 3 5 1 7 1 L 12 1 C 14 1 14 3 14 3 L 13 8 L 15 5 L 17 8 L 16 8 C 16 12 12 12 12 12 L 7 12 C 3 12 3 8 3 8 C 3 7 5 7 5 8 C 5 8 5 10 7 10 L 12 10 C 14 10 14 8 14 8 L 8 8 L 8 7 L 9 7 L 9 4.5 L 8 4.5 L 8 3.5 L 9 3 L 10 3 L 10 7 L 11 7 L 11 8 L 13 8 L 14 3 C 14 4 16 4 16 3 C 16 -1 12 -1 12 -1 L 7 -1 C 3 -1 3 3 3 3 Z Z"/></svg>');
 	--internal-checkmark-symbol: var(--checkmark-symbol, url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="-13 -13 26 26"><path fill="gray" d="M -9 -2 L -8 -3 L -3 2 L 9 -8 L 10 -7 L -3 8 z"/></svg>'));
 	--internal-drum-symbol: var(--drum-symbol, url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40"> \
 			<defs> \
@@ -14216,6 +14235,28 @@ html {
 .obtrusive-scrollbars::-webkit-scrollbar-thumb, .obtrusive-scrollbars *::-webkit-scrollbar-thumb {
 	background-color: ${ColorConfig.uiWidgetBackground};
 	border: 3px solid ${ColorConfig.editorBackground};
+}
+	
+.songLoopButton::before {
+content: "";
+  position: absolute;
+  width: var(--button-size);
+  height: var(--button-size);
+  left: 3px;
+  top: 0;
+  mask-image: var(--loop-within-bar-symbol);
+  -webkit-mask-image: var(--loop-within-bar-symbol);
+  pointer-events: none;
+  background: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: -o-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: optimizeSpeed !important;
 }
 
 .beepboxEditor {
@@ -14593,6 +14634,27 @@ html {
 	-webkit-mask-repeat: no-repeat;
 	-webkit-mask-position: center;
 }
+
+.beepboxEditor .details-button {
+	width: var(--button-size);
+}
+.beepboxEditor .details-button::before {
+	content: "";
+	position: absolute;
+	width: var(--button-size);
+	height: var(--button-size);
+	left: 0;
+	top: 0;
+	pointer-events: none;
+	background: var(--primary-text);
+	mask-image: var(--internal-add-symbol);
+	mask-repeat: no-repeat;
+	mask-position: center;
+	-webkit-mask-image: var(--internal-add-symbol);
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+}
+	
 .beepboxEditor .add-envelope:disabled {
 	visibility: hidden;
 }
@@ -15676,6 +15738,55 @@ html {
 	font-weight: 1000;
 }
 
+.beepboxEditor .knobContainer {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: 56px;
+}
+
+.beepboxEditor .knob {
+	width: 40px;
+	height: 40px;
+	cursor: pointer;
+	touch-action: none;
+}
+
+.beepboxEditor .knobTrack {
+	fill: ${ColorConfig.uiWidgetBackground};
+}
+
+.beepboxEditor .knobIndicator {
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	pointer-events: none;
+}
+
+.beepboxEditor .knobMarker {
+	stroke: ${ColorConfig.blackPianoKey};
+	stroke-width: 2;
+	stroke-linecap: round;
+	pointer-events: none;
+}
+
+.beepboxEditor .knobValueArc {
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: butt;
+	pointer-events: none;
+	fill: none;
+}
+
+.beepboxEditor .knobModulationArc {
+	stroke: ${ColorConfig.overwritingModSlider};
+	stroke-width: 1.5;
+	stroke-linecap: butt;
+	pointer-events: none;
+	fill: none;
+}
+
 .beepboxEditor .selectRow > :last-child {
 	width: 62.5%;
 	flex-shrink: 0;
@@ -15759,7 +15870,7 @@ html {
 	.beepboxEditor .layoutAreaButton, .layoutArea {
 		display: none;
 	}
-}	
+}
 
 .beepboxEditor .editor-right-side-top > *, .beepboxEditor .editor-right-side-bottom > * {
 	flex-shrink: 0;
@@ -17306,7 +17417,7 @@ li.select2-results__option[role=group] > strong:hover {
             this.unisonSign = 1.0;
             this.effects = 0;
             this.chord = 1;
-            this.strumParts = 10;
+            this.strumParts = 1;
             this.volume = 0;
             this.pan = Config.panCenter;
             this.panDelay = 0;
@@ -17342,6 +17453,10 @@ li.select2-results__option[role=group] > strong:hover {
             this.reverbShelfGain = 6;
             this.echoSustain = 0;
             this.echoDelay = 0;
+            this.phaserFreq = 0;
+            this.phaserMix = Config.phaserMixRange - 1;
+            this.phaserFeedback = 0;
+            this.phaserStages = 2;
             this.flangerDelay = 0;
             this.flangerDepth = 0;
             this.flangerRate = 0;
@@ -17439,13 +17554,17 @@ li.select2-results__option[role=group] > strong:hover {
             this.grainSize = (Config.grainSizeMax - Config.grainSizeMin) / Config.grainSizeStep;
             this.grainAmounts = Config.grainAmountsMax;
             this.grainRange = 40;
+            this.phaserFreq = 0;
+            this.phaserFeedback = 0;
+            this.phaserStages = 2;
+            this.phaserMix = Config.phaserMixRange - 1;
             this.flangerDelay = 8;
             this.flangerDepth = 12;
             this.flangerRate = 3;
             this.flangerFeedback = 13;
             this.flangerMix = 26;
             this.slideTicks = 3;
-            this.strumParts = 10;
+            this.strumParts = 1;
             this.pan = Config.panCenter;
             this.panDelay = 0;
             this.pitchShift = Config.pitchShiftCenter;
@@ -17754,6 +17873,12 @@ li.select2-results__option[role=group] > strong:hover {
                 instrumentObject["ringModWaveformIndex"] = this.ringModWaveformIndex;
                 instrumentObject["ringModPulseWidth"] = Math.round(100 * this.ringModPulseWidth / (Config.pulseWidthRange - 1));
             }
+            if (effectsIncludePhaser(this.effects)) {
+                instrumentObject["phaserMix"] = Math.round(100 * this.phaserMix / (Config.phaserMixRange - 1));
+                instrumentObject["phaserFreq"] = Math.round(100 * this.phaserFreq / (Config.phaserFreqRange - 1));
+                instrumentObject["phaserFeedback"] = Math.round(100 * this.phaserFeedback / (Config.phaserFeedbackRange - 1));
+                instrumentObject["phaserStages"] = Math.round(100 * this.phaserStages / (Config.phaserMaxStages - 1));
+            }
             if (effectsIncludeDistortion(this.effects)) {
                 instrumentObject["distortion"] = Math.round(100 * this.distortion / (Config.distortionRange - 1));
                 instrumentObject["aliases"] = this.aliases;
@@ -17963,7 +18088,7 @@ li.select2-results__option[role=group] > strong:hover {
                 for (let i = 0; i < instrumentObject["effects"].length; i++) {
                     effects = effects | (1 << Config.effectNames.indexOf(instrumentObject["effects"][i]));
                 }
-                this.effects = (effects & ((1 << 16) - 1));
+                this.effects = (effects & ((1 << 17) - 1));
             }
             else {
                 const legacyEffectsNames = ["none", "reverb", "chorus", "chorus & reverb"];
@@ -18169,6 +18294,18 @@ li.select2-results__option[role=group] > strong:hover {
             }
             if (instrumentObject["grainRange"] != undefined) {
                 this.grainRange = clamp(0, Config.grainRangeMax / Config.grainSizeStep + 1, instrumentObject["grainRange"]);
+            }
+            if (instrumentObject["phaserMix"] != undefined) {
+                this.phaserMix = clamp(0, Config.phaserMixRange, Math.round((Config.phaserMixRange - 1) * (instrumentObject["phaserMix"] | 0) / 100));
+            }
+            if (instrumentObject["phaserFreq"] != undefined) {
+                this.phaserFreq = clamp(0, Config.phaserFreqRange, Math.round((Config.phaserFreqRange - 1) * (instrumentObject["phaserFreq"] | 0) / 100));
+            }
+            if (instrumentObject["phaserFeedback"] != undefined) {
+                this.phaserFeedback = clamp(0, Config.phaserFeedbackRange, Math.round((Config.phaserFeedbackRange - 1) * (instrumentObject["phaserFeedback"] | 0) / 100));
+            }
+            if (instrumentObject["phaserStages"] != undefined) {
+                this.phaserStages = clamp(0, Config.phaserMaxStages, Math.round((Config.phaserMaxStages - 1) * (instrumentObject["phaserStages"] | 0) / 100));
             }
             if (instrumentObject["distortion"] != undefined) {
                 this.distortion = clamp(0, Config.distortionRange, Math.round((Config.distortionRange - 1) * (instrumentObject["distortion"] | 0) / 100));
@@ -19094,7 +19231,7 @@ li.select2-results__option[role=group] > strong:hover {
             this._modifiedEnvelopeIndices = [];
             this._modifiedEnvelopeCount = 0;
             this.lowpassCutoffDecayVolumeCompensation = 1.0;
-            const length = 57;
+            const length = 61;
             for (let i = 0; i < length; i++) {
                 this.envelopeStarts[i] = 1.0;
                 this.envelopeEnds[i] = 1.0;
@@ -19188,7 +19325,7 @@ li.select2-results__option[role=group] > strong:hover {
                     const noteEndTick = tone.noteEndPart * Config.ticksPerPart;
                     const noteLengthTicks = noteEndTick - noteStartTick;
                     const maximumSlideTicks = noteLengthTicks * 0.5;
-                    let slideTicks = instrument.slideTicks * 10;
+                    let slideTicks = instrument.slideTicks * 0.5;
                     slideTicks = Math.min(maximumSlideTicks, slideTicks *= instrument.slideTicks / 2);
                     if (tone.prevNote != null && !tone.forceContinueAtStart) {
                         if (tickTimeStartReal - noteStartTick < slideTicks) {
@@ -20103,6 +20240,16 @@ li.select2-results__option[role=group] > strong:hover {
             this.reverbPreDelayLineL = null;
             this.reverbPreDelayLineR = null;
             this.reverbPreDelayPos = 0;
+            this.phaserSamples = null;
+            this.phaserPrevInputs = null;
+            this.phaserFeedbackMult = 0.0;
+            this.phaserFeedbackMultDelta = 0.0;
+            this.phaserMix = 0.0;
+            this.phaserMixDelta = 0.0;
+            this.phaserBreakCoef = 0.0;
+            this.phaserBreakCoefDelta = 0.0;
+            this.phaserStages = 0;
+            this.phaserStagesDelta = 0;
             this.flangerDelayLineL = null;
             this.flangerDelayLineR = null;
             this.flangerDelayPos = 0;
@@ -20162,6 +20309,12 @@ li.select2-results__option[role=group] > strong:hover {
                 }
                 if (this.reverbPreDelayLineR == null) {
                     this.reverbPreDelayLineR = new Float32Array(Config.reverbPreDelayBufferSize);
+                }
+            }
+            if (effectsIncludePhaser(instrument.effects)) {
+                if (this.phaserSamples == null) {
+                    this.phaserSamples = new Float32Array(Config.phaserMaxStages);
+                    this.phaserPrevInputs = new Float32Array(Config.phaserMaxStages);
                 }
             }
             if (effectsIncludeGranular(instrument.effects)) {
@@ -20238,6 +20391,12 @@ li.select2-results__option[role=group] > strong:hover {
             this.reverbShelfPrevInput2 = 0.0;
             this.reverbShelfPrevInput3 = 0.0;
             this.reverbDelay = 0.0;
+            if (this.phaserSamples != null)
+                for (let i = 0; i < this.phaserSamples.length; i++)
+                    this.phaserSamples[i] = 0.0;
+            if (this.phaserPrevInputs != null)
+                for (let i = 0; i < this.phaserPrevInputs.length; i++)
+                    this.phaserPrevInputs[i] = 0.0;
             this.flangerDelayPos = 0;
             this.flangerPhase = 0;
             if (this.flangerDelayLineL != null) {
@@ -20335,6 +20494,7 @@ li.select2-results__option[role=group] > strong:hover {
             const usesChorus = effectsIncludeChorus(this.effects);
             const usesEcho = effectsIncludeEcho(this.effects);
             const usesReverb = effectsIncludeReverb(this.effects);
+            const usesPhaser = effectsIncludePhaser(this.effects);
             const usesFlanger = effectsIncludeFlanger(this.effects);
             let granularChance = 0;
             if (usesGranular) {
@@ -20681,6 +20841,64 @@ li.select2-results__option[role=group] > strong:hover {
                 this.echoShelfB1 = Synth.tempFilterStartCoefficients.b[1];
             }
             let maxReverbMult = 0.0;
+            if (usesPhaser) {
+                const phaserMinFeedback = 0.0;
+                const phaserMaxFeedback = 0.95;
+                const phaserFeedbackMultSlider = instrument.phaserFeedback / Config.phaserFeedbackRange;
+                const phaserFeedbackMultEnvelopeStart = envelopeStarts[59];
+                const phaserFeedbackMultEnvelopeEnd = envelopeEnds[59];
+                let phaserFeedbackMultRawStart = phaserFeedbackMultSlider * phaserFeedbackMultEnvelopeStart;
+                let phaserFeedbackMultRawEnd = phaserFeedbackMultSlider * phaserFeedbackMultEnvelopeEnd;
+                if (synth.isModActive(Config.modulators.dictionary["phaser feedback"].index, channelIndex, instrumentIndex)) {
+                    phaserFeedbackMultRawStart = synth.getModValue(Config.modulators.dictionary["phaser feedback"].index, channelIndex, instrumentIndex, false) / (Config.phaserFeedbackRange);
+                    phaserFeedbackMultRawEnd = synth.getModValue(Config.modulators.dictionary["phaser feedback"].index, channelIndex, instrumentIndex, true) / (Config.phaserFeedbackRange);
+                }
+                const phaserFeedbackMultStart = Math.max(phaserMinFeedback, Math.min(phaserMaxFeedback, phaserFeedbackMultRawStart));
+                const phaserFeedbackMultEnd = Math.max(phaserMinFeedback, Math.min(phaserMaxFeedback, phaserFeedbackMultRawEnd));
+                this.phaserFeedbackMult = phaserFeedbackMultStart;
+                this.phaserFeedbackMultDelta = (phaserFeedbackMultEnd - phaserFeedbackMultStart) / roundedSamplesPerTick;
+                const phaserMixSlider = instrument.phaserMix / (Config.phaserMixRange - 1);
+                const phaserMixEnvelopeStart = envelopeStarts[58];
+                const phaserMixEnvelopeEnd = envelopeEnds[58];
+                let phaserMixStart = phaserMixSlider * phaserMixEnvelopeStart;
+                let phaserMixEnd = phaserMixSlider * phaserMixEnvelopeEnd;
+                if (synth.isModActive(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex)) {
+                    phaserMixStart = Math.max(0, Math.min(Config.phaserMixRange - 1, synth.getModValue(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex, false))) / (Config.phaserMixRange - 1);
+                    phaserMixEnd = Math.max(0, Math.min(Config.phaserMixRange - 1, synth.getModValue(Config.modulators.dictionary["phaser"].index, channelIndex, instrumentIndex, true))) / (Config.phaserMixRange - 1);
+                }
+                this.phaserMix = phaserMixStart;
+                this.phaserMixDelta = (phaserMixEnd - phaserMixStart) / roundedSamplesPerTick;
+                const phaserBreakFreqSlider = instrument.phaserFreq / (Config.phaserFreqRange - 1);
+                let phaserBreakFreqEnvelopeStart = envelopeStarts[57];
+                let phaserBreakFreqEnvelopeEnd = envelopeEnds[57];
+                let phaserBreakFreqRawStart = phaserBreakFreqSlider * phaserBreakFreqEnvelopeStart;
+                let phaserBreakFreqRawEnd = phaserBreakFreqSlider * phaserBreakFreqEnvelopeEnd;
+                if (synth.isModActive(Config.modulators.dictionary["phaser frequency"].index, channelIndex, instrumentIndex)) {
+                    phaserBreakFreqRawStart = synth.getModValue(Config.modulators.dictionary["phaser frequency"].index, channelIndex, instrumentIndex, false) / (Config.phaserFreqRange);
+                    phaserBreakFreqRawEnd = synth.getModValue(Config.modulators.dictionary["phaser frequency"].index, channelIndex, instrumentIndex, true) / (Config.phaserFreqRange);
+                }
+                const phaserBreakFreqRemappedStart = Config.phaserMinFreq * Math.pow(Config.phaserMaxFreq / Config.phaserMinFreq, phaserBreakFreqRawStart);
+                const phaserBreakFreqRemappedEnd = Config.phaserMinFreq * Math.pow(Config.phaserMaxFreq / Config.phaserMinFreq, phaserBreakFreqRawEnd);
+                const phaserBreakFreqStart = Math.max(Config.phaserMinFreq, Math.min(Config.phaserMaxFreq, phaserBreakFreqRemappedStart));
+                const phaserBreakFreqStartT = Math.tan(Math.PI * phaserBreakFreqStart / samplesPerSecond);
+                const phaserBreakCoefStart = (phaserBreakFreqStartT - 1) / (phaserBreakFreqStartT + 1);
+                const phaserBreakFreqEnd = Math.max(Config.phaserMinFreq, Math.min(Config.phaserMaxFreq, phaserBreakFreqRemappedEnd));
+                const phaserBreakFreqEndT = Math.tan(Math.PI * phaserBreakFreqEnd / samplesPerSecond);
+                const phaserBreakCoefEnd = (phaserBreakFreqEndT - 1) / (phaserBreakFreqEndT + 1);
+                this.phaserBreakCoef = phaserBreakCoefStart;
+                this.phaserBreakCoefDelta = (phaserBreakCoefEnd - phaserBreakCoefStart) / roundedSamplesPerTick;
+                const phaserStagesEnvelopeStart = envelopeStarts[60];
+                const phaserStagesEnvelopeEnd = envelopeEnds[60];
+                const phaserStagesSlider = instrument.phaserStages;
+                let phaserStagesStart = Math.max(Config.phaserMinStages, Math.min(Config.phaserMaxStages, phaserStagesSlider * phaserStagesEnvelopeStart));
+                let phaserStagesEnd = Math.max(Config.phaserMinStages, Math.min(Config.phaserMaxStages, phaserStagesSlider * phaserStagesEnvelopeEnd));
+                if (synth.isModActive(Config.modulators.dictionary["phaser stages"].index, channelIndex, instrumentIndex)) {
+                    phaserStagesStart = Math.round(synth.getModValue(Config.modulators.dictionary["phaser stages"].index, channelIndex, instrumentIndex, false));
+                    phaserStagesEnd = Math.round(synth.getModValue(Config.modulators.dictionary["phaser stages"].index, channelIndex, instrumentIndex, false));
+                }
+                this.phaserStages = phaserStagesStart;
+                this.phaserStagesDelta = (phaserStagesEnd - phaserStagesStart) / roundedSamplesPerTick;
+            }
             if (usesFlanger) {
                 this.flangerDelay = (instrument.flangerDelay / (Config.flangerDelayRange - 1)) * 0.010;
                 this.flangerDepth = instrument.flangerDepth;
@@ -21266,6 +21484,7 @@ li.select2-results__option[role=group] > strong:hover {
         constructor(string) {
             this.titleNotifier = [];
             this.scaleCustom = [];
+            this.loopType = 1;
             this.channels = [];
             this.limitDecay = 4.0;
             this.limitRise = 4000.0;
@@ -21497,7 +21716,8 @@ li.select2-results__option[role=group] > strong:hover {
             this.octave = 0;
             this.loopStart = 0;
             this.loopLength = 4;
-            this.tempo = 111;
+            this.tempo = 110;
+            this.loopType = 1;
             this.reverb = 0;
             this.beatsPerBar = 8;
             this.barCount = 16;
@@ -21511,6 +21731,9 @@ li.select2-results__option[role=group] > strong:hover {
                 this.eqSubFilters[i] = null;
             }
             this.title = "Unnamed";
+            this.author = "";
+            this.description = "";
+            this.showSongDetails = false;
             this.titleNotifier.forEach(o => o());
             if (andResetChannels) {
                 this.pitchChannelCount = 3;
@@ -21559,6 +21782,17 @@ li.select2-results__option[role=group] > strong:hover {
             for (let i = 0; i < encodedSongTitle.length; i++) {
                 buffer.push(encodedSongTitle.charCodeAt(i));
             }
+            var encodedAuthorTitle = encodeURIComponent(this.author);
+            buffer.push(base64IntToCharCode[encodedAuthorTitle.length >> 6], base64IntToCharCode[encodedAuthorTitle.length & 0x3f]);
+            for (let i = 0; i < encodedAuthorTitle.length; i++) {
+                buffer.push(encodedAuthorTitle.charCodeAt(i));
+            }
+            var encodedDescriptionTitle = encodeURIComponent(this.description);
+            buffer.push(base64IntToCharCode[encodedDescriptionTitle.length >> 6], base64IntToCharCode[encodedDescriptionTitle.length & 0x3f]);
+            for (let i = 0; i < encodedDescriptionTitle.length; i++) {
+                buffer.push(encodedDescriptionTitle.charCodeAt(i));
+            }
+            buffer.push(base64IntToCharCode[this.showSongDetails ? 1 : 0]);
             buffer.push(110, base64IntToCharCode[this.pitchChannelCount], base64IntToCharCode[this.noiseChannelCount], base64IntToCharCode[this.modChannelCount]);
             buffer.push(115, base64IntToCharCode[this.scale]);
             if (this.scale == Config.scales["dictionary"]["Custom"].index) {
@@ -21575,6 +21809,7 @@ li.select2-results__option[role=group] > strong:hover {
             buffer.push(106, base64IntToCharCode[(this.patternsPerChannel - 1) >> 6], base64IntToCharCode[(this.patternsPerChannel - 1) & 0x3f]);
             buffer.push(114, base64IntToCharCode[this.rhythm]);
             buffer.push(74, base64IntToCharCode[this.rhythmEnabled ? 1 : 0]);
+            buffer.push(75, base64IntToCharCode[this.loopType]);
             buffer.push(79);
             if (this.compressionRatio != 1.0 || this.limitRatio != 1.0 || this.limitRise != 4000.0 || this.limitDecay != 4.0 || this.limitThreshold != 1.0 || this.compressionThreshold != 1.0 || this.masterGain != 1.0) {
                 buffer.push(base64IntToCharCode[Math.round(this.compressionRatio < 1 ? this.compressionRatio * 10 : 10 + (this.compressionRatio - 1) * 60)]);
@@ -21781,6 +22016,12 @@ li.select2-results__option[role=group] > strong:hover {
                         buffer.push(base64IntToCharCode[instrument.ringModWaveformIndex]);
                         buffer.push(base64IntToCharCode[(instrument.ringModPulseWidth)]);
                         buffer.push(base64IntToCharCode[(instrument.ringModHzOffset - Config.rmHzOffsetMin) >> 6], base64IntToCharCode[(instrument.ringModHzOffset - Config.rmHzOffsetMin) & 0x3F]);
+                    }
+                    if (effectsIncludePhaser(instrument.effects)) {
+                        buffer.push(base64IntToCharCode[instrument.phaserFreq]);
+                        buffer.push(base64IntToCharCode[instrument.phaserFeedback]);
+                        buffer.push(base64IntToCharCode[instrument.phaserStages]);
+                        buffer.push(base64IntToCharCode[instrument.phaserMix]);
                     }
                     if (instrument.type != 4) {
                         buffer.push(100, base64IntToCharCode[instrument.fadeIn], base64IntToCharCode[instrument.fadeOut]);
@@ -22374,6 +22615,15 @@ li.select2-results__option[role=group] > strong:hover {
                             this.title = decodeURIComponent(compressed.substring(charIndex, charIndex + songNameLength));
                             this.titleNotifier.forEach(o => o());
                             charIndex += songNameLength;
+                            if ((fromUltraBox && !beforeSix) || (from41Box && !beforeFour)) {
+                                var songAuthorLength = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                                this.author = decodeURIComponent(compressed.substring(charIndex, charIndex + songAuthorLength));
+                                charIndex += songAuthorLength;
+                                var songDescriptionLength = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                                this.description = decodeURIComponent(compressed.substring(charIndex, charIndex + songDescriptionLength));
+                                charIndex += songDescriptionLength;
+                                this.showSongDetails = base64CharCodeToInt[compressed.charCodeAt(charIndex++)] == 1;
+                            }
                         }
                         break;
                     case 110:
@@ -22478,6 +22728,11 @@ li.select2-results__option[role=group] > strong:hover {
                                 this.tempo = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) | (base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                             }
                             this.tempo = clamp(Config.tempoMin, Config.tempoMax + 1, this.tempo);
+                        }
+                        break;
+                    case 75:
+                        {
+                            this.loopType = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
                         }
                         break;
                     case 109:
@@ -23308,7 +23563,7 @@ li.select2-results__option[role=group] > strong:hover {
                         {
                             const instrument = this.channels[instrumentChannelIterator].instruments[instrumentIndexIterator];
                             if ((beforeNine && fromBeepBox) || ((fromJummBox && beforeFive) || (beforeFour && fromGoldBox))) {
-                                instrument.effects = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] & ((1 << 16) - 1));
+                                instrument.effects = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] & ((1 << 17) - 1));
                                 if (legacyGlobalReverb == 0 && !((fromJummBox && beforeFive) || (beforeFour && fromGoldBox))) {
                                     instrument.effects &= ~(1 << 0);
                                 }
@@ -23504,8 +23759,14 @@ li.select2-results__option[role=group] > strong:hover {
                                     instrument.ringModPulseWidth = clamp(0, Config.pulseWidthRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                                     instrument.ringModHzOffset = clamp(Config.rmHzOffsetMin, Config.rmHzOffsetMax + 1, (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                                 }
+                                if (effectsIncludePhaser(instrument.effects) && !beforeFour) {
+                                    instrument.phaserFreq = clamp(0, Config.phaserFreqRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                                    instrument.phaserFeedback = clamp(0, Config.phaserFeedbackRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                                    instrument.phaserStages = clamp(0, Config.phaserMaxStages + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                                    instrument.phaserMix = clamp(0, Config.phaserMixRange, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                                }
                             }
-                            instrument.effects &= (1 << 16) - 1;
+                            instrument.effects &= (1 << 17) - 1;
                         }
                         break;
                     case 118:
@@ -24145,7 +24406,7 @@ li.select2-results__option[role=group] > strong:hover {
                                                     songReverbIndex = mod;
                                                 }
                                             }
-                                            if (jumfive && Config.modulators[instrument.modulators[mod]].associatedEffect != 16) {
+                                            if (jumfive && Config.modulators[instrument.modulators[mod]].associatedEffect != 17) {
                                                 this.channels[instrument.modChannels[mod]].instruments[instrument.modInstruments[mod]].effects |= 1 << Config.modulators[instrument.modulators[mod]].associatedEffect;
                                             }
                                         }
@@ -24763,10 +25024,14 @@ li.select2-results__option[role=group] > strong:hover {
                 "name": this.title,
                 "format": Song._format,
                 "version": Song._latest41BoxVersion,
+                "author": this.author,
+                "description": this.description,
+                "showSongDetails": this.showSongDetails,
                 "scale": Config.scales[this.scale].name,
                 "customScale": this.scaleCustom,
                 "key": Config.keys[this.key].name,
                 "keyOctave": this.octave,
+                "loopType": this.loopType,
                 "introBars": this.loopStart,
                 "loopBars": this.loopLength,
                 "beatsPerBar": this.beatsPerBar,
@@ -24810,6 +25075,15 @@ li.select2-results__option[role=group] > strong:hover {
             const format = (jsonFormat == "auto" ? jsonObject["format"] : jsonFormat).toLowerCase();
             if (jsonObject["name"] != undefined) {
                 this.title = jsonObject["name"];
+            }
+            if (jsonObject["author"] != undefined) {
+                this.author = jsonObject["author"];
+            }
+            if (jsonObject["description"] != undefined) {
+                this.description = jsonObject["description"];
+            }
+            if (jsonObject["showSongDetails"] != undefined) {
+                this.showSongDetails = jsonObject["showSongDetails"];
             }
             if (jsonObject["customSamples"] != undefined) {
                 const customSamples = jsonObject["customSamples"];
@@ -25153,6 +25427,9 @@ li.select2-results__option[role=group] > strong:hover {
             }
             if (jsonObject["beatsPerMinute"] != undefined) {
                 this.tempo = clamp(Config.tempoMin, Config.tempoMax + 1, jsonObject["beatsPerMinute"] | 0);
+            }
+            if (jsonObject["loopType"] != undefined) {
+                this.loopType = jsonObject["loopType"] | 0;
             }
             if (jsonObject["keyOctave"] != undefined) {
                 this.octave = clamp(Config.octaveMin, Config.octaveMax + 1, jsonObject["keyOctave"] | 0);
@@ -25760,7 +26037,7 @@ li.select2-results__option[role=group] > strong:hover {
                     if (tgtInstrument == null)
                         continue;
                     const str = Config.modulators[instrument.modulators[mod]].name;
-                    if (!((Config.modulators[instrument.modulators[mod]].associatedEffect != 16 && !(tgtInstrument.effects & (1 << Config.modulators[instrument.modulators[mod]].associatedEffect)))
+                    if (!((Config.modulators[instrument.modulators[mod]].associatedEffect != 17 && !(tgtInstrument.effects & (1 << Config.modulators[instrument.modulators[mod]].associatedEffect)))
                         || ((tgtInstrument.type != 1 && tgtInstrument.type != 11) && (str == "fm slider 1" || str == "fm slider 2" || str == "fm slider 3" || str == "fm slider 4" || str == "fm feedback"))
                         || tgtInstrument.type != 11 && (str == "fm slider 5" || str == "fm slider 6")
                         || ((tgtInstrument.type != 6 && tgtInstrument.type != 8) && (str == "pulse width" || str == "decimal offset"))
@@ -27421,7 +27698,7 @@ li.select2-results__option[role=group] > strong:hover {
                                 }
                                 if ((!transition.continues && !forceContinueAtStart) || prevNoteForThisTone == null) {
                                     if (useStrumSpeed)
-                                        strumOffsetParts += instrument.strumParts;
+                                        strumOffsetParts += instrument.strumParts * 10;
                                 }
                                 const atNoteStart = (Config.ticksPerPart * noteStartPart == currentTick);
                                 let tone;
@@ -29264,6 +29541,7 @@ li.select2-results__option[role=group] > strong:hover {
             const usesReverb = effectsIncludeReverb(instrumentState.effects);
             const usesGranular = effectsIncludeGranular(instrumentState.effects);
             const usesRingModulation = effectsIncludeRingModulation(instrumentState.effects);
+            const usesPhaser = effectsIncludePhaser(instrumentState.effects);
             const usesFlanger = effectsIncludeFlanger(instrumentState.effects);
             let signature = 0;
             if (usesDistortion)
@@ -29291,6 +29569,9 @@ li.select2-results__option[role=group] > strong:hover {
                 signature = signature | 1;
             signature = signature << 1;
             if (usesRingModulation)
+                signature = signature | 1;
+            signature = signature << 1;
+            if (usesPhaser)
                 signature = signature | 1;
             signature = signature << 1;
             if (usesFlanger)
@@ -29388,6 +29669,22 @@ li.select2-results__option[role=group] > strong:hover {
                     waveform = Synth.getOperatorWave(ringModWaveformIndex, ringModPulseWidth).samples;
                 }
                 const waveformLength = waveform.length - 1;
+                `;
+                }
+                if (usesPhaser) {
+                    effectsSource += `
+                
+                const phaserSamples = instrumentState.phaserSamples;
+                const phaserPrevInputs = instrumentState.phaserPrevInputs;
+                let phaserStages = instrumentState.phaserStages;
+                let phaserStagesInt = Math.floor(phaserStages);
+                const phaserStagesDelta = instrumentState.phaserStagesDelta;
+                const phaserFeedbackMultDelta = +instrumentState.phaserFeedbackMultDelta;
+                let phaserFeedbackMult = +instrumentState.phaserFeedbackMult;
+                const phaserMixDelta = +instrumentState.phaserMixDelta;
+                let phaserMix = +instrumentState.phaserMix;
+                const phaserBreakCoefDelta = +instrumentState.phaserBreakCoefDelta;
+                let phaserBreakCoef = +instrumentState.phaserBreakCoef;
                 `;
                 }
                 if (usesEqFilter) {
@@ -29692,6 +29989,26 @@ li.select2-results__option[role=group] > strong:hover {
                 ringModMixFade += ringModMixFadeDelta;
                 `;
                 }
+                if (usesPhaser) {
+                    effectsSource += `
+                        const phaserFeedback = phaserSamples[Math.max(0,phaserStagesInt - 1)] * phaserFeedbackMult;
+                        for (let stage = 0; stage < phaserStagesInt; stage++) {
+                            const phaserInput = stage === 0 ? sample + phaserFeedback : phaserSamples[stage - 1];
+                            const phaserPrevInput = phaserPrevInputs[stage];
+                            const phaserSample = phaserSamples[stage];
+                            const phaserNextOutput = phaserBreakCoef * phaserInput + phaserPrevInput - phaserBreakCoef * phaserSample;
+                            phaserPrevInputs[stage] = phaserInput;
+                            phaserSamples[stage] = phaserNextOutput;
+                        }
+                        const phaserOutput = phaserSamples[Math.max(0,phaserStagesInt - 1)];
+                        sample = sample + phaserOutput * phaserMix;
+                        phaserFeedbackMult += phaserFeedbackMultDelta;
+                        phaserBreakCoef += phaserBreakCoefDelta;
+                        phaserMix += phaserMixDelta;
+                        phaserStages += phaserStagesDelta;
+                        /*phaserStagesInt = Math.floor(phaserStages);*/
+                    `;
+                }
                 if (usesEqFilter) {
                     effectsSource += `
 					
@@ -29963,6 +30280,19 @@ li.select2-results__option[role=group] > strong:hover {
                 instrumentState.ringModPulseWidth = ringModPulseWidth;
                 instrumentState.ringModMixFade = ringModMixFade;
                  `;
+                }
+                if (usesPhaser) {
+                    effectsSource += `
+                
+                for (let stage = 0; stage < phaserStages; stage++) {
+                    if (!Number.isFinite(phaserPrevInputs[stage]) || Math.abs(phaserPrevInputs[stage]) < epsilon) phaserPrevInputs[stage] = 0.0;
+                    if (!Number.isFinite(phaserSamples[stage]) || Math.abs(phaserSamples[stage]) < epsilon) phaserSamples[stage] = 0.0;
+                }
+                
+                instrumentState.phaserMix = phaserMix;
+                instrumentState.phaserFeedbackMult = phaserFeedbackMult;
+                instrumentState.phaserBreakCoef = phaserBreakCoef;
+                `;
                 }
                 if (usesEqFilter) {
                     effectsSource += `
@@ -32305,6 +32635,7 @@ li.select2-results__option[role=group] > strong:hover {
             this.closePromptByClickoff = window.localStorage.getItem("closePromptByClickoff") == "true";
             this.frostedGlassBackground = window.localStorage.getItem("frostedGlassBackground") == "true";
             this.oldModNotes = window.localStorage.getItem("oldModNotes") == "true";
+            this.promptSongDetails = window.localStorage.getItem("promptSongDetails") != "false";
             this.keyboardLayout = window.localStorage.getItem("keyboardLayout") || "pianoTransposingC";
             this.bassOffset = (+window.localStorage.getItem("bassOffset")) || 0;
             this.layout = window.localStorage.getItem("layout") || "wide long";
@@ -32362,6 +32693,7 @@ li.select2-results__option[role=group] > strong:hover {
             window.localStorage.setItem("closePromptByClickoff", this.closePromptByClickoff ? "true" : "false");
             window.localStorage.setItem("frostedGlassBackground", this.frostedGlassBackground ? "true" : "false");
             window.localStorage.setItem("oldModNotes", this.oldModNotes ? "true" : "false");
+            window.localStorage.setItem("promptSongDetails", this.promptSongDetails ? "true" : "false");
             window.localStorage.setItem("keyboardLayout", this.keyboardLayout);
             window.localStorage.setItem("bassOffset", String(this.bassOffset));
             window.localStorage.setItem("layout", this.layout);
@@ -36907,6 +37239,42 @@ li.select2-results__option[role=group] > strong:hover {
                 this._didSomething();
         }
     }
+    class ChangePhaserMix extends ChangeInstrumentSlider {
+        constructor(doc, oldValue, newValue) {
+            super(doc);
+            this._instrument.phaserMix = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
+    class ChangePhaserFreq extends ChangeInstrumentSlider {
+        constructor(doc, oldValue, newValue) {
+            super(doc);
+            this._instrument.phaserFreq = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
+    class ChangePhaserFeedback extends ChangeInstrumentSlider {
+        constructor(doc, oldValue, newValue) {
+            super(doc);
+            this._instrument.phaserFeedback = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
+    class ChangePhaserStages extends ChangeInstrumentSlider {
+        constructor(doc, oldValue, newValue) {
+            super(doc);
+            this._instrument.phaserStages = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
     class ChangeChorus extends ChangeInstrumentSlider {
         constructor(doc, oldValue, newValue) {
             super(doc);
@@ -37441,6 +37809,54 @@ li.select2-results__option[role=group] > strong:hover {
             }
             doc.song.title = newValue;
             document.title = newValue + " - " + EditorConfig.versionDisplayName;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
+    class ChangeSongAuthor extends Change {
+        constructor(doc, oldValue, newValue) {
+            super();
+            if (newValue.length > 30) {
+                newValue = newValue.substring(0, 30);
+            }
+            doc.song.author = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
+    class ChangeSongDescription extends Change {
+        constructor(doc, oldValue, newValue) {
+            super();
+            if (newValue.length > 1200) {
+                newValue = newValue.substring(0, 1200);
+            }
+            doc.song.description = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
+    class ChangeShowSongDetails extends Change {
+        constructor(doc, oldValue, newValue) {
+            super();
+            doc.song.showSongDetails = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
+    class ChangeLoopType extends Change {
+        constructor(doc, oldValue, newValue) {
+            super();
+            if (newValue < 3) {
+                newValue++;
+            }
+            else {
+                newValue = 1;
+            }
+            doc.song.loopType = newValue;
             doc.notifier.changed();
             if (oldValue != newValue)
                 this._didSomething();
@@ -40023,6 +40439,12 @@ li.select2-results__option[role=group] > strong:hover {
             const visibleOctaveCount = this.getVisibleOctaveCount();
             return Math.max(0, Math.min(Config.pitchOctaves - visibleOctaveCount, Math.ceil(this.song.channels[channel].octave - visibleOctaveCount * 0.5)));
         }
+        samplesToTime(samples) {
+            const rawSeconds = Math.round(samples / this.synth.samplesPerSecond);
+            const seconds = rawSeconds % 60;
+            const minutes = Math.floor(rawSeconds / 60);
+            return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+        }
     }
     SongDocument._maximumUndoHistory = 300;
 
@@ -40203,7 +40625,7 @@ li.select2-results__option[role=group] > strong:hover {
         return Math.pow(volumeMult, 0.25) * 127;
     }
 
-    const { button: button$q, div: div$q, h2: h2$p, input: input$i, select: select$d, option: option$d } = HTML;
+    const { button: button$r, div: div$r, h2: h2$q, input: input$j, select: select$d, option: option$d } = HTML;
     function lerp(low, high, t) {
         return low + t * (high - low);
     }
@@ -40231,21 +40653,21 @@ li.select2-results__option[role=group] > strong:hover {
         constructor(_doc) {
             this._doc = _doc;
             this.outputStarted = false;
-            this._fileName = input$i({ type: "text", style: "width: 10em;", value: Config.jsonFormat + "_song", maxlength: 250, "autofocus": "autofocus" });
-            this._computedSamplesLabel = div$q({ style: "width: 10em;" }, new Text("0:00"));
-            this._enableIntro = input$i({ type: "checkbox" });
-            this._loopDropDown = input$i({ style: "width: 2em;", type: "number", min: "1", max: "4", step: "1" });
-            this._enableOutro = input$i({ type: "checkbox" });
+            this._fileName = input$j({ type: "text", style: "width: 10em;", value: Config.jsonFormat + "_song", maxlength: 250, "autofocus": "autofocus" });
+            this._computedSamplesLabel = div$r({ style: "width: 10em;" }, new Text("0:00"));
+            this._enableIntro = input$j({ type: "checkbox" });
+            this._loopDropDown = input$j({ style: "width: 2em;", type: "number", min: "1", max: "4", step: "1" });
+            this._enableOutro = input$j({ type: "checkbox" });
             this._formatSelect = select$d({ style: "width: 100%;" }, option$d({ value: "wav" }, "Export as .wav"), option$d({ value: "mp3" }, "Export as .mp3"), option$d({ value: "midi" }, "Export as .mid"), option$d({ value: "json" }, "Export as .json"), option$d({ value: "html" }, "Export as .html"));
-            this._removeWhitespace = input$i({ type: "checkbox" });
-            this._removeWhitespaceDiv = div$q({ style: "vertical-align: middle; align-items: center; justify-content: space-between; margin-bottom: 14px;" }, "Remove Whitespace: ", this._removeWhitespace);
-            this._cancelButton = button$q({ class: "cancelButton" });
-            this._exportButton = button$q({ class: "exportButton", style: "width:45%;" }, "Save");
-            this._outputProgressBar = div$q({ style: `width: 0%; background: ${ColorConfig.loopAccent}; height: 100%; position: absolute; z-index: 2;` });
-            this._outputProgressLabel = div$q({ style: `position: relative; top: -1px; z-index: 3;` }, "0%");
-            this._outputProgressContainer = div$q({ style: `height: 12px; background: ${ColorConfig.uiWidgetBackground}; display: block; position: relative; z-index: 1; margin-bottom: 14px;` }, this._outputProgressBar, this._outputProgressLabel);
-            this._exportPrompt = div$q({}, div$q({ class: "promptTitle", style: "margin-bottom: 14px;" }, h2$p({ class: "exportExt", style: "text-align: inherit;" }, ""), h2$p({ class: "exportTitle" }, "Save Options")), div$q({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 14px;" }, "File name:", this._fileName), div$q({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 14px;" }, "Length:", this._computedSamplesLabel), div$q({ style: "display: table; width: 100%; margin-bottom: 14px;" }, div$q({ style: "display: table-row;" }, div$q({ style: "display: table-cell;" }, "Intro:"), div$q({ style: "display: table-cell;" }, "Loop Count:"), div$q({ style: "display: table-cell;" }, "Outro:")), div$q({ style: "display: table-row; margin-bottom: 14px;" }, div$q({ style: "display: table-cell; vertical-align: middle;" }, this._enableIntro), div$q({ style: "display: table-cell; vertical-align: middle;" }, this._loopDropDown), div$q({ style: "display: table-cell; vertical-align: middle;" }, this._enableOutro))), div$q({ class: "selectContainer", style: "width: 100%; margin-bottom: 14px;" }, this._formatSelect), this._removeWhitespaceDiv, div$q({ style: "text-align: left; margin-bottom: 14px;" }, "Exporting can be slow. Reloading the page or clicking the X will cancel it. Please be patient."), this._outputProgressContainer, div$q({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between; margin-bottom: 14px;" }, this._exportButton), this._cancelButton);
-            this.container = div$q({ class: "prompt noSelection", style: "width: 200px;" }, this._exportPrompt);
+            this._removeWhitespace = input$j({ type: "checkbox" });
+            this._removeWhitespaceDiv = div$r({ style: "vertical-align: middle; align-items: center; justify-content: space-between; margin-bottom: 14px;" }, "Remove Whitespace: ", this._removeWhitespace);
+            this._cancelButton = button$r({ class: "cancelButton" });
+            this._exportButton = button$r({ class: "exportButton", style: "width:45%;" }, "Save");
+            this._outputProgressBar = div$r({ style: `width: 0%; background: ${ColorConfig.loopAccent}; height: 100%; position: absolute; z-index: 2;` });
+            this._outputProgressLabel = div$r({ style: `position: relative; top: -1px; z-index: 3;` }, "0%");
+            this._outputProgressContainer = div$r({ style: `height: 12px; background: ${ColorConfig.uiWidgetBackground}; display: block; position: relative; z-index: 1; margin-bottom: 14px;` }, this._outputProgressBar, this._outputProgressLabel);
+            this._exportPrompt = div$r({}, div$r({ class: "promptTitle", style: "margin-bottom: 14px;" }, h2$q({ class: "exportExt", style: "text-align: inherit;" }, ""), h2$q({ class: "exportTitle" }, "Save Options")), div$r({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 14px;" }, "File name:", this._fileName), div$r({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 14px;" }, "Length:", this._computedSamplesLabel), div$r({ style: "display: table; width: 100%; margin-bottom: 14px;" }, div$r({ style: "display: table-row;" }, div$r({ style: "display: table-cell;" }, "Intro:"), div$r({ style: "display: table-cell;" }, "Loop Count:"), div$r({ style: "display: table-cell;" }, "Outro:")), div$r({ style: "display: table-row; margin-bottom: 14px;" }, div$r({ style: "display: table-cell; vertical-align: middle;" }, this._enableIntro), div$r({ style: "display: table-cell; vertical-align: middle;" }, this._loopDropDown), div$r({ style: "display: table-cell; vertical-align: middle;" }, this._enableOutro))), div$r({ class: "selectContainer", style: "width: 100%; margin-bottom: 14px;" }, this._formatSelect), this._removeWhitespaceDiv, div$r({ style: "text-align: left; margin-bottom: 14px;" }, "Exporting can be slow. Reloading the page or clicking the X will cancel it. Please be patient."), this._outputProgressContainer, div$r({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between; margin-bottom: 14px;" }, this._exportButton), this._cancelButton);
+            this.container = div$r({ class: "prompt noSelection", style: "width: 200px;" }, this._exportPrompt);
             this._close = () => {
                 if (this.synth != null)
                     this.synth.renderingSong = false;
@@ -40961,16 +41383,16 @@ You should be redirected to the song at:<br /><br />
         0x51,
     ];
 
-    const { button: button$p, div: div$p, span: span$7, h2: h2$o, input: input$h, br: br$4, select: select$c, option: option$c } = HTML;
+    const { button: button$q, div: div$q, span: span$8, h2: h2$p, input: input$i, br: br$5, select: select$c, option: option$c } = HTML;
     class BeatsPerBarPrompt {
         constructor(_doc) {
             this._doc = _doc;
-            this._computedSamplesLabel = div$p({ style: "width: 10em;" }, new Text("0:00"));
-            this._beatsStepper = input$h({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
+            this._computedSamplesLabel = div$q({ style: "width: 10em;" }, new Text("0:00"));
+            this._beatsStepper = input$i({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
             this._conversionStrategySelect = select$c({ style: "width: 100%;" }, option$c({ value: "splice" }, "Splice beats at end of bars."), option$c({ value: "stretch" }, "Stretch notes to fit in bars."), option$c({ value: "overflow" }, "Overflow notes across bars."));
-            this._cancelButton = button$p({ class: "cancelButton" });
-            this._okayButton = button$p({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this.container = div$p({ class: "prompt noSelection", style: "width: 250px;" }, h2$o("Beats Per Bar"), div$p({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" }, "Length:", this._computedSamplesLabel), div$p({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$p({ style: "text-align: right;" }, "Beats per bar:", br$4(), span$7({ style: "font-size: smaller; color: ${ColorConfig.secondaryText};" }, "(Multiples of 3 or 4 are recommended)")), this._beatsStepper), div$p({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$p({ class: "selectContainer", style: "width: 100%;" }, this._conversionStrategySelect)), div$p({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._cancelButton = button$q({ class: "cancelButton" });
+            this._okayButton = button$q({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this.container = div$q({ class: "prompt noSelection", style: "width: 250px;" }, h2$p("Beats Per Bar"), div$q({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" }, "Length:", this._computedSamplesLabel), div$q({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$q({ style: "text-align: right;" }, "Beats per bar:", br$5(), span$8({ style: "font-size: smaller; color: ${ColorConfig.secondaryText};" }, "(Multiples of 3 or 4 are recommended)")), this._beatsStepper), div$q({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$q({ class: "selectContainer", style: "width: 100%;" }, this._conversionStrategySelect)), div$q({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -41033,19 +41455,19 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$o, div: div$o, label: label$4, br: br$3, h2: h2$n, input: input$g } = HTML;
+    const { button: button$p, div: div$p, label: label$4, br: br$4, h2: h2$o, input: input$h } = HTML;
     class ChannelSettingsPrompt {
         constructor(_doc) {
             this._doc = _doc;
-            this._patternsStepper = input$g({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
-            this._pitchChannelStepper = input$g({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
-            this._drumChannelStepper = input$g({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
-            this._modChannelStepper = input$g({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
-            this._layeredInstrumentsBox = input$g({ style: "width: 3em; margin-left: 1em;", type: "checkbox" });
-            this._patternInstrumentsBox = input$g({ style: "width: 3em; margin-left: 1em;", type: "checkbox" });
-            this._cancelButton = button$o({ class: "cancelButton" });
-            this._okayButton = button$o({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this.container = div$o({ class: "prompt noSelection", style: "width: 250px; text-align: right;" }, h2$n("Channel Settings"), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Pitch channels:", this._pitchChannelStepper), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Drum channels:", this._drumChannelStepper), div$o({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Mod channels:", this._modChannelStepper), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Available patterns per channel:", this._patternsStepper), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Simultaneous instruments", br$3(), "per channel:", this._layeredInstrumentsBox), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Different instruments", br$3(), "per pattern:", this._patternInstrumentsBox), div$o({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._patternsStepper = input$h({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
+            this._pitchChannelStepper = input$h({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
+            this._drumChannelStepper = input$h({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
+            this._modChannelStepper = input$h({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
+            this._layeredInstrumentsBox = input$h({ style: "width: 3em; margin-left: 1em;", type: "checkbox" });
+            this._patternInstrumentsBox = input$h({ style: "width: 3em; margin-left: 1em;", type: "checkbox" });
+            this._cancelButton = button$p({ class: "cancelButton" });
+            this._okayButton = button$p({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this.container = div$p({ class: "prompt noSelection", style: "width: 250px; text-align: right;" }, h2$o("Channel Settings"), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Pitch channels:", this._pitchChannelStepper), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Drum channels:", this._drumChannelStepper), div$p({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Mod channels:", this._modChannelStepper), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Available patterns per channel:", this._patternsStepper), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Simultaneous instruments", br$4(), "per channel:", this._layeredInstrumentsBox), label$4({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Different instruments", br$4(), "per pattern:", this._patternInstrumentsBox), div$p({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -41120,7 +41542,7 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$n, div: div$n, h2: h2$m } = HTML;
+    const { button: button$o, div: div$o, h2: h2$n } = HTML;
     class CustomChipPromptCanvas {
         constructor(doc) {
             this._mouseX = 0;
@@ -41313,24 +41735,24 @@ You should be redirected to the song at:<br /><br />
             this._doc = _doc;
             this._songEditor = _songEditor;
             this.customChipCanvas = new CustomChipPromptCanvas(this._doc);
-            this._playButton = button$n({ style: "width: 55%;", type: "button" });
-            this._cancelButton = button$n({ class: "cancelButton" });
-            this._okayButton = button$n({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this.copyButton = button$n({ style: "width:86px; margin-right: 5px;", class: "copyButton" }, [
+            this._playButton = button$o({ style: "width: 55%;", type: "button" });
+            this._cancelButton = button$o({ class: "cancelButton" });
+            this._okayButton = button$o({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this.copyButton = button$o({ style: "width:86px; margin-right: 5px;", class: "copyButton" }, [
                 "Copy",
                 SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 50%; margin-top: -1em; pointer-events: none;", width: "2em", height: "2em", viewBox: "-5 -21 26 26" }, [
                     SVG.path({ d: "M 0 -15 L 1 -15 L 1 0 L 13 0 L 13 1 L 0 1 L 0 -15 z M 2 -1 L 2 -17 L 10 -17 L 14 -13 L 14 -1 z M 3 -2 L 13 -2 L 13 -12 L 9 -12 L 9 -16 L 3 -16 z", fill: "currentColor" }),
                 ]),
             ]);
-            this.pasteButton = button$n({ style: "width:86px;", class: "pasteButton" }, [
+            this.pasteButton = button$o({ style: "width:86px;", class: "pasteButton" }, [
                 "Paste",
                 SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 50%; margin-top: -1em; pointer-events: none;", width: "2em", height: "2em", viewBox: "0 0 26 26" }, [
                     SVG.path({ d: "M 8 18 L 6 18 L 6 5 L 17 5 L 17 7 M 9 8 L 16 8 L 20 12 L 20 22 L 9 22 z", stroke: "currentColor", fill: "none" }),
                     SVG.path({ d: "M 9 3 L 14 3 L 14 6 L 9 6 L 9 3 z M 16 8 L 20 12 L 16 12 L 16 8 z", fill: "currentColor", }),
                 ]),
             ]);
-            this.copyPasteContainer = div$n({ style: "width: 185px;" }, this.copyButton, this.pasteButton);
-            this.container = div$n({ class: "prompt noSelection", style: "width: 600px;" }, h2$m("Edit Custom Chip Instrument"), div$n({ style: "display: flex; width: 55%; align-self: center; flex-direction: row; align-items: center; justify-content: center;" }, this._playButton), div$n({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center;" }, this.customChipCanvas.container), div$n({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton, this.copyPasteContainer), this._cancelButton);
+            this.copyPasteContainer = div$o({ style: "width: 185px;" }, this.copyButton, this.pasteButton);
+            this.container = div$o({ class: "prompt noSelection", style: "width: 600px;" }, h2$n("Edit Custom Chip Instrument"), div$o({ style: "display: flex; width: 55%; align-self: center; flex-direction: row; align-items: center; justify-content: center;" }, this._playButton), div$o({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center;" }, this.customChipCanvas.container), div$o({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton, this.copyPasteContainer), this._cancelButton);
             this._togglePlay = () => {
                 this._songEditor.togglePlay();
                 this.updatePlayButton();
@@ -42098,7 +42520,7 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$m, div: div$m, h2: h2$l, p: p$a } = HTML;
+    const { button: button$n, div: div$n, h2: h2$m, p: p$a } = HTML;
     class CustomFilterPrompt {
         constructor(_doc, _songEditor, _useNoteFilter, forSong = false) {
             this._doc = _doc;
@@ -42108,29 +42530,29 @@ You should be redirected to the song at:<br /><br />
             this.filterData = new FilterSettings;
             this.startingFilterData = new FilterSettings;
             this._subfilterIndex = 0;
-            this._playButton = button$m({ style: "width: 55%;", type: "button" });
+            this._playButton = button$n({ style: "width: 55%;", type: "button" });
             this._filterButtons = [];
-            this._filterButtonContainer = div$m({ class: "instrument-bar", style: "justify-content: center;" });
-            this._cancelButton = button$m({ class: "cancelButton" });
-            this._okayButton = button$m({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this._filterContainer = div$m({ style: "width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: center;" });
-            this._editorTitle = div$m({}, h2$l("Edit Filter"));
-            this._filterCopyButton = button$m({ style: "width:86px; margin-right: 5px;", class: "copyButton" }, [
+            this._filterButtonContainer = div$n({ class: "instrument-bar", style: "justify-content: center;" });
+            this._cancelButton = button$n({ class: "cancelButton" });
+            this._okayButton = button$n({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this._filterContainer = div$n({ style: "width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: center;" });
+            this._editorTitle = div$n({}, h2$m("Edit Filter"));
+            this._filterCopyButton = button$n({ style: "width:86px; margin-right: 5px;", class: "copyButton" }, [
                 "Copy",
                 SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 50%; margin-top: -1em; pointer-events: none;", width: "2em", height: "2em", viewBox: "-5 -21 26 26" }, [
                     SVG.path({ d: "M 0 -15 L 1 -15 L 1 0 L 13 0 L 13 1 L 0 1 L 0 -15 z M 2 -1 L 2 -17 L 10 -17 L 14 -13 L 14 -1 z M 3 -2 L 13 -2 L 13 -12 L 9 -12 L 9 -16 L 3 -16 z", fill: "currentColor" }),
                 ]),
             ]);
-            this._filterPasteButton = button$m({ style: "width:86px;", class: "pasteButton" }, [
+            this._filterPasteButton = button$n({ style: "width:86px;", class: "pasteButton" }, [
                 "Paste",
                 SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 50%; margin-top: -1em; pointer-events: none;", width: "2em", height: "2em", viewBox: "0 0 26 26" }, [
                     SVG.path({ d: "M 8 18 L 6 18 L 6 5 L 17 5 L 17 7 M 9 8 L 16 8 L 20 12 L 20 22 L 9 22 z", stroke: "currentColor", fill: "none" }),
                     SVG.path({ d: "M 9 3 L 14 3 L 14 6 L 9 6 L 9 3 z M 16 8 L 20 12 L 16 12 L 16 8 z", fill: "currentColor", }),
                 ]),
             ]);
-            this._filterCopyPasteContainer = div$m({ style: "width: 185px;" }, this._filterCopyButton, this._filterPasteButton);
-            this._filterCoordinateText = div$m({ style: "text-align: left; margin-bottom: 0px; font-size: x-small; height: 1.3em; color: " + ColorConfig.secondaryText + ";" }, p$a(""));
-            this.container = div$m({ class: "prompt noSelection", style: "width: 600px;" }, this._editorTitle, div$m({ style: "display: flex; width: 55%; align-self: center; flex-direction: row; align-items: center; justify-content: center;" }, this._playButton), this._filterButtonContainer, this._filterContainer, div$m({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton, this._filterCopyPasteContainer), this._cancelButton);
+            this._filterCopyPasteContainer = div$n({ style: "width: 185px;" }, this._filterCopyButton, this._filterPasteButton);
+            this._filterCoordinateText = div$n({ style: "text-align: left; margin-bottom: 0px; font-size: x-small; height: 1.3em; color: " + ColorConfig.secondaryText + ";" }, p$a(""));
+            this.container = div$n({ class: "prompt noSelection", style: "width: 600px;" }, this._editorTitle, div$n({ style: "display: flex; width: 55%; align-self: center; flex-direction: row; align-items: center; justify-content: center;" }, this._playButton), this._filterButtonContainer, this._filterContainer, div$n({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton, this._filterCopyPasteContainer), this._cancelButton);
             this._setSubfilter = (index, useHistory = true, doSwap = true) => {
                 this._filterButtons[this._subfilterIndex].classList.remove("selected-instrument");
                 if (doSwap)
@@ -42234,12 +42656,12 @@ You should be redirected to the song at:<br /><br />
             this.filterEditor.container.insertBefore(this._filterCoordinateText, this.filterEditor.container.firstChild);
             this.filterEditor.coordText = this._filterCoordinateText;
             this._editorTitle.children[0].innerHTML = forSong ? "Edit Song EQ Filter" : (_useNoteFilter) ? "Edit Note Filter" : "Edit EQ Filter";
-            let newButton = button$m({ class: "no-underline", style: "max-width: 5em;" }, "Main");
+            let newButton = button$n({ class: "no-underline", style: "max-width: 5em;" }, "Main");
             this._filterButtonContainer.appendChild(newButton);
             this._filterButtons.push(newButton);
             newButton.addEventListener("click", () => { this._setSubfilter(0); });
             for (let i = 1; i < Config.filterMorphCount; i++) {
-                let newSubButton = button$m({ class: "no-underline", style: "max-width: 2em;" }, "" + i);
+                let newSubButton = button$n({ class: "no-underline", style: "max-width: 2em;" }, "" + i);
                 this._filterButtons.push(newSubButton);
                 this._filterButtonContainer.appendChild(newSubButton);
                 newSubButton.addEventListener("click", () => { this._setSubfilter(i); });
@@ -42272,16 +42694,16 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$l, div: div$l, h2: h2$k, input: input$f, label: label$3, br: br$2 } = HTML;
+    const { button: button$m, div: div$m, h2: h2$l, input: input$g, label: label$3, br: br$3 } = HTML;
     class InstrumentExportPrompt {
         constructor(_doc) {
             this._doc = _doc;
-            this._cancelButton = button$l({ class: "cancelButton" });
-            this._exportButton = button$l({ class: "exportButton", style: "width:45%;" }, "Export");
-            this._exportMultipleBox = input$f({ style: "width: 3em; margin-left: 1em;", type: "checkbox" });
+            this._cancelButton = button$m({ class: "cancelButton" });
+            this._exportButton = button$m({ class: "exportButton", style: "width:45%;" }, "Export");
+            this._exportMultipleBox = input$g({ style: "width: 3em; margin-left: 1em;", type: "checkbox" });
             this._channelName = this._doc.song.channels[this._doc.channel].name == "" ? Config.jsonFormat + "-Instrument" : this._doc.song.channels[this._doc.channel].name;
-            this._fileName = input$f({ type: "text", style: "width: 10em;", value: this._channelName, maxlength: 250, "autofocus": "autofocus" });
-            this.container = div$l({ class: "prompt noSelection", style: "width: 200px;" }, h2$k("Export Instruments Options"), div$l({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" }, "File name:", this._fileName), label$3({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Export all instruments", br$2(), "in channel:", this._exportMultipleBox), div$l({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._exportButton), this._cancelButton);
+            this._fileName = input$g({ type: "text", style: "width: 10em;", value: this._channelName, maxlength: 250, "autofocus": "autofocus" });
+            this.container = div$m({ class: "prompt noSelection", style: "width: 200px;" }, h2$l("Export Instruments Options"), div$m({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" }, "File name:", this._fileName), label$3({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, "Export all instruments", br$3(), "in channel:", this._exportMultipleBox), div$m({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._exportButton), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -42348,15 +42770,15 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$k, div: div$k, h2: h2$j, input: input$e, select: select$b, option: option$b, code: code$1 } = HTML;
+    const { button: button$l, div: div$l, h2: h2$k, input: input$f, select: select$b, option: option$b, code: code$1 } = HTML;
     class InstrumentImportPrompt {
         constructor(_doc) {
             this._doc = _doc;
-            this._cancelButton = button$k({ class: "cancelButton" });
+            this._cancelButton = button$l({ class: "cancelButton" });
             this._importStrategySelect = select$b({ style: "width: 100%;" }, option$b({ value: "append" }, "Append instruments to the end of the list."), option$b({ value: "replace" }, "Replace only the selected instrument."), option$b({ value: "all" }, "Replace all instruments in the channel."));
-            this._fileInput = input$e({ type: "file", accept: ".json,application/json" });
-            this._strategyInfoText = div$k({ style: "text-align: left;" }, "You must enable either ", code$1("Simultaneous instruments per channel"), " or ", code$1("Different instruments per pattern"), " to change the import strategy.");
-            this.container = div$k({ class: "prompt noSelection", style: "width: 300px;" }, h2$j("Import Instrument(s)"), this._strategyInfoText, div$k({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$k({ class: "selectContainer", style: "width: 100%;" }, this._importStrategySelect)), this._fileInput, this._cancelButton);
+            this._fileInput = input$f({ type: "file", accept: ".json,application/json" });
+            this._strategyInfoText = div$l({ style: "text-align: left;" }, "You must enable either ", code$1("Simultaneous instruments per channel"), " or ", code$1("Different instruments per pattern"), " to change the import strategy.");
+            this.container = div$l({ class: "prompt noSelection", style: "width: 300px;" }, h2$k("Import Instrument(s)"), this._strategyInfoText, div$l({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$l({ class: "selectContainer", style: "width: 100%;" }, this._importStrategySelect)), this._fileInput, this._cancelButton);
             this._whenFileSelected = () => {
                 const file = this._fileInput.files[0];
                 if (!file)
@@ -42497,7 +42919,7 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$j, div: div$j, h2: h2$i, input: input$d } = HTML;
+    const { button: button$k, div: div$k, h2: h2$j, input: input$e } = HTML;
     function gcd(x, y) {
         while (y !== 0) {
             const z = x % y;
@@ -42603,32 +43025,32 @@ You should be redirected to the song at:<br /><br />
             this._clockPadding = this._clockWidth / this._maxSteps;
             this._clockRadius = this._clockWidth / 2 - this._clockPointMaxRadius - this._clockPadding;
             this._sequenceButtons = [];
-            this._sequenceRemoveButton = button$j({ class: "no-underline", style: "flex-grow: 0; flex-basis: 30px;" }, SVG.svg({ width: "26", height: "26", viewBox: "-13 -13 26 26", "pointer-events": "none" }, SVG.path({ d: "M -7.07 -5.66 L -5.66 -7.07 L 0 -1.4 L 5.66 -7.07 L 7.07 -5.66 L 1.4 0 L 7.07 5.66 L 5.66 7.07 L 0 1.4 L -5.66 7.07 L -7.07 5.66 L -1.4 0 z", fill: ColorConfig.primaryText })));
-            this._sequenceAddButton = button$j({ class: "no-underline last-button", style: "flex-grow: 0; flex-basis: 30px;" }, SVG.svg({ width: "26", height: "26", viewBox: "-13 -13 26 26", "pointer-events": "none" }, SVG.path({ d: "M -8 -1 L -1 -1 L -1 -8 L 1 -8 L 1 -1 L 8 -1 L 8 1 L 1 1 L 1 8 L -1 8 L -1 1 L -8 1 z", fill: ColorConfig.primaryText })));
-            this._sequenceButtonContainer = div$j({ class: "instrument-bar", style: "justify-content: center; width: 100%;" }, this._sequenceRemoveButton, this._sequenceAddButton);
+            this._sequenceRemoveButton = button$k({ class: "no-underline", style: "flex-grow: 0; flex-basis: 30px;" }, SVG.svg({ width: "26", height: "26", viewBox: "-13 -13 26 26", "pointer-events": "none" }, SVG.path({ d: "M -7.07 -5.66 L -5.66 -7.07 L 0 -1.4 L 5.66 -7.07 L 7.07 -5.66 L 1.4 0 L 7.07 5.66 L 5.66 7.07 L 0 1.4 L -5.66 7.07 L -7.07 5.66 L -1.4 0 z", fill: ColorConfig.primaryText })));
+            this._sequenceAddButton = button$k({ class: "no-underline last-button", style: "flex-grow: 0; flex-basis: 30px;" }, SVG.svg({ width: "26", height: "26", viewBox: "-13 -13 26 26", "pointer-events": "none" }, SVG.path({ d: "M -8 -1 L -1 -1 L -1 -8 L 1 -8 L 1 -1 L 8 -1 L 8 1 L 1 1 L 1 8 L -1 8 L -1 1 L -8 1 z", fill: ColorConfig.primaryText })));
+            this._sequenceButtonContainer = div$k({ class: "instrument-bar", style: "justify-content: center; width: 100%;" }, this._sequenceRemoveButton, this._sequenceAddButton);
             this._barPreviewBackground = SVG.svg({ "pointer-events": "none" });
             this._barPreviewSteps = SVG.svg({ "pointer-events": "none" });
-            this._barPreviewLabel = div$j({ style: `flex-grow: 1; color: ${ColorConfig.secondaryText}` });
-            this._barPreviewGoToFirstButton = button$j({ style: "height: auto; min-height: var(--button-size);" }, SVG.svg({ width: "26", height: "26", viewBox: "-13 -14 26 26", "pointer-events": "none" }, SVG.rect({ x: "-6", y: "-6", width: "2", height: "12", fill: ColorConfig.primaryText }), SVG.path({ d: "M 6 -6 L 6 6 L -3 0 z", fill: ColorConfig.primaryText })));
-            this._barPreviewGoBackButton = button$j({ style: "height: auto; min-height: var(--button-size); margin-left: 1em;" }, SVG.svg({ width: "24", height: "26", viewBox: "-10 -14 24 26", "pointer-events": "none" }, SVG.path({ d: "M 6 -6 L 6 6 L -3 0 z", fill: ColorConfig.primaryText })));
-            this._barPreviewGoForwardButton = button$j({ style: "height: auto; min-height: var(--button-size);" }, SVG.svg({ width: "24", height: "26", viewBox: "-14 -14 24 26", "pointer-events": "none" }, SVG.path({ d: "M -6 -6 L -6 6 L 3 0 z", fill: ColorConfig.primaryText })));
-            this._barPreviewGoToLastButton = button$j({ style: "height: auto; min-height: var(--button-size); margin-left: 1em;" }, SVG.svg({ width: "26", height: "26", viewBox: "-13 -14 26 26", "pointer-events": "none" }, SVG.rect({ x: "4", y: "-6", width: "2", height: "12", fill: ColorConfig.primaryText }), SVG.path({ d: "M -6 -6 L -6 6 L 3 0 z", fill: ColorConfig.primaryText })));
+            this._barPreviewLabel = div$k({ style: `flex-grow: 1; color: ${ColorConfig.secondaryText}` });
+            this._barPreviewGoToFirstButton = button$k({ style: "height: auto; min-height: var(--button-size);" }, SVG.svg({ width: "26", height: "26", viewBox: "-13 -14 26 26", "pointer-events": "none" }, SVG.rect({ x: "-6", y: "-6", width: "2", height: "12", fill: ColorConfig.primaryText }), SVG.path({ d: "M 6 -6 L 6 6 L -3 0 z", fill: ColorConfig.primaryText })));
+            this._barPreviewGoBackButton = button$k({ style: "height: auto; min-height: var(--button-size); margin-left: 1em;" }, SVG.svg({ width: "24", height: "26", viewBox: "-10 -14 24 26", "pointer-events": "none" }, SVG.path({ d: "M 6 -6 L 6 6 L -3 0 z", fill: ColorConfig.primaryText })));
+            this._barPreviewGoForwardButton = button$k({ style: "height: auto; min-height: var(--button-size);" }, SVG.svg({ width: "24", height: "26", viewBox: "-14 -14 24 26", "pointer-events": "none" }, SVG.path({ d: "M -6 -6 L -6 6 L 3 0 z", fill: ColorConfig.primaryText })));
+            this._barPreviewGoToLastButton = button$k({ style: "height: auto; min-height: var(--button-size); margin-left: 1em;" }, SVG.svg({ width: "26", height: "26", viewBox: "-13 -14 26 26", "pointer-events": "none" }, SVG.rect({ x: "4", y: "-6", width: "2", height: "12", fill: ColorConfig.primaryText }), SVG.path({ d: "M -6 -6 L -6 6 L 3 0 z", fill: ColorConfig.primaryText })));
             this._clockWire = SVG.circle({ cx: this._clockWidth / 2, cy: this._clockHeight / 2, r: this._clockRadius, stroke: ColorConfig.primaryText, "stroke-width": "0.5", fill: "none" });
             this._clockPoints = SVG.svg({ "pointer-events": "none" });
-            this._stepsStepper = input$d({ style: "width: 3em; margin-left: 1em;", type: "number", min: this._minSteps, max: this._maxSteps, value: "8", step: "1" });
-            this._pulsesStepper = input$d({ style: "width: 3em; margin-left: 1em;", type: "number", min: "0", max: "8", value: "5", step: "1" });
-            this._rotationStepper = input$d({ style: "width: 3em; margin-left: 1em;", type: "number", min: "0", max: this._maxSteps, value: "0", step: "1" });
-            this._stepSizeNumeratorStepper = input$d({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: Config.partsPerBeat, value: "1", step: "1" });
-            this._stepSizeDenominatorStepper = input$d({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: Config.partsPerBeat, value: "4", step: "1" });
-            this._channelStepper = input$d({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: this._maxChannel + 1, value: "1", step: "1" });
-            this._pitchStepper = input$d({ style: "width: 3em; margin-left: 1em;", type: "number", min: "0", max: Config.maxPitch, value: "0", step: "1" });
-            this._barAmountStepper = input$d({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: Config.barCountMax, value: "1", step: "1" });
-            this._extendUntilLoopButton = button$j({ style: "height: auto; min-height: var(--button-size); margin-left: 1em;" }, "Extend until loop");
-            this._generateFadingNotesBox = input$d({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: 1em;" });
-            this._invertBox = input$d({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: 1em;" });
-            this._okayButton = button$j({ class: "okayButton", style: "width: 45%;" }, "Okay");
-            this._cancelButton = button$j({ class: "cancelButton" });
-            this.container = div$j({ class: "prompt noSelection", style: "width: 600px;" }, h2$i("Generate Euclidean Rhythm"), div$j({ style: "display: flex; flex-direction: row; align-items: center;" }, this._sequenceButtonContainer), div$j({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" }, div$j({ style: "flex-grow: 0; flex-shrink: 0;" }, this._barPreviewGoToFirstButton, this._barPreviewGoBackButton), this._barPreviewLabel, div$j({ style: "flex-grow: 0; flex-shrink: 0;" }, this._barPreviewGoForwardButton, this._barPreviewGoToLastButton)), div$j({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center;" }, SVG.svg({ "pointer-events": "none", style: "touch-action: none; overflow: hidden;", width: "100%", height: "20px", viewBox: `0 0 ${this._barPreviewWidth} ${this._barPreviewHeight}`, preserveAspectRatio: "none" }, this._barPreviewBackground, this._barPreviewSteps)), div$j({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-evenly;" }, div$j({ style: "max-width: 150px; height: 100%;" }, SVG.svg({ "pointer-events": "none", width: "100%", height: "100%", style: "touch-action: none; overflow: hidden; margin-right: 1.5em; max-width: 150px; height: 100%;", viewBox: `0 0 ${this._clockWidth} ${this._clockHeight}`, preserveAspectRatio: "none" }, this._clockWire, this._clockPoints)), div$j({ style: "display: flex; height: 100%;" }, div$j({ style: "flex-grow: 1; " }, div$j({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end;" }, div$j({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Steps"), this._stepsStepper), div$j({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-top: 0.5em;" }, div$j({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Pulses"), this._pulsesStepper), div$j({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-top: 0.5em;" }, div$j({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Rotation"), this._rotationStepper)), div$j({ style: "flex-grow: 1; margin-left: 1em;" }, div$j({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-bottom: 1em;" }, div$j({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Size"), div$j({ style: "display: flex; flex-direction: column;" }, this._stepSizeNumeratorStepper, this._stepSizeDenominatorStepper)), div$j({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-top: 0.5em;" }, div$j({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Channel"), this._channelStepper), div$j({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-top: 0.5em;" }, div$j({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Pitch"), this._pitchStepper)))), div$j({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end;" }, div$j({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "Generate fading notes"), this._generateFadingNotesBox, div$j({ style: `text-align: right; color: ${ColorConfig.primaryText}; margin-left: 1em;` }, "Invert"), this._invertBox), div$j({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end;" }, div$j({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "Length (in bars)"), this._barAmountStepper, this._extendUntilLoopButton), div$j({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._stepsStepper = input$e({ style: "width: 3em; margin-left: 1em;", type: "number", min: this._minSteps, max: this._maxSteps, value: "8", step: "1" });
+            this._pulsesStepper = input$e({ style: "width: 3em; margin-left: 1em;", type: "number", min: "0", max: "8", value: "5", step: "1" });
+            this._rotationStepper = input$e({ style: "width: 3em; margin-left: 1em;", type: "number", min: "0", max: this._maxSteps, value: "0", step: "1" });
+            this._stepSizeNumeratorStepper = input$e({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: Config.partsPerBeat, value: "1", step: "1" });
+            this._stepSizeDenominatorStepper = input$e({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: Config.partsPerBeat, value: "4", step: "1" });
+            this._channelStepper = input$e({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: this._maxChannel + 1, value: "1", step: "1" });
+            this._pitchStepper = input$e({ style: "width: 3em; margin-left: 1em;", type: "number", min: "0", max: Config.maxPitch, value: "0", step: "1" });
+            this._barAmountStepper = input$e({ style: "width: 3em; margin-left: 1em;", type: "number", min: "1", max: Config.barCountMax, value: "1", step: "1" });
+            this._extendUntilLoopButton = button$k({ style: "height: auto; min-height: var(--button-size); margin-left: 1em;" }, "Extend until loop");
+            this._generateFadingNotesBox = input$e({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: 1em;" });
+            this._invertBox = input$e({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: 1em;" });
+            this._okayButton = button$k({ class: "okayButton", style: "width: 45%;" }, "Okay");
+            this._cancelButton = button$k({ class: "cancelButton" });
+            this.container = div$k({ class: "prompt noSelection", style: "width: 600px;" }, h2$j("Generate Euclidean Rhythm"), div$k({ style: "display: flex; flex-direction: row; align-items: center;" }, this._sequenceButtonContainer), div$k({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" }, div$k({ style: "flex-grow: 0; flex-shrink: 0;" }, this._barPreviewGoToFirstButton, this._barPreviewGoBackButton), this._barPreviewLabel, div$k({ style: "flex-grow: 0; flex-shrink: 0;" }, this._barPreviewGoForwardButton, this._barPreviewGoToLastButton)), div$k({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center;" }, SVG.svg({ "pointer-events": "none", style: "touch-action: none; overflow: hidden;", width: "100%", height: "20px", viewBox: `0 0 ${this._barPreviewWidth} ${this._barPreviewHeight}`, preserveAspectRatio: "none" }, this._barPreviewBackground, this._barPreviewSteps)), div$k({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-evenly;" }, div$k({ style: "max-width: 150px; height: 100%;" }, SVG.svg({ "pointer-events": "none", width: "100%", height: "100%", style: "touch-action: none; overflow: hidden; margin-right: 1.5em; max-width: 150px; height: 100%;", viewBox: `0 0 ${this._clockWidth} ${this._clockHeight}`, preserveAspectRatio: "none" }, this._clockWire, this._clockPoints)), div$k({ style: "display: flex; height: 100%;" }, div$k({ style: "flex-grow: 1; " }, div$k({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end;" }, div$k({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Steps"), this._stepsStepper), div$k({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-top: 0.5em;" }, div$k({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Pulses"), this._pulsesStepper), div$k({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-top: 0.5em;" }, div$k({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Rotation"), this._rotationStepper)), div$k({ style: "flex-grow: 1; margin-left: 1em;" }, div$k({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-bottom: 1em;" }, div$k({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Size"), div$k({ style: "display: flex; flex-direction: column;" }, this._stepSizeNumeratorStepper, this._stepSizeDenominatorStepper)), div$k({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-top: 0.5em;" }, div$k({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Channel"), this._channelStepper), div$k({ style: "display: flex; flex-direction: row; align-items: center; height: 3em; justify-content: flex-end; margin-top: 0.5em;" }, div$k({ style: `text-align: right; flex-grow: 1; color: ${ColorConfig.primaryText};` }, "Pitch"), this._pitchStepper)))), div$k({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end;" }, div$k({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "Generate fading notes"), this._generateFadingNotesBox, div$k({ style: `text-align: right; color: ${ColorConfig.primaryText}; margin-left: 1em;` }, "Invert"), this._invertBox), div$k({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end;" }, div$k({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "Length (in bars)"), this._barAmountStepper, this._extendUntilLoopButton), div$k({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this.cleanUp = () => {
                 this._okayButton.removeEventListener("click", this._saveChanges);
                 this._cancelButton.removeEventListener("click", this._close);
@@ -43215,7 +43637,7 @@ You should be redirected to the song at:<br /><br />
             this._renderSequenceButtons = () => {
                 const container = this._sequenceButtonContainer;
                 while (this._sequenceButtons.length < this._sequences.length) {
-                    const sequenceButton = button$j({ class: "no-underline" }, (this._sequenceButtons.length + 1) + "");
+                    const sequenceButton = button$k({ class: "no-underline" }, (this._sequenceButtons.length + 1) + "");
                     this._sequenceButtons.push(sequenceButton);
                     container.insertBefore(sequenceButton, this._sequenceRemoveButton);
                 }
@@ -43858,7 +44280,7 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { span: span$6 } = HTML;
+    const { span: span$7 } = HTML;
     class InputBox {
         constructor(input, _doc, _getChange) {
             this.input = input;
@@ -43909,7 +44331,7 @@ You should be redirected to the song at:<br /><br />
                     this._change = null;
                 }
             };
-            this.container = (midTick) ? span$6({ class: "midTick", style: "position: sticky; width: 61.5%;" }, input) : span$6({ style: "position: sticky;" }, input);
+            this.container = (midTick) ? span$7({ class: "midTick", style: "position: sticky; width: 61.5%;" }, input) : span$7({ style: "position: sticky;" }, input);
             input.addEventListener("input", this._whenInput);
             input.addEventListener("change", this._whenChange);
         }
@@ -43919,6 +44341,174 @@ You should be redirected to the song at:<br /><br />
         }
         getValueBeforeProspectiveChange() {
             return this._oldValue;
+        }
+    }
+
+    const { span: span$6 } = HTML;
+    const { svg, circle, line, path } = SVG;
+    class Knob {
+        constructor(_min, _max, _step, value, _bipolar, _doc, _getChange, _markings = []) {
+            this._min = _min;
+            this._max = _max;
+            this._step = _step;
+            this._bipolar = _bipolar;
+            this._doc = _doc;
+            this._getChange = _getChange;
+            this._markings = _markings;
+            this._marker = line({ x1: "20", y1: "20", x2: "20", y2: "9", class: "knobIndicator", });
+            this._modulationArc = path({ class: "knobModulationArc" });
+            this._valueArc = path({ class: "knobValueArc" });
+            this._svg = svg({ class: "knob", viewBox: "0 0 44 44", role: "slider", tabindex: "0", "aria-label": "Parameter" }, circle({ cx: "22", cy: "22", r: "17", class: "knobTrack", }));
+            this._change = null;
+            this._value = 0;
+            this._modulationValue = null;
+            this._oldValue = 0;
+            this._dragging = false;
+            this._lastY = 0;
+            this.innerRadius = 5;
+            this.outerRadius = 14.5;
+            this._whenPointerDown = (event) => {
+                if (event.button !== 0)
+                    return;
+                this._dragging = true;
+                this._lastY = event.clientY;
+                this._svg.setPointerCapture(event.pointerId);
+                event.preventDefault();
+            };
+            this._whenPointerMove = (event) => {
+                if (!this._dragging)
+                    return;
+                const delta = this._lastY - event.clientY;
+                this._lastY = event.clientY;
+                this._setValue(this._value + delta * this._step);
+            };
+            this._whenPointerUp = () => {
+                this._dragging = false;
+                if (this._getChange != null && this._change != null) {
+                    this._doc.record(this._change);
+                    this._change = null;
+                }
+            };
+            this._value = this._clamp(value);
+            this.container = span$6({ class: "knobContainer" });
+            this._createMarkers();
+            this.container.appendChild(this._svg);
+            this._svg.appendChild(this._valueArc);
+            this._svg.appendChild(this._modulationArc);
+            this._svg.appendChild(this._marker);
+            this._updateDisplay();
+            this._addEventListeners();
+        }
+        _clamp(value) {
+            const clamped = Math.max(this._min, Math.min(this._max, value));
+            return this._min + Math.round((clamped - this._min) / this._step) * this._step;
+        }
+        _setValue(value) {
+            const newValue = this._clamp(value);
+            if (newValue == this._value)
+                return;
+            if (this._getChange != null) {
+                const continuingProspectiveChange = this._doc.lastChangeWas(this._change);
+                if (!continuingProspectiveChange)
+                    this._oldValue = this._value;
+                this._change = this._getChange(this._oldValue, newValue);
+                this._doc.setProspectiveChange(this._change);
+            }
+            this._value = newValue;
+            this._updateDisplay();
+        }
+        updateValue(value) {
+            this._value = this._clamp(value);
+            this._updateDisplay();
+        }
+        _updateArc() {
+            const percentage = (this._value - this._min) / (this._max - this._min || 1);
+            const angle = this._bipolar ? (percentage * 2 - 1) * 135 : -90 + percentage * 180;
+            const startAngle = this._bipolar ? 0 : -90;
+            const endAngle = angle;
+            if (Math.abs(endAngle - startAngle) < 0.001) {
+                this._valueArc.setAttribute("d", "");
+                return;
+            }
+            const radius = this.outerRadius + 4;
+            const x1 = 22 + Math.sin(startAngle * Math.PI / 180) * radius;
+            const y1 = 22 - Math.cos(startAngle * Math.PI / 180) * radius;
+            const x2 = 22 + Math.sin(endAngle * Math.PI / 180) * radius;
+            const y2 = 22 - Math.cos(endAngle * Math.PI / 180) * radius;
+            const sweep = this._bipolar ? (endAngle > startAngle ? 1 : 0) : 1;
+            this._valueArc.setAttribute("d", `M ${x1} ${y1} A ${radius} ${radius} 0 0 ${sweep} ${x2} ${y2}`);
+        }
+        _updateDisplay() {
+            var _a, _b, _c, _d;
+            const percentage = (this._value - this._min) / (this._max - this._min || 1);
+            const angle = this._bipolar ? (percentage * 2 - 1) * 135 : -90 + percentage * 180;
+            const radians = angle * Math.PI / 180;
+            this._updateArc();
+            this._svg.setAttribute("aria-valuemin", this._min.toString());
+            this._svg.setAttribute("aria-valuemax", this._max.toString());
+            this._svg.setAttribute("aria-valuenow", this._value.toString());
+            const innerRadius = this.innerRadius;
+            const outerRadius = this.outerRadius;
+            (_a = this._svg.querySelector(".knobIndicator")) === null || _a === void 0 ? void 0 : _a.setAttribute("x1", (22 + Math.sin(radians) * innerRadius).toString());
+            (_b = this._svg.querySelector(".knobIndicator")) === null || _b === void 0 ? void 0 : _b.setAttribute("y1", (22 - Math.cos(radians) * innerRadius).toString());
+            (_c = this._svg.querySelector(".knobIndicator")) === null || _c === void 0 ? void 0 : _c.setAttribute("x2", (22 + Math.sin(radians) * outerRadius).toString());
+            (_d = this._svg.querySelector(".knobIndicator")) === null || _d === void 0 ? void 0 : _d.setAttribute("y2", (22 - Math.cos(radians) * outerRadius).toString());
+            this._updateModulationArc();
+        }
+        setTitle(title) {
+            this._svg.setAttribute("title", title);
+        }
+        _createMarkers() {
+            for (const value of this._markings) {
+                if (value < this._min || value > this._max)
+                    continue;
+                const percentage = (value - this._min) / (this._max - this._min || 1);
+                const angle = this._bipolar ? (percentage * 2 - 1) * 135 : -90 + percentage * 180;
+                const radians = angle * Math.PI / 180;
+                const innerRadius = this.outerRadius + 2;
+                const outerRadius = this.outerRadius + 6;
+                const tick = line({ x1: (22 + Math.sin(radians) * innerRadius).toString(), y1: (22 - Math.cos(radians) * innerRadius).toString(), x2: (22 + Math.sin(radians) * outerRadius).toString(), y2: (22 - Math.cos(radians) * outerRadius).toString(), class: "knobMarker" });
+                this._svg.appendChild(tick);
+            }
+        }
+        _addEventListeners() {
+            this._svg.addEventListener("pointerdown", this._whenPointerDown);
+            this._svg.addEventListener("pointermove", this._whenPointerMove);
+            this._svg.addEventListener("pointerup", this._whenPointerUp);
+            this._svg.addEventListener("pointercancel", this._whenPointerUp);
+        }
+        updateColor(color) {
+            var _a;
+            (_a = this._svg.querySelector(".knobIndicator")) === null || _a === void 0 ? void 0 : _a.setAttribute("stroke", color);
+        }
+        updateModulation(value) {
+            this._modulationValue = value;
+            this._updateModulationArc();
+        }
+        _updateModulationArc() {
+            if (this._modulationValue == null) {
+                this._modulationArc.setAttribute("d", "");
+                return;
+            }
+            const modValue = this._min + this._modulationValue * (this._max - this._min);
+            const basePercentage = (this._value - this._min) / (this._max - this._min || 1);
+            const modPercentage = (modValue - this._min) / (this._max - this._min || 1);
+            const baseAngle = this._bipolar ? (basePercentage * 2 - 1) * 135 : -90 + basePercentage * 180;
+            const modAngle = this._bipolar ? (modPercentage * 2 - 1) * 135 : -90 + modPercentage * 180;
+            if (Math.abs(modAngle - baseAngle) < 0.001) {
+                this._modulationArc.setAttribute("d", "");
+                return;
+            }
+            const radius = this.outerRadius + 6;
+            const minAngle = this._bipolar ? 0 : -90;
+            const x1 = 22 + Math.sin(minAngle * Math.PI / 180) * radius;
+            const y1 = 22 - Math.cos(minAngle * Math.PI / 180) * radius;
+            const x2 = 22 + Math.sin(modAngle * Math.PI / 180) * radius;
+            const y2 = 22 - Math.cos(modAngle * Math.PI / 180) * radius;
+            const delta = modAngle - minAngle;
+            const sweep = delta >= 0 ? 1 : 0;
+            const largeArc = Math.abs(delta) > 180 ? 1 : 0;
+            this._modulationArc.setAttribute("d", `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} ${sweep} ${x2} ${y2}`);
         }
     }
 
@@ -44001,20 +44591,20 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$i, p: p$9, div: div$i, h2: h2$h, input: input$c, select: select$a, option: option$a } = HTML;
+    const { button: button$j, p: p$9, div: div$j, h2: h2$i, input: input$d, select: select$a, option: option$a } = HTML;
     class ImportPrompt {
         constructor(_doc) {
             this._doc = _doc;
             this.exportStuff = new ExportPrompt(this._doc);
-            this._importButton = button$i({ style: "height: auto; min-height: var(--button-size); margin: 0.5em; width:50%; color: var(--primary-text); border-bottom: solid; border-bottom-color:var(--link-accent;)" }, "Load");
-            this._exportButton = button$i({ style: "height: auto; min-height: var(--button-size); margin: 0.5em; width:50%; color: var(--secondary-text);" }, "Save");
-            this._fileInput = input$c({ type: "file", accept: ".json,application/json,.mid,.midi,audio/midi,audio/x-midi" });
-            this._cancelButton = button$i({ class: "cancelButton" });
+            this._importButton = button$j({ style: "height: auto; min-height: var(--button-size); margin: 0.5em; width:50%; color: var(--primary-text); border-bottom: solid; border-bottom-color:var(--link-accent;)" }, "Load");
+            this._exportButton = button$j({ style: "height: auto; min-height: var(--button-size); margin: 0.5em; width:50%; color: var(--secondary-text);" }, "Save");
+            this._fileInput = input$d({ type: "file", accept: ".json,application/json,.mid,.midi,audio/midi,audio/x-midi" });
+            this._cancelButton = button$j({ class: "cancelButton" });
             this._modeImportSelect = select$a({ style: "width: 100%;" }, option$a({ value: "auto" }, "Auto-detect mode (for json)"), option$a({ value: "BeepBox" }, "BeepBox"), option$a({ value: "ModBox" }, "ModBox"), option$a({ value: "JummBox" }, "JummBox"), option$a({ value: "SynthBox" }, "SynthBox"), option$a({ value: "GoldBox" }, "GoldBox"), option$a({ value: "PaandorasBox" }, "PaandorasBox"), option$a({ value: "UltraBox" }, "UltraBox"), option$a({ value: "slarmoosbox" }, "Slarmoo's Box"), option$a({ value: "41box" }, "41Box"));
-            this._importPrompt = div$i({}, div$i({ class: "promptTitle" }, h2$h({ class: "importExt", style: "text-align: inherit;" }, ""), h2$h({ class: "importTitle" }, "Load .JSON")), p$9({ style: "text-align: left; margin: 0.5em 0;" }, "BeepBox songs can be exported and re-imported as .json files. You could also use other means to make .json files for BeepBox as long as they follow the same structure."), p$9({ style: "text-align: left; margin: 0.5em 0;" }, "BeepBox can also (crudely) import .mid files. There are many tools available for creating .mid files. Shorter and simpler songs are more likely to work well."), this._modeImportSelect, this._fileInput, this._cancelButton);
-            this._exportPrompt = div$i({ style: "display:none;" }, this.exportStuff._exportPrompt);
-            this.customContainer = div$i({ class: "customContainer", id: "customContainer", style: "width: 100%;" }, p$9({ style: "text-align: center; margin: 1em 0; display:flex; flex-direction: row;" }, this._importButton, this._exportButton), this._importPrompt, this._exportPrompt);
-            this.container = div$i({ class: "prompt noSelection", style: "width: 300px;" }, this.customContainer);
+            this._importPrompt = div$j({}, div$j({ class: "promptTitle" }, h2$i({ class: "importExt", style: "text-align: inherit;" }, ""), h2$i({ class: "importTitle" }, "Load .JSON")), p$9({ style: "text-align: left; margin: 0.5em 0;" }, "BeepBox songs can be exported and re-imported as .json files. You could also use other means to make .json files for BeepBox as long as they follow the same structure."), p$9({ style: "text-align: left; margin: 0.5em 0;" }, "BeepBox can also (crudely) import .mid files. There are many tools available for creating .mid files. Shorter and simpler songs are more likely to work well."), this._modeImportSelect, this._fileInput, this._cancelButton);
+            this._exportPrompt = div$j({ style: "display:none;" }, this.exportStuff._exportPrompt);
+            this.customContainer = div$j({ class: "customContainer", id: "customContainer", style: "width: 100%;" }, p$9({ style: "text-align: center; margin: 1em 0; display:flex; flex-direction: row;" }, this._importButton, this._exportButton), this._importPrompt, this._exportPrompt);
+            this.container = div$j({ class: "prompt noSelection", style: "width: 300px;" }, this.customContainer);
             this._importCategoryButton = () => {
                 this._importPrompt.style.display = "";
                 this._exportPrompt.style.display = "none";
@@ -44960,21 +45550,21 @@ You should be redirected to the song at:<br /><br />
     }
     ChannelRow.patternHeight = 28;
 
-    const { button: button$h, label: label$2, div: div$h, form: form$1, h2: h2$g, input: input$b } = HTML;
+    const { button: button$i, label: label$2, div: div$i, form: form$1, h2: h2$h, input: input$c } = HTML;
     class LayoutPrompt {
         constructor(_doc) {
             this._doc = _doc;
-            this._fileInput = input$b({ type: "file", accept: ".json,application/json,.mid,.midi,audio/midi,audio/x-midi" });
-            this._okayButton = button$h({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this._cancelButton = button$h({ class: "cancelButton" });
-            this._form = form$1({ style: "display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;" }, label$2({ class: "layout-option" }, input$b({ type: "radio", name: "layout", value: "small" }), SVG(`\
+            this._fileInput = input$c({ type: "file", accept: ".json,application/json,.mid,.midi,audio/midi,audio/x-midi" });
+            this._okayButton = button$i({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this._cancelButton = button$i({ class: "cancelButton" });
+            this._form = form$1({ style: "display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;" }, label$2({ class: "layout-option" }, input$c({ type: "radio", name: "layout", value: "small" }), SVG(`\
 					<svg viewBox="-4 -1 28 22">
 						<rect x="0" y="0" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 						<rect x="2" y="2" width="11" height="10" fill="currentColor"/>
 						<rect x="14" y="2" width="4" height="16" fill="currentColor"/>
 						<rect x="2" y="13" width="11" height="5" fill="currentColor"/>
 					</svg>
-				`), div$h("Small")), label$2({ class: "layout-option" }, input$b({ type: "radio", name: "layout", value: "long" }), SVG(`\
+				`), div$i("Small")), label$2({ class: "layout-option" }, input$c({ type: "radio", name: "layout", value: "long" }), SVG(`\
 					<svg viewBox="-1 -1 28 22">
 						<rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 						<rect x="2" y="2" width="12" height="10" fill="currentColor"/>
@@ -44982,14 +45572,14 @@ You should be redirected to the song at:<br /><br />
 						<rect x="20" y="2" width="4" height="10" fill="currentColor"/>
 						<rect x="2" y="13" width="22" height="5" fill="currentColor"/>
 					</svg>
-				`), div$h("Long")), label$2({ class: "layout-option" }, input$b({ type: "radio", name: "layout", value: "tall" }), SVG(`\
+				`), div$i("Long")), label$2({ class: "layout-option" }, input$c({ type: "radio", name: "layout", value: "tall" }), SVG(`\
 					<svg viewBox="-1 -1 28 22">
 						<rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 						<rect x="11" y="2" width="8" height="16" fill="currentColor"/>
 						<rect x="20" y="2" width="4" height="16" fill="currentColor"/>
 						<rect x="2" y="2" width="8" height="16" fill="currentColor"/>
 					</svg>
-				`), div$h("Tall")), label$2({ class: "layout-option" }, input$b({ type: "radio", name: "layout", value: "wide" }), SVG(`\
+				`), div$i("Tall")), label$2({ class: "layout-option" }, input$c({ type: "radio", name: "layout", value: "wide" }), SVG(`\
 					<svg viewBox="-1 -1 28 22">
 						<rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 						<rect x="2" y="2" width="4" height="16" fill="currentColor"/>
@@ -44997,7 +45587,7 @@ You should be redirected to the song at:<br /><br />
 						<rect x="21.5" y="2" width="2.5" height="16" fill="currentColor"/>
 						<rect x="7" y="2" width="10" height="16" fill="currentColor"/>
 					</svg>
-				`), div$h("Wide (JB)")), label$2({ class: "layout-option" }, input$b({ type: "radio", name: "layout", value: "wide long" }), SVG(`\
+				`), div$i("Wide (JB)")), label$2({ class: "layout-option" }, input$c({ type: "radio", name: "layout", value: "wide long" }), SVG(`\
 					<svg viewBox="-1 -1 28 22">
 						<rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 						<rect x="2" y="2" width="12" height="10" fill="currentColor"/>
@@ -45005,7 +45595,7 @@ You should be redirected to the song at:<br /><br />
 						<rect x="20" y="2" width="4" height="16" fill="currentColor"/>
 						<rect x="2" y="13" width="12" height="5" fill="currentColor"/>
 					</svg>
-				`), div$h("Wide Long (AB)")), label$2({ class: "layout-option" }, input$b({ type: "radio", name: "layout", value: "flipped long" }), SVG(`\
+				`), div$i("Wide Long (AB)")), label$2({ class: "layout-option" }, input$c({ type: "radio", name: "layout", value: "flipped long" }), SVG(`\
 					<svg viewBox="-1 -1 28 22">
 						<rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 						<rect x="2" y="2" width="22" height="2" fill="currentColor"/>
@@ -45013,15 +45603,15 @@ You should be redirected to the song at:<br /><br />
 						<rect x="7" y="5" width="17" height="8" fill="currentColor"/>
 						<rect x="2" y="14" width="22" height="4" fill="currentColor"/>
 					</svg>
-				`), div$h("Flipped Long (AB)")), label$2({ class: "layout-option" }, input$b({ type: "radio", name: "layout", value: "focused long" }), SVG(`\
+				`), div$i("Flipped Long (AB)")), label$2({ class: "layout-option" }, input$c({ type: "radio", name: "layout", value: "focused long" }), SVG(`\
 					<svg viewBox="-1 -1 28 22">
 						<rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 						<rect x="2" y="2" width="17" height="10" fill="currentColor"/>
 						<rect x="20" y="2" width="4" height="16" fill="currentColor"/>
 						<rect x="2" y="13" width="17" height="5" fill="currentColor"/>
 					</svg>
-				`), div$h("Focused long (AB)")));
-            this.container = div$h({ class: "prompt noSelection", style: "width: 300px;" }, h2$g("Layout"), this._form, div$h({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+				`), div$i("Focused long (AB)")));
+            this.container = div$i({ class: "prompt noSelection", style: "width: 300px;" }, h2$h("Layout"), this._form, div$i({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -45742,7 +46332,7 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$g, div: div$g, h2: h2$f, input: input$a } = HTML;
+    const { button: button$h, div: div$h, h2: h2$g, input: input$b } = HTML;
     class LimiterCanvas {
         constructor(lim) {
             this._editorWidth = 200;
@@ -45865,22 +46455,22 @@ You should be redirected to the song at:<br /><br />
             this._doc = _doc;
             this._songEditor = _songEditor;
             this.limiterCanvas = new LimiterCanvas(this);
-            this._playButton = button$g({ style: "width: 55%;", type: "button" });
-            this.limitDecaySlider = input$a({ title: "limit decay", style: `width: 5em; flex-grow: 1; margin: 0;`, type: "range", min: "1", max: "30", value: "4", step: "1" });
-            this.limitRiseSlider = input$a({ title: "limit rise", style: `width: 5em; flex-grow: 1; margin: 0;`, type: "range", min: "2000", max: "10000", value: "4000", step: "250" });
-            this.compressionThresholdSlider = input$a({ title: "compressor threshold", style: `width: 100%; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "1.1", value: "1", step: "0.05" });
-            this.limitThresholdSlider = input$a({ title: "limiter threshold", style: `width: 100%; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "2", value: "1", step: "0.05" });
-            this.compressionRatioSlider = input$a({ title: "compressor ratio", style: `width: 100%; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "20", value: "10", step: "1" });
-            this.limitRatioSlider = input$a({ title: "limiter ratio", style: `width: 100%; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "20", value: "10", step: "1" });
-            this.masterGainSlider = input$a({ title: "master gain", style: `width: 5em; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "5", value: "1", step: "0.02" });
+            this._playButton = button$h({ style: "width: 55%;", type: "button" });
+            this.limitDecaySlider = input$b({ title: "limit decay", style: `width: 5em; flex-grow: 1; margin: 0;`, type: "range", min: "1", max: "30", value: "4", step: "1" });
+            this.limitRiseSlider = input$b({ title: "limit rise", style: `width: 5em; flex-grow: 1; margin: 0;`, type: "range", min: "2000", max: "10000", value: "4000", step: "250" });
+            this.compressionThresholdSlider = input$b({ title: "compressor threshold", style: `width: 100%; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "1.1", value: "1", step: "0.05" });
+            this.limitThresholdSlider = input$b({ title: "limiter threshold", style: `width: 100%; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "2", value: "1", step: "0.05" });
+            this.compressionRatioSlider = input$b({ title: "compressor ratio", style: `width: 100%; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "20", value: "10", step: "1" });
+            this.limitRatioSlider = input$b({ title: "limiter ratio", style: `width: 100%; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "20", value: "10", step: "1" });
+            this.masterGainSlider = input$b({ title: "master gain", style: `width: 5em; flex-grow: 1; margin: 0;`, type: "range", min: "0", max: "5", value: "1", step: "0.02" });
             this.inVolumeHistoricTimer = 0.0;
             this.inVolumeHistoricCap = 0.0;
             this.outVolumeHistoricTimer = 0.0;
             this.outVolumeHistoricCap = 0.0;
-            this._cancelButton = button$g({ class: "cancelButton" });
-            this._okayButton = button$g({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this._resetButton = button$g({ style: "width:45%;" }, "Reset");
-            this.container = div$g({ class: "prompt noSelection", style: "width: 250px;" }, h2$f("Limiter Options"), div$g({ style: "display: flex; width: 55%; align-self: center; flex-direction: row; align-items: center; justify-content: center;" }, this._playButton), div$g({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center;" }, this.limiterCanvas.container), div$g({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; margin-top: 1.5em; justify-content: flex-end;" }, div$g({ style: `text-align: right; width: 25%; margin-right: 4.5%; color: ${ColorConfig.primaryText};` }, ""), div$g({ style: `text-align: center; width: 33%; margin-right: 4.5%; color: ${ColorConfig.textSelection};` }, "Boost"), div$g({ style: `text-align: center; width: 33%; margin-right: 0%; color: ${ColorConfig.linkAccent};` }, "Cutoff")), div$g({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; margin-top: 0.5em; justify-content: flex-end;" }, div$g({ style: `text-align: right; width: 25%; margin-right: 4.5%; color: ${ColorConfig.primaryText};` }, "Threshold:"), div$g({ style: `width: 33%; margin-right: 4.5%;` }, this.compressionThresholdSlider), div$g({ style: `width: 33%; margin-right: 0%;` }, this.limitThresholdSlider)), div$g({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$g({ style: `text-align: right; width: 25%; margin-right: 4.5%; color: ${ColorConfig.primaryText};` }, "Ratio:"), div$g({ style: `width: 33%; margin-right: 4.5%;` }, this.compressionRatioSlider), div$g({ style: `width: 33%; margin-right: 0%;` }, this.limitRatioSlider)), div$g({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$g({ style: `text-align: right; width: 8.5em; margin-right: 1em; color: ${ColorConfig.primaryText};` }, "Limit Decay:"), this.limitDecaySlider), div$g({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$g({ style: `text-align: right; width: 8.5em; margin-right: 1em; color: ${ColorConfig.primaryText};` }, "Limit Rise:"), this.limitRiseSlider), div$g({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$g({ style: `text-align: right; width: 8.5em; margin-right: 1em; color: ${ColorConfig.primaryText};` }, "Master Gain:"), this.masterGainSlider), div$g({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton, this._resetButton), this._cancelButton);
+            this._cancelButton = button$h({ class: "cancelButton" });
+            this._okayButton = button$h({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this._resetButton = button$h({ style: "width:45%;" }, "Reset");
+            this.container = div$h({ class: "prompt noSelection", style: "width: 250px;" }, h2$g("Limiter Options"), div$h({ style: "display: flex; width: 55%; align-self: center; flex-direction: row; align-items: center; justify-content: center;" }, this._playButton), div$h({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center;" }, this.limiterCanvas.container), div$h({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; margin-top: 1.5em; justify-content: flex-end;" }, div$h({ style: `text-align: right; width: 25%; margin-right: 4.5%; color: ${ColorConfig.primaryText};` }, ""), div$h({ style: `text-align: center; width: 33%; margin-right: 4.5%; color: ${ColorConfig.textSelection};` }, "Boost"), div$h({ style: `text-align: center; width: 33%; margin-right: 0%; color: ${ColorConfig.linkAccent};` }, "Cutoff")), div$h({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; margin-top: 0.5em; justify-content: flex-end;" }, div$h({ style: `text-align: right; width: 25%; margin-right: 4.5%; color: ${ColorConfig.primaryText};` }, "Threshold:"), div$h({ style: `width: 33%; margin-right: 4.5%;` }, this.compressionThresholdSlider), div$h({ style: `width: 33%; margin-right: 0%;` }, this.limitThresholdSlider)), div$h({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$h({ style: `text-align: right; width: 25%; margin-right: 4.5%; color: ${ColorConfig.primaryText};` }, "Ratio:"), div$h({ style: `width: 33%; margin-right: 4.5%;` }, this.compressionRatioSlider), div$h({ style: `width: 33%; margin-right: 0%;` }, this.limitRatioSlider)), div$h({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$h({ style: `text-align: right; width: 8.5em; margin-right: 1em; color: ${ColorConfig.primaryText};` }, "Limit Decay:"), this.limitDecaySlider), div$h({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$h({ style: `text-align: right; width: 8.5em; margin-right: 1em; color: ${ColorConfig.primaryText};` }, "Limit Rise:"), this.limitRiseSlider), div$h({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$h({ style: `text-align: right; width: 8.5em; margin-right: 1em; color: ${ColorConfig.primaryText};` }, "Master Gain:"), this.masterGainSlider), div$h({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton, this._resetButton), this._cancelButton);
             this._volumeUpdate = () => {
                 this.inVolumeHistoricTimer--;
                 if (this.inVolumeHistoricTimer <= 0) {
@@ -46023,14 +46613,14 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$f, div: div$f, h2: h2$e, p: p$8 } = HTML;
+    const { button: button$g, div: div$g, h2: h2$f, p: p$8 } = HTML;
     class CustomScalePrompt {
         constructor(_doc) {
             this._doc = _doc;
             this._flags = [];
             this._scaleFlags = [];
-            this._cancelButton = button$f({ class: "cancelButton" });
-            this._okayButton = button$f({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this._cancelButton = button$g({ class: "cancelButton" });
+            this._okayButton = button$g({ class: "okayButton", style: "width:45%;" }, "Okay");
             this._editorWidth = 240;
             this._editorHeight = 100;
             this._keys = [];
@@ -46107,7 +46697,7 @@ You should be redirected to the song at:<br /><br />
             this._svg = SVG.svg({ style: `background-color: ${ColorConfig.editorBackground}; touch-action: none;`, width: "100%", height: "100%", viewBox: "0 0 " + this._editorWidth + " " + this._editorHeight, preserveAspectRatio: "none" }, SVG.defs(SVG.linearGradient({ id: "shadow", x1: "0%", y1: "0%", x2: "0%", y2: "100%" }, SVG.stop({ offset: "0%", "stop-color": "rgba(0,0,0,0.5)" }), SVG.stop({ offset: "100%", "stop-color": "transparent" }))), ...sortedKeys, ...this._keyNames);
             this._okayButton.addEventListener("click", this._saveChanges);
             this._cancelButton.addEventListener("click", this._close);
-            this.container = div$f({ class: "prompt noSelection", style: "width: 250px;" }, h2$e("Custom Scale"), p$8("Here, you can make your own scale to use in your song. Press the keys below to toggle which notes of an octave are in the scale. For this to work, you'll need to have the \"Custom\" scale selected."), div$f({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end;" }, this._svg), div$f({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this.container = div$g({ class: "prompt noSelection", style: "width: 250px;" }, h2$f("Custom Scale"), p$8("Here, you can make your own scale to use in your song. Press the keys below to toggle which notes of an octave are in the scale. For this to work, you'll need to have the \"Custom\" scale selected."), div$g({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end;" }, this._svg), div$g({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this.container.addEventListener("keydown", this.whenKeyPressed);
             this._render();
         }
@@ -46497,15 +47087,15 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$e, div: div$e, span: span$5, h2: h2$d, input: input$9, br: br$1, select: select$9, option: option$9 } = HTML;
+    const { button: button$f, div: div$f, span: span$5, h2: h2$e, input: input$a, br: br$2, select: select$9, option: option$9 } = HTML;
     class MoveNotesSidewaysPrompt {
         constructor(_doc) {
             this._doc = _doc;
-            this._beatsStepper = input$9({ style: "width: 3em; margin-left: 1em;", type: "number", step: "0.01", value: "0" });
+            this._beatsStepper = input$a({ style: "width: 3em; margin-left: 1em;", type: "number", step: "0.01", value: "0" });
             this._conversionStrategySelect = select$9({ style: "width: 100%;" }, option$9({ value: "overflow" }, "Overflow notes across bars."), option$9({ value: "wrapAround" }, "Wrap notes around within bars."));
-            this._cancelButton = button$e({ class: "cancelButton" });
-            this._okayButton = button$e({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this.container = div$e({ class: "prompt noSelection", style: "width: 250px;" }, h2$d("Move Notes Sideways"), div$e({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$e({ style: "text-align: right;" }, "Beats to move:", br$1(), span$5({ style: `font-size: smaller; color: ${ColorConfig.secondaryText};` }, "(Negative is left, positive is right)")), this._beatsStepper), div$e({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$e({ class: "selectContainer", style: "width: 100%;" }, this._conversionStrategySelect)), div$e({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._cancelButton = button$f({ class: "cancelButton" });
+            this._okayButton = button$f({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this.container = div$f({ class: "prompt noSelection", style: "width: 250px;" }, h2$e("Move Notes Sideways"), div$f({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$f({ style: "text-align: right;" }, "Beats to move:", br$2(), span$5({ style: `font-size: smaller; color: ${ColorConfig.secondaryText};` }, "(Negative is left, positive is right)")), this._beatsStepper), div$f({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$f({ class: "selectContainer", style: "width: 100%;" }, this._conversionStrategySelect)), div$f({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -46552,11 +47142,12 @@ You should be redirected to the song at:<br /><br />
             this._doc = _doc;
             this._editor = _editor;
             this._cornerFiller = HTML.div({ style: `background: ${ColorConfig.editorBackground}; position: sticky; bottom: 0; left: 0; width: 30px; height: 30px;` });
+            this._loopButtonInput = HTML.button({ class: "songLoopButton", style: 'width: 100%;' });
             this._buttons = [];
             this._channelCounts = [];
             this._channelNameDisplay = HTML.div({ style: `background-color: ${ColorConfig.uiWidgetFocus}; white-space:nowrap; display: none; transform:translate(20px); width: auto; pointer-events: none; position: absolute; border-radius: 0.2em; z-index: 2;`, "color": ColorConfig.primaryText }, "");
             this._channelNameInput = new InputBox(HTML.input({ style: `color: ${ColorConfig.primaryText}; background-color: ${ColorConfig.uiWidgetFocus}; margin-top: -2px; display: none; width: 6em; position: absolute; border-radius: 0.2em; z-index: 2;`, "color": ColorConfig.primaryText }, ""), this._doc, (oldValue, newValue) => new ChangeChannelName(this._doc, oldValue, newValue));
-            this._channelDropDown = HTML.select({ style: "width: 0px; left: 19px; height: 19px; position:absolute; opacity:0" }, HTML.option({ value: "rename" }, "Rename..."), HTML.option({ value: "chnUp" }, "Move Channel Up"), HTML.option({ value: "chnDown" }, "Move Channel Down"), HTML.option({ value: "chnMute" }, "Mute Channel"), HTML.option({ value: "chnSolo" }, "Solo Channel"), HTML.option({ value: "chnInsert" }, "Insert Channel Below"), HTML.option({ value: "chnDelete" }, "Delete This Channel"));
+            this._channelDropDown = HTML.select({ style: "width: 14px; left: 19px; height: 19px; position:absolute; opacity:0" }, HTML.option({ value: "rename" }, "Rename..."), HTML.option({ value: "chnUp" }, "Move Channel Up"), HTML.option({ value: "chnDown" }, "Move Channel Down"), HTML.option({ value: "chnMute" }, "Mute Channel"), HTML.option({ value: "chnSolo" }, "Solo Channel"), HTML.option({ value: "chnInsert" }, "Insert Channel Below"), HTML.option({ value: "chnDelete" }, "Delete This Channel"));
             this.container = HTML.div({ class: "muteEditor", style: "position: sticky; padding-top: " + Config.barEditorHeight + "px;" }, this._channelNameDisplay, this._channelNameInput.input, this._channelDropDown);
             this._editorHeight = 128;
             this._renderedPitchChannels = 0;
@@ -46574,6 +47165,9 @@ You should be redirected to the song at:<br /><br />
             };
             this._channelNameInputClicked = (event) => {
                 event.stopPropagation();
+            };
+            this._changeLoopType = () => {
+                this._doc.record(new ChangeLoopType(this._doc, this._doc.song.loopType, this._doc.song.loopType));
             };
             this._channelNameInputHide = () => {
                 this._channelNameInput.input.style.setProperty("display", "none");
@@ -46754,6 +47348,7 @@ You should be redirected to the song at:<br /><br />
             this._channelNameInput.input.addEventListener("blur", this._channelNameInputHide);
             this._channelNameInput.input.addEventListener("mousedown", this._channelNameInputClicked);
             this._channelNameInput.input.addEventListener("input", this._channelNameInputWhenInput);
+            this._loopButtonInput.addEventListener("click", this._changeLoopType);
         }
         onKeyUp(event) {
             switch (event.keyCode) {
@@ -46785,6 +47380,7 @@ You should be redirected to the song at:<br /><br />
                 }
                 this._buttons.length = this._doc.song.getChannelCount();
                 this.container.appendChild(this._cornerFiller);
+                this._cornerFiller.appendChild(this._loopButtonInput);
             }
             for (let y = 0; y < this._doc.song.getChannelCount(); y++) {
                 if (this._doc.song.channels[y].muted) {
@@ -50102,13 +50698,13 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$d, div: div$d, h2: h2$c, p: p$7, input: input$8, span: span$4 } = HTML;
+    const { button: button$e, div: div$e, h2: h2$d, p: p$7, input: input$9, span: span$4 } = HTML;
     class SelectiveRandomPastePrompt {
         constructor(_doc, _isRandom) {
             this._doc = _doc;
             this._isRandom = _isRandom;
-            this._cancelButton = button$d({ class: "cancelButton" });
-            this._okayButton = button$d({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this._cancelButton = button$e({ class: "cancelButton" });
+            this._okayButton = button$e({ class: "okayButton", style: "width:45%;" }, "Okay");
             this._close = () => {
                 this._doc.undo();
             };
@@ -50144,33 +50740,33 @@ You should be redirected to the song at:<br /><br />
                 this.SpecificRandomPasteSettings = this._doc.prefs.selectiveRandom;
             else
                 this.SpecificRandomPasteSettings = this._doc.prefs.selectivePaste;
-            this._instrumentTypeCheckbox = input$8({ "checked": this.SpecificRandomPasteSettings.instrumentType, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
-            this._eqFilterCheckbox = input$8({ "checked": this.SpecificRandomPasteSettings.eqFilter, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
-            this._fadeCheckbox = input$8({ "checked": this.SpecificRandomPasteSettings.fade, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
-            this._instrumentTypeSettingsCheckbox = input$8({ "checked": this.SpecificRandomPasteSettings.instrumentTypeSettings, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
-            this._unisonCheckbox = input$8({ "checked": this.SpecificRandomPasteSettings.unison, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
-            this._effectsCheckbox = input$8({ "checked": this.SpecificRandomPasteSettings.effects, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
-            this._envelopesCheckbox = input$8({ "checked": this.SpecificRandomPasteSettings.envelopes, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
-            this._instrumentPatternsCheckbox = input$8({ "checked": this.SpecificRandomPasteSettings.instrumentPatterns, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
-            this._allInstrumentsCheckbox = input$8({ "checked": this.SpecificRandomPasteSettings.allInstruments, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
+            this._instrumentTypeCheckbox = input$9({ "checked": this.SpecificRandomPasteSettings.instrumentType, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
+            this._eqFilterCheckbox = input$9({ "checked": this.SpecificRandomPasteSettings.eqFilter, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
+            this._fadeCheckbox = input$9({ "checked": this.SpecificRandomPasteSettings.fade, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
+            this._instrumentTypeSettingsCheckbox = input$9({ "checked": this.SpecificRandomPasteSettings.instrumentTypeSettings, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
+            this._unisonCheckbox = input$9({ "checked": this.SpecificRandomPasteSettings.unison, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
+            this._effectsCheckbox = input$9({ "checked": this.SpecificRandomPasteSettings.effects, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
+            this._envelopesCheckbox = input$9({ "checked": this.SpecificRandomPasteSettings.envelopes, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
+            this._instrumentPatternsCheckbox = input$9({ "checked": this.SpecificRandomPasteSettings.instrumentPatterns, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
+            this._allInstrumentsCheckbox = input$9({ "checked": this.SpecificRandomPasteSettings.allInstruments, type: "checkbox", style: "width: 1em; padding: 0.5em;" });
             this._okayButton.addEventListener("click", this._saveChanges);
             this._cancelButton.addEventListener("click", this._close);
-            this.container = div$d({ class: "prompt noSelection", style: "width: 250px;" }, h2$c(this._isRandom ? "Customize Specific Random" : "Customize Specific Paste"), p$7((this._isRandom ? "When generating a random instrument with Alt + R" : "When pasting an instrument with Alt + V") +
-                ", you can choose which parameters you want " + (this._isRandom ? "randomized" : "pasted") + " here."), div$d({ style: "align-items: center; display: flex; flex-direction: row;" }, div$d({ style: "display: flex; flex-direction: column; align-items: flex-start;" }, div$d(span$4("Instrument Type: "), this._instrumentTypeCheckbox), div$d(span$4("EQ Filter: "), this._eqFilterCheckbox), div$d(span$4("Fade: "), this._fadeCheckbox), div$d(span$4("Instrument Type Settings: "), this._instrumentTypeSettingsCheckbox), div$d(span$4("Unison: "), this._unisonCheckbox), div$d(span$4("Effects: "), this._effectsCheckbox), div$d(span$4("Envelopes: "), this._envelopesCheckbox), this._isRandom || !this._doc.song.patternInstruments ? "" : div$d(span$4("Instrument Patterns: "), this._instrumentPatternsCheckbox), this._isRandom || (!this._doc.song.patternInstruments && !this._doc.song.layeredInstruments) ? "" : div$d(span$4("All Instruments: "), this._allInstrumentsCheckbox))), div$d({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this.container = div$e({ class: "prompt noSelection", style: "width: 250px;" }, h2$d(this._isRandom ? "Customize Specific Random" : "Customize Specific Paste"), p$7((this._isRandom ? "When generating a random instrument with Alt + R" : "When pasting an instrument with Alt + V") +
+                ", you can choose which parameters you want " + (this._isRandom ? "randomized" : "pasted") + " here."), div$e({ style: "align-items: center; display: flex; flex-direction: row;" }, div$e({ style: "display: flex; flex-direction: column; align-items: flex-start;" }, div$e(span$4("Instrument Type: "), this._instrumentTypeCheckbox), div$e(span$4("EQ Filter: "), this._eqFilterCheckbox), div$e(span$4("Fade: "), this._fadeCheckbox), div$e(span$4("Instrument Type Settings: "), this._instrumentTypeSettingsCheckbox), div$e(span$4("Unison: "), this._unisonCheckbox), div$e(span$4("Effects: "), this._effectsCheckbox), div$e(span$4("Envelopes: "), this._envelopesCheckbox), this._isRandom || !this._doc.song.patternInstruments ? "" : div$e(span$4("Instrument Patterns: "), this._instrumentPatternsCheckbox), this._isRandom || (!this._doc.song.patternInstruments && !this._doc.song.layeredInstruments) ? "" : div$e(span$4("All Instruments: "), this._allInstrumentsCheckbox))), div$e({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this.container.addEventListener("keydown", this.whenKeyPressed);
         }
     }
 
-    const { button: button$c, div: div$c, span: span$3, h2: h2$b, input: input$7, br, select: select$8, option: option$8 } = HTML;
+    const { button: button$d, div: div$d, span: span$3, h2: h2$c, input: input$8, br: br$1, select: select$8, option: option$8 } = HTML;
     class SongDurationPrompt {
         constructor(_doc) {
             this._doc = _doc;
-            this._computedSamplesLabel = div$c({ style: "width: 10em;" }, new Text("0:00"));
-            this._barsStepper = input$7({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
+            this._computedSamplesLabel = div$d({ style: "width: 10em;" }, new Text("0:00"));
+            this._barsStepper = input$8({ style: "width: 3em; margin-left: 1em;", type: "number", step: "1" });
             this._positionSelect = select$8({ style: "width: 100%;" }, option$8({ value: "end" }, "Apply change at end of song."), option$8({ value: "beginning" }, "Apply change at beginning of song."));
-            this._cancelButton = button$c({ class: "cancelButton" });
-            this._okayButton = button$c({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this.container = div$c({ class: "prompt noSelection", style: "width: 250px;" }, h2$b("Song Length"), div$c({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" }, "Length:", this._computedSamplesLabel), div$c({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$c({ style: "display: inline-block; text-align: right;" }, "Bars per song:", br(), span$3({ style: `font-size: smaller; color: ${ColorConfig.secondaryText};` }, "(Multiples of 4 are recommended)")), this._barsStepper), div$c({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$c({ class: "selectContainer", style: "width: 100%;" }, this._positionSelect)), div$c({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._cancelButton = button$d({ class: "cancelButton" });
+            this._okayButton = button$d({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this.container = div$d({ class: "prompt noSelection", style: "width: 250px;" }, h2$c("Song Length"), div$d({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between;" }, "Length:", this._computedSamplesLabel), div$d({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$d({ style: "display: inline-block; text-align: right;" }, "Bars per song:", br$1(), span$3({ style: `font-size: smaller; color: ${ColorConfig.secondaryText};` }, "(Multiples of 4 are recommended)")), this._barsStepper), div$d({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$d({ class: "selectContainer", style: "width: 100%;" }, this._positionSelect)), div$d({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -50235,14 +50831,14 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$b, div: div$b, h2: h2$a, p: p$6, select: select$7, option: option$7 } = HTML;
+    const { button: button$c, div: div$c, h2: h2$b, p: p$6, select: select$7, option: option$7 } = HTML;
     class SustainPrompt {
         constructor(_doc) {
             this._doc = _doc;
             this._typeSelect = select$7({ style: "width: 100%;" }, option$7({ value: "acoustic" }, "(A) Acoustic"), option$7({ value: "bright" }, "(B) Bright"));
-            this._cancelButton = button$b({ class: "cancelButton" });
-            this._okayButton = button$b({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this.container = div$b({ class: "prompt", style: "width: 300px;" }, div$b(h2$a("String Sustain"), p$6("This setting controls how quickly the picked string vibration decays."), p$6("Unlike most of BeepBox's instrument synthesizer features, a picked string cannot change frequency suddenly while maintaining its decay. If a tone's pitch changes suddenly (e.g. if the chord type is set to \"arpeggio\" or the transition type is set to \"continues\") then the string will be re-picked and start decaying from the beginning again, even if the envelopes don't otherwise restart.")), div$b({ style: { display: Config.enableAcousticSustain ? undefined : "none" } }, p$6("BeepBox comes with two slightly different sustain designs. You can select one here and press \"Okay\" to confirm it."), div$b({ class: "selectContainer", style: "width: 100%;" }, this._typeSelect)), div$b({ style: { display: Config.enableAcousticSustain ? "flex" : "none", "flex-direction": "row-reverse", "justify-content": "space-between" } }, this._okayButton), this._cancelButton);
+            this._cancelButton = button$c({ class: "cancelButton" });
+            this._okayButton = button$c({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this.container = div$c({ class: "prompt", style: "width: 300px;" }, div$c(h2$b("String Sustain"), p$6("This setting controls how quickly the picked string vibration decays."), p$6("Unlike most of BeepBox's instrument synthesizer features, a picked string cannot change frequency suddenly while maintaining its decay. If a tone's pitch changes suddenly (e.g. if the chord type is set to \"arpeggio\" or the transition type is set to \"continues\") then the string will be re-picked and start decaying from the beginning again, even if the envelopes don't otherwise restart.")), div$c({ style: { display: Config.enableAcousticSustain ? undefined : "none" } }, p$6("BeepBox comes with two slightly different sustain designs. You can select one here and press \"Okay\" to confirm it."), div$c({ class: "selectContainer", style: "width: 100%;" }, this._typeSelect)), div$c({ style: { display: Config.enableAcousticSustain ? "flex" : "none", "flex-direction": "row-reverse", "justify-content": "space-between" } }, this._okayButton), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -50276,13 +50872,13 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$a, div: div$a, h2: h2$9, p: p$5, select: select$6, option: option$6, iframe } = HTML;
+    const { button: button$b, div: div$b, h2: h2$a, p: p$5, select: select$6, option: option$6, iframe } = HTML;
     class SongRecoveryPrompt {
         constructor(_doc) {
             this._doc = _doc;
-            this._songContainer = div$a();
-            this._cancelButton = button$a({ class: "cancelButton" });
-            this.container = div$a({ class: "prompt", style: "width: 300px;" }, h2$9("Song Recovery"), div$a({ style: "max-height: 385px; overflow-y: auto;" }, p$5("This is a TEMPORARY list of songs you have recently modified. Please keep your own backups of songs you care about! SONGS THAT USE SAMPLES WILL TAKE A WHILE TO LOAD, so be patient!"), this._songContainer, p$5("(If \"Display Song Data in URL\" is enabled in your preferences, then you may also be able to find song versions in your browser history. However, song recovery won't work if you were browsing in private/incognito mode.)")), this._cancelButton);
+            this._songContainer = div$b();
+            this._cancelButton = button$b({ class: "cancelButton" });
+            this.container = div$b({ class: "prompt", style: "width: 300px;" }, h2$a("Song Recovery"), div$b({ style: "max-height: 385px; overflow-y: auto;" }, p$5("This is a TEMPORARY list of songs you have recently modified. Please keep your own backups of songs you care about! SONGS THAT USE SAMPLES WILL TAKE A WHILE TO LOAD, so be patient!"), this._songContainer, p$5("(If \"Display Song Data in URL\" is enabled in your preferences, then you may also be able to find song versions in your browser history. However, song recovery won't work if you were browsing in private/incognito mode.)")), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -50301,7 +50897,7 @@ You should be redirected to the song at:<br /><br />
                 }
                 const player = iframe({ style: "width: 100%; height: 60px; border: none; display: block;" });
                 player.src = "player/" + (OFFLINE ? "index.html" : "") + "#song=" + window.localStorage.getItem(versionToKey(song.versions[0]));
-                const container = div$a({ style: "margin: 4px 0;" }, div$a({ class: "selectContainer", style: "width: 100%; margin: 2px 0;" }, versionMenu), player);
+                const container = div$b({ style: "margin: 4px 0;" }, div$b({ class: "selectContainer", style: "width: 100%; margin: 2px 0;" }, versionMenu), player);
                 this._songContainer.appendChild(container);
                 versionMenu.addEventListener("change", () => {
                     const version = song.versions[versionMenu.selectedIndex];
@@ -50312,23 +50908,23 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$9, label: label$1, div: div$9, p: p$4, a: a$2, h2: h2$8, input: input$6, select: select$5, option: option$5 } = HTML;
+    const { button: button$a, label: label$1, div: div$a, p: p$4, a: a$2, h2: h2$9, input: input$7, select: select$5, option: option$5 } = HTML;
     class RecordingSetupPrompt {
         constructor(_doc) {
             this._doc = _doc;
             this._keyboardMode = select$5({ style: "width: 100%;" }, option$5({ value: "useCapsLockForNotes" }, "simple shortcuts, use caps lock to play notes"), option$5({ value: "pressControlForShortcuts" }, "simple notes, press " + EditorConfig.ctrlName + " for shortcuts"));
             this._keyboardLayout = select$5({ style: "width: 100%;" }, option$5({ value: "wickiHayden" }, "Wicki-Hayden"), option$5({ value: "songScale" }, "selected song scale"), option$5({ value: "pianoAtC" }, "piano starting at C"), option$5({ value: "pianoAtA" }, "piano starting at A"), option$5({ value: "pianoTransposingC" }, "piano transposing C to song key"), option$5({ value: "pianoTransposingA" }, "piano transposing A to song key"));
             this._bassOffset = select$5({ style: "width: 100%;" }, option$5({ value: "0" }, "disabled"), option$5({ value: "-1" }, "before"), option$5({ value: "1" }, "after"));
-            this._keyboardLayoutPreview = div$9({ style: "display: grid; row-gap: 4px; margin: 4px auto; font-size: 10px;" });
-            this._enableMidi = input$6({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showRecordButton = input$6({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._snapRecordedNotesToRhythm = input$6({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._ignorePerformedNotesNotInScale = input$6({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._metronomeCountIn = input$6({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._metronomeWhileRecording = input$6({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._okayButton = button$9({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this._cancelButton = button$9({ class: "cancelButton" });
-            this.container = div$9({ class: "prompt noSelection recordingSetupPrompt", style: "width: 600px; text-align: right; max-height: 90%;" }, h2$8({ style: "align-self: center;" }, "Note Recording Setup"), div$9({ style: "display: grid; overflow-y: auto; overflow-x: hidden; flex-shrink: 1;" }, p$4("UltraBox can record notes as you perform them. You can start recording by pressing Ctrl+Space (or " + EditorConfig.ctrlSymbol + "P)."), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Add ● record button next to ▶ play button:", this._showRecordButton), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Snap recorded notes to the song's rhythm:", this._snapRecordedNotesToRhythm), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Ignore notes not in the song's scale:", this._ignorePerformedNotesNotInScale), p$4("While recording, you can perform notes on your keyboard!"), label$1({ style: "display: flex; flex-direction: row; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em; justify-content: center;" }, "Keyboard layout:", div$9({ class: "selectContainer", style: "width: 50%; margin-left: 1em;" }, this._keyboardLayout)), this._keyboardLayoutPreview, p$4("When not recording, you can use the computer keyboard either for shortcuts (like C and V for copy and paste) or for performing notes, depending on this mode:"), label$1({ style: "display: flex; margin-top: 0.5em; margin-bottom: 0.5em; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, div$9({ class: "selectContainer", style: "width: 50%;" }, this._keyboardMode)), p$4("Performing music takes practice! Try slowing the tempo and using this metronome to help you keep a rhythm."), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Hear metronome while recording:", this._metronomeWhileRecording), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Count-in 1 bar of metronome before recording:", this._metronomeCountIn), p$4("If you have a ", a$2({ href: "https://caniuse.com/midi", target: "_blank" }, "compatible browser"), " on a device connected to a MIDI keyboard, you can use it to perform notes in UltraBox! (Or you could buy ", a$2({ href: "https://imitone.com/", target: "_blank" }, "Imitone"), " or ", a$2({ href: "https://vochlea.com/", target: "_blank" }, "Dubler"), " to hum notes into a microphone while wearing headphones!)"), label$1({ style: "display: flex; flex-direction: row; align-items: center; margin-top: 0.5em; height: 2em; justify-content: center;" }, "Enable MIDI performance:", this._enableMidi), p$4("The range of pitches available to play via your computer keyboard is affected by the octave scrollbar of the currently selected channel."), p$4("If you set the channel offset below to 'before' or 'after', notes below the middle octave in the view will be 'bass' notes, and placed in the channel before or after the viewed one. Using this, you can play bass and lead at the same time!"), label$1({ style: "display: flex; flex-direction: row; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em; justify-content: center;" }, "Bass Offset:", div$9({ class: "selectContainer", style: "width: 50%; margin-left: 1em;" }, this._bassOffset)), p$4("Once you enable the setting, the keyboard layout above will darken to denote the new bass notes. The notes will be recorded with independent timing and this works with MIDI devices, too. Be aware that the octave offset of both used channels will impact how high/low the bass/lead are relative to one another."), p$4("Recorded notes often overlap such that one note ends after the next note already started. In UltraBox, these notes get split into multiple notes which may sound different when re-played than they did when you were recording. To fix the sound, you can either manually clean up the notes in the pattern editor, or you could try enabling the \"transition type\" effect on the instrument and setting it to \"continue\"."), div$9({ style: `width: 100%; height: 80px; background: linear-gradient(rgba(0,0,0,0), ${ColorConfig.editorBackground}); position: sticky; bottom: 0; pointer-events: none;` })), div$9({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._keyboardLayoutPreview = div$a({ style: "display: grid; row-gap: 4px; margin: 4px auto; font-size: 10px;" });
+            this._enableMidi = input$7({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showRecordButton = input$7({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._snapRecordedNotesToRhythm = input$7({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._ignorePerformedNotesNotInScale = input$7({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._metronomeCountIn = input$7({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._metronomeWhileRecording = input$7({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._okayButton = button$a({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this._cancelButton = button$a({ class: "cancelButton" });
+            this.container = div$a({ class: "prompt noSelection recordingSetupPrompt", style: "width: 600px; text-align: right; max-height: 90%;" }, h2$9({ style: "align-self: center;" }, "Note Recording Setup"), div$a({ style: "display: grid; overflow-y: auto; overflow-x: hidden; flex-shrink: 1;" }, p$4("UltraBox can record notes as you perform them. You can start recording by pressing Ctrl+Space (or " + EditorConfig.ctrlSymbol + "P)."), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Add ● record button next to ▶ play button:", this._showRecordButton), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Snap recorded notes to the song's rhythm:", this._snapRecordedNotesToRhythm), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Ignore notes not in the song's scale:", this._ignorePerformedNotesNotInScale), p$4("While recording, you can perform notes on your keyboard!"), label$1({ style: "display: flex; flex-direction: row; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em; justify-content: center;" }, "Keyboard layout:", div$a({ class: "selectContainer", style: "width: 50%; margin-left: 1em;" }, this._keyboardLayout)), this._keyboardLayoutPreview, p$4("When not recording, you can use the computer keyboard either for shortcuts (like C and V for copy and paste) or for performing notes, depending on this mode:"), label$1({ style: "display: flex; margin-top: 0.5em; margin-bottom: 0.5em; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, div$a({ class: "selectContainer", style: "width: 50%;" }, this._keyboardMode)), p$4("Performing music takes practice! Try slowing the tempo and using this metronome to help you keep a rhythm."), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Hear metronome while recording:", this._metronomeWhileRecording), label$1({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: center;" }, "Count-in 1 bar of metronome before recording:", this._metronomeCountIn), p$4("If you have a ", a$2({ href: "https://caniuse.com/midi", target: "_blank" }, "compatible browser"), " on a device connected to a MIDI keyboard, you can use it to perform notes in UltraBox! (Or you could buy ", a$2({ href: "https://imitone.com/", target: "_blank" }, "Imitone"), " or ", a$2({ href: "https://vochlea.com/", target: "_blank" }, "Dubler"), " to hum notes into a microphone while wearing headphones!)"), label$1({ style: "display: flex; flex-direction: row; align-items: center; margin-top: 0.5em; height: 2em; justify-content: center;" }, "Enable MIDI performance:", this._enableMidi), p$4("The range of pitches available to play via your computer keyboard is affected by the octave scrollbar of the currently selected channel."), p$4("If you set the channel offset below to 'before' or 'after', notes below the middle octave in the view will be 'bass' notes, and placed in the channel before or after the viewed one. Using this, you can play bass and lead at the same time!"), label$1({ style: "display: flex; flex-direction: row; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em; justify-content: center;" }, "Bass Offset:", div$a({ class: "selectContainer", style: "width: 50%; margin-left: 1em;" }, this._bassOffset)), p$4("Once you enable the setting, the keyboard layout above will darken to denote the new bass notes. The notes will be recorded with independent timing and this works with MIDI devices, too. Be aware that the octave offset of both used channels will impact how high/low the bass/lead are relative to one another."), p$4("Recorded notes often overlap such that one note ends after the next note already started. In UltraBox, these notes get split into multiple notes which may sound different when re-played than they did when you were recording. To fix the sound, you can either manually clean up the notes in the pattern editor, or you could try enabling the \"transition type\" effect on the instrument and setting it to \"continue\"."), div$a({ style: `width: 100%; height: 80px; background: linear-gradient(rgba(0,0,0,0), ${ColorConfig.editorBackground}); position: sticky; bottom: 0; pointer-events: none;` })), div$a({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -50362,12 +50958,12 @@ You should be redirected to the song at:<br /><br />
                 const rowLengths = [12, 12, 11, 10];
                 const scale = this._doc.song.scale == Config.scales.dictionary["Custom"].index ? this._doc.song.scaleCustom : Config.scales[this._doc.song.scale].flags;
                 for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
-                    const row = div$9({ style: "display: flex;" });
+                    const row = div$a({ style: "display: flex;" });
                     this._keyboardLayoutPreview.appendChild(row);
-                    const spacer = div$9({ style: "width: " + (rowIndex * 12) + "px; height: 20px; flex-shrink: 0;" });
+                    const spacer = div$a({ style: "width: " + (rowIndex * 12) + "px; height: 20px; flex-shrink: 0;" });
                     row.appendChild(spacer);
                     for (let colIndex = 0; colIndex < rowLengths[rowIndex]; colIndex++) {
-                        const key = div$9({ style: `width: 20px; height: 20px; margin: 0 2px; box-sizing: border-box; flex-shrink: 0; display: flex; justify-content: center; align-items: center;` });
+                        const key = div$a({ style: `width: 20px; height: 20px; margin: 0 2px; box-sizing: border-box; flex-shrink: 0; display: flex; justify-content: center; align-items: center;` });
                         row.appendChild(key);
                         const pitch = KeyboardLayout.keyPosToPitch(this._doc, colIndex, 3 - rowIndex, this._keyboardLayout.value);
                         if (pitch != null) {
@@ -50841,7 +51437,7 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$8, div: div$8, h2: h2$7, input: input$5, p: p$3, a: a$1 } = HTML;
+    const { button: button$9, div: div$9, h2: h2$8, input: input$6, p: p$3, a: a$1 } = HTML;
     let doReload = false;
     class CustomThemePrompt {
         constructor(_doc, _pattern, _pattern2, _pattern3) {
@@ -50849,9 +51445,9 @@ You should be redirected to the song at:<br /><br />
             this._pattern = _pattern;
             this._pattern2 = _pattern2;
             this._pattern3 = _pattern3;
-            this._fileInput = input$5({ type: "file", accept: "image/*", text: "choose editor background image" });
-            this._fileInput2 = input$5({ type: "file", accept: "image/*", text: "choose website background image" });
-            this._colorInput = input$5({
+            this._fileInput = input$6({ type: "file", accept: "image/*", text: "choose editor background image" });
+            this._fileInput2 = input$6({ type: "file", accept: "image/*", text: "choose website background image" });
+            this._colorInput = input$6({
                 type: "text", value: localStorage.getItem("customColors") || `:root {
 			--page-margin: #14051a;
 			--editor-background: #14051a66;
@@ -50965,10 +51561,10 @@ You should be redirected to the song at:<br /><br />
 			--oscilloscope-line-L: var(--secondary-text);
 }`
             });
-            this._cancelButton = button$8({ class: "cancelButton" });
-            this._okayButton = button$8({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this._resetButton = button$8({ style: "height: auto; min-height: var(--button-size);" }, "Reset to defaults");
-            this.container = div$8({ class: "prompt noSelection", style: "width: 300px;" }, h2$7("Import"), p$3({ style: "text-align: left; margin: 0.5em 0;" }, "You can upload images to create a custom theme. The first image will become the editor background, and the second image will be tiled across the webpage."), div$8({ style: "text-align: left; margin-top: 0.5em; margin-bottom: 0.5em;" }, "You can find a list of custom themes made by other users on the ", a$1({ target: "_blank", href: "https://docs.google.com/spreadsheets/d/1dGjEcLgJrPwzBExPmwA9pbE_KVQ3jNrnTBrd46d2IKo/edit" }, "custom theme sheet.")), div$8(), p$3({ style: "text-align: left; margin: 0;" }, "Editor Background Image:", this._fileInput), p$3({ style: "text-align: left; margin: 0.5em 0;" }, "Website Background Image:", this._fileInput2), div$8(), p$3({ style: "text-align: left; margin: 0;" }, "Replace the text below with your custom theme data to load it:"), this._colorInput, div$8({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._resetButton), div$8({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._cancelButton = button$9({ class: "cancelButton" });
+            this._okayButton = button$9({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this._resetButton = button$9({ style: "height: auto; min-height: var(--button-size);" }, "Reset to defaults");
+            this.container = div$9({ class: "prompt noSelection", style: "width: 300px;" }, h2$8("Import"), p$3({ style: "text-align: left; margin: 0.5em 0;" }, "You can upload images to create a custom theme. The first image will become the editor background, and the second image will be tiled across the webpage."), div$9({ style: "text-align: left; margin-top: 0.5em; margin-bottom: 0.5em;" }, "You can find a list of custom themes made by other users on the ", a$1({ target: "_blank", href: "https://docs.google.com/spreadsheets/d/1dGjEcLgJrPwzBExPmwA9pbE_KVQ3jNrnTBrd46d2IKo/edit" }, "custom theme sheet.")), div$9(), p$3({ style: "text-align: left; margin: 0;" }, "Editor Background Image:", this._fileInput), p$3({ style: "text-align: left; margin: 0.5em 0;" }, "Website Background Image:", this._fileInput2), div$9(), p$3({ style: "text-align: left; margin: 0;" }, "Replace the text below with your custom theme data to load it:"), this._colorInput, div$9({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._resetButton), div$9({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._close = () => {
                 this._doc.prompt = null;
                 this._doc.undo();
@@ -51160,16 +51756,16 @@ You should be redirected to the song at:<br /><br />
         }
     ];
 
-    const { button: button$7, div: div$7, h2: h2$6, } = HTML;
+    const { button: button$8, div: div$8, h2: h2$7, } = HTML;
     class ThemePrompt {
         constructor(_doc) {
             var _a, _b;
             this._doc = _doc;
             this._themeList = this._makeThemeList();
-            this._themeButtonText = div$7({
+            this._themeButtonText = div$8({
                 class: "themeButtonText"
             }, "41Box Classic");
-            this._themeButton = button$7({
+            this._themeButton = button$8({
                 class: "themeDropdownButton",
                 style: `
 				width:100%;
@@ -51179,7 +51775,7 @@ You should be redirected to the song at:<br /><br />
 				padding:6px 10px;
 				box-sizing:border-box;
 			`
-            }, this._themeButtonText, div$7({
+            }, this._themeButtonText, div$8({
                 class: "themeButtonArrows",
                 style: `
 					display:flex;
@@ -51190,8 +51786,8 @@ You should be redirected to the song at:<br /><br />
 					font-size:9px;
 					margin-right:0px;
 				`
-            }, div$7("▲"), div$7("▼")));
-            this._themeMenu = div$7({
+            }, div$8("▲"), div$8("▼")));
+            this._themeMenu = div$8({
                 class: "themeDropdownMenu",
                 style: `
 				display:none;
@@ -51212,9 +51808,9 @@ You should be redirected to the song at:<br /><br />
             }, this._themeList);
             this._previewFrame = null;
             this._dropdownOpen = false;
-            this._cancelButton = button$7({ class: "cancelButton" });
-            this._okayButton = button$7({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this.container = div$7({ class: "prompt noSelection", style: "width: 220px;" }, h2$6("Set Theme"), div$7({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$7({ style: "position:relative; width:100%;" }, this._themeButton, this._themeMenu)), div$7({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._cancelButton = button$8({ class: "cancelButton" });
+            this._okayButton = button$8({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this.container = div$8({ class: "prompt noSelection", style: "width: 220px;" }, h2$7("Set Theme"), div$8({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$8({ style: "position:relative; width:100%;" }, this._themeButton, this._themeMenu)), div$8({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this.lastTheme = window.localStorage.getItem("colorTheme");
             this._originalTheme = this._doc.prefs.colorTheme;
             this._close = () => {
@@ -51289,7 +51885,7 @@ You should be redirected to the song at:<br /><br />
 
 				user-select:none;
 			`
-                }, arrow, div$7({ style: "margin-left:6px;" }, group.group));
+                }, arrow, div$8({ style: "margin-left:6px;" }, group.group));
                 heading.addEventListener("mouseenter", () => {
                     heading.style.background = "rgba(70, 120, 255, 0.5)";
                 });
@@ -51363,12 +51959,12 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$6, div: div$6, p: p$2, h2: h2$5, h3: h3$1 } = HTML;
+    const { button: button$7, div: div$7, p: p$2, h2: h2$6, h3: h3$1 } = HTML;
     class TipPrompt {
         constructor(_doc, type) {
             this._doc = _doc;
-            this._closeButton = button$6({ class: "cancelButton" });
-            this._okayButton = button$6({ class: "okayButton", style: "width:45%; margin-left: auto; margin-top: 0em;" }, "Okay");
+            this._closeButton = button$7({ class: "cancelButton" });
+            this._okayButton = button$7({ class: "okayButton", style: "width:45%; margin-left: auto; margin-top: 0em;" }, "Okay");
             this._close = () => {
                 this._doc.undo();
             };
@@ -51379,552 +51975,552 @@ You should be redirected to the song at:<br /><br />
             switch (type) {
                 case "scale":
                     {
-                        message = div$6(h2$5("Scale"), p$2("This setting limits the available pitches for adding notes. You may think that there's no point in limiting your choices, but the set of pitches you use has a strong influence on the mood and feel of your song, and these scales serve as guides to help you choose appropriate pitches. Don't worry, you can change the scale at any time, so you're not locked into it. Try making little melodies using all the available pitches of a scale to get a sense for how it sounds."), p$2("The most common scales are major and minor. Assuming your song uses all pitches in the scale and especially \"tonic\" pitches (the purple rows in the pattern editor) then major scales tend to sound more playful or optimistic, whereas minor scales sound more serious or sad."));
+                        message = div$7(h2$6("Scale"), p$2("This setting limits the available pitches for adding notes. You may think that there's no point in limiting your choices, but the set of pitches you use has a strong influence on the mood and feel of your song, and these scales serve as guides to help you choose appropriate pitches. Don't worry, you can change the scale at any time, so you're not locked into it. Try making little melodies using all the available pitches of a scale to get a sense for how it sounds."), p$2("The most common scales are major and minor. Assuming your song uses all pitches in the scale and especially \"tonic\" pitches (the purple rows in the pattern editor) then major scales tend to sound more playful or optimistic, whereas minor scales sound more serious or sad."));
                     }
                     break;
                 case "key":
                     {
-                        message = div$6(h2$5("Song Key"), p$2("This setting can shift the frequency of every note in your entire song up or down, keeping the \"tonic\" pitches (the brown rows in the pattern editor) aligned with the selected \"key\" pitch."), p$2("If you've already placed some notes but they don't emphasize \"tonic\" pitches then the selected key isn't very meaningful. You can select the \"Detect Key\" option in the key menu to automatically align the most emphasized notes with \"tonic\" pitches."));
+                        message = div$7(h2$6("Song Key"), p$2("This setting can shift the frequency of every note in your entire song up or down, keeping the \"tonic\" pitches (the brown rows in the pattern editor) aligned with the selected \"key\" pitch."), p$2("If you've already placed some notes but they don't emphasize \"tonic\" pitches then the selected key isn't very meaningful. You can select the \"Detect Key\" option in the key menu to automatically align the most emphasized notes with \"tonic\" pitches."));
                     }
                     break;
                 case "key_octave":
                     {
-                        message = div$6(h2$5("Octave"), p$2("This setting can shift the \"key\" by an octave, allowing you to use a B- or C+ key."), p$2(`This goes from ${Config.octaveMin} to ${Config.octaveMax}.`));
+                        message = div$7(h2$6("Octave"), p$2("This setting can shift the \"key\" by an octave, allowing you to use a B- or C+ key."), p$2(`This goes from ${Config.octaveMin} to ${Config.octaveMax}.`));
                     }
                     break;
                 case "tempo":
                     {
-                        message = div$6(h2$5("Song Tempo"), p$2("This setting controls the speed of your song, measured in beats-per-minute. A \"beat\" is the duration of the little gray rectangles in the pattern editor. (In conventional music notation, a \"quarter note\" is usually equivalent to \"beat\".)"));
+                        message = div$7(h2$6("Song Tempo"), p$2("This setting controls the speed of your song, measured in beats-per-minute. A \"beat\" is the duration of the little gray rectangles in the pattern editor. (In conventional music notation, a \"quarter note\" is usually equivalent to \"beat\".)"));
                     }
                     break;
                 case "reverb":
                     {
-                        message = div$6(h2$5("Reverb"), p$2("Reverb is like a continuous echo effect. A little bit helps instruments sound more natural. Adding a lot of reverb can add sense of depth or mystery, but too much reverb can kinda \"smear\" sounds so that it's harder to distinguish notes or instruments, especially for lower \"bass\" notes."));
+                        message = div$7(h2$6("Reverb"), p$2("Reverb is like a continuous echo effect. A little bit helps instruments sound more natural. Adding a lot of reverb can add sense of depth or mystery, but too much reverb can kinda \"smear\" sounds so that it's harder to distinguish notes or instruments, especially for lower \"bass\" notes."));
                     }
                     break;
                 case "reverbMix":
                     {
-                        message = div$6(h2$5("Reverb Mix"), p$2("This setting controls the wet/dry mix of the reverb effect."));
+                        message = div$7(h2$6("Reverb Mix"), p$2("This setting controls the wet/dry mix of the reverb effect."));
                     }
                     break;
                 case "reverbDelay":
                     {
-                        message = div$6(h2$5("Reverb Delay"), p$2("This setting controls the delay of the reverb effect."));
+                        message = div$7(h2$6("Reverb Delay"), p$2("This setting controls the delay of the reverb effect."));
                     }
                     break;
                 case "reverbShelf":
                     {
-                        message = div$6(h2$5("Reverb Shelf"), p$2("This setting controls the shelf of the reverb effect."));
+                        message = div$7(h2$6("Reverb Shelf"), p$2("This setting controls the shelf of the reverb effect."));
                     }
                     break;
                 case "rhythm":
                     {
-                        message = div$6(h2$5("Subgrid"), p$2("This setting determines how beats are divided. The pattern editor helps you align notes to an independent grid based on this setting."), p$2("If you've already placed some notes but they don't align with the subgrid, you can either select the \"Quantize All Notes\" option or the \"Quantize Selected Patterns\" to align your notes with the current subgrid value."));
+                        message = div$7(h2$6("Subgrid"), p$2("This setting determines how beats are divided. The pattern editor helps you align notes to an independent grid based on this setting."), p$2("If you've already placed some notes but they don't align with the subgrid, you can either select the \"Quantize All Notes\" option or the \"Quantize Selected Patterns\" to align your notes with the current subgrid value."));
                     }
                     break;
                 case "instrumentIndex":
                     {
-                        message = div$6(h2$5("Instrument Number"), p$2("In the \"Channel Settings\" option from 41Box's \"Edit\" menu, there are a few ways to enable multiple instruments per channel."), p$2("First, you could enable multiple simultaneous instruments per channel. All of the channel's instruments will play all of the notes in the channel at the same time, and you can click an instrument number to view and edit its settings."), p$2("Second, you could enable different instruments per pattern. Only one of the instruments will play at any given time, but you can click the instrument number to change which instrument is used for the currently selected pattern(s)."), p$2("Finally, you can enable them both, in which case you can click an instrument number once to view it, and again to toggle whether the instrument is used for the currently selected pattern(s)."), p$2("Either way, you can click the + button to add more instruments to a channel, and you can press shift and a number key on your keyboard to select an instrument as if you had clicked the corresponding button here."));
+                        message = div$7(h2$6("Instrument Number"), p$2("In the \"Channel Settings\" option from 41Box's \"Edit\" menu, there are a few ways to enable multiple instruments per channel."), p$2("First, you could enable multiple simultaneous instruments per channel. All of the channel's instruments will play all of the notes in the channel at the same time, and you can click an instrument number to view and edit its settings."), p$2("Second, you could enable different instruments per pattern. Only one of the instruments will play at any given time, but you can click the instrument number to change which instrument is used for the currently selected pattern(s)."), p$2("Finally, you can enable them both, in which case you can click an instrument number once to view it, and again to toggle whether the instrument is used for the currently selected pattern(s)."), p$2("Either way, you can click the + button to add more instruments to a channel, and you can press shift and a number key on your keyboard to select an instrument as if you had clicked the corresponding button here."));
                     }
                     break;
                 case "instrumentVolume":
                     {
-                        message = div$6(h2$5("Instrument Volume"), p$2("This setting controls the volume of the selected instrument without affecting the volume of the other instruments. This allows you to balance the loudness of each instrument relative to each other."), p$2("Please be careful when using volume settings above 0. This indicates amplification and too much of that can trip the audio limiter built into this tool. This can lead to your song sounding muffled if overused. But when used carefully, amplification can be a powerful tool!"));
+                        message = div$7(h2$6("Instrument Volume"), p$2("This setting controls the volume of the selected instrument without affecting the volume of the other instruments. This allows you to balance the loudness of each instrument relative to each other."), p$2("Please be careful when using volume settings above 0. This indicates amplification and too much of that can trip the audio limiter built into this tool. This can lead to your song sounding muffled if overused. But when used carefully, amplification can be a powerful tool!"));
                     }
                     break;
                 case "pan":
                     {
-                        message = div$6(h2$5("Instrument Panning"), p$2("If you're listening through headphones or some other stereo sound system, this controls the position of the instrument and where the sound is coming from, ranging from left to right."), p$2("As a suggestion, composers often put lead melodies, drums, and basses in the center, and spread other instruments toward either side. If too many instruments seem like they're coming from the same place, it can feel crowded and harder to distinguish individual sounds, especially if they cover a similar pitch range."));
+                        message = div$7(h2$6("Instrument Panning"), p$2("If you're listening through headphones or some other stereo sound system, this controls the position of the instrument and where the sound is coming from, ranging from left to right."), p$2("As a suggestion, composers often put lead melodies, drums, and basses in the center, and spread other instruments toward either side. If too many instruments seem like they're coming from the same place, it can feel crowded and harder to distinguish individual sounds, especially if they cover a similar pitch range."));
                     }
                     break;
                 case "panDelay":
                     {
-                        message = div$6(h2$5("Stereo Delay"), p$2("When panning, a slight delay is often added between the left and right ear to help make a sound feel more 'directional'. For example, in the real world your left ear will hear a sound coming from the left just slightly before the right ear."), p$2("This setting controls how much delay is added. When this is set to minimum, panning only affects the volume of the left/right ear without changing the delay. This can help to get a more 'uniform' feeling sound, which can be desirable for making 8-bit music."));
+                        message = div$7(h2$6("Stereo Delay"), p$2("When panning, a slight delay is often added between the left and right ear to help make a sound feel more 'directional'. For example, in the real world your left ear will hear a sound coming from the left just slightly before the right ear."), p$2("This setting controls how much delay is added. When this is set to minimum, panning only affects the volume of the left/right ear without changing the delay. This can help to get a more 'uniform' feeling sound, which can be desirable for making 8-bit music."));
                     }
                     break;
                 case "arpeggioSpeed":
                     {
-                        message = div$6(h2$5("Arpeggio Speed"), p$2("This setting affects how fast your chord will 'arpeggiate', or cycle between notes. With a fast arpeggio speed it will sound rapid-fire, with a slow speed you can hear each note one after another."));
+                        message = div$7(h2$6("Arpeggio Speed"), p$2("This setting affects how fast your chord will 'arpeggiate', or cycle between notes. With a fast arpeggio speed it will sound rapid-fire, with a slow speed you can hear each note one after another."));
                     }
                     break;
                 case "twoNoteArpeggio":
                     {
-                        message = div$6(h2$5("Faster Two-Note Arpeggio"), p$2("This setting makes arpeggios with only two notes in them happen twice as fast. Arpeggios with more notes in them are unaffected."));
+                        message = div$7(h2$6("Faster Two-Note Arpeggio"), p$2("This setting makes arpeggios with only two notes in them happen twice as fast. Arpeggios with more notes in them are unaffected."));
                     }
                     break;
                 case "monophonic":
                     {
-                        message = div$6(h2$5("Monophonic Note"), p$2(`This setting controls which note of the chord your instrument will play. `));
+                        message = div$7(h2$6("Monophonic Note"), p$2(`This setting controls which note of the chord your instrument will play. `));
                     }
                     break;
                 case "strumSpeedSlider":
                     {
-                        message = div$6(h2$5("Strum Speed"), p$2("This setting controls the speed of the strum, which means how long it takes for each note to play consecutively."));
+                        message = div$7(h2$6("Strum Speed"), p$2("This setting controls the speed of the strum, which means how long it takes for each note to play consecutively."));
                     }
                     break;
                 case "detune":
                     {
-                        message = div$6(h2$5("Detune"), p$2("This setting can be used to finely control the pitch of your instrument. It is in units of 'cents', 100 of which equal a pitch shift of one semitone."), p$2("Careful; you can quickly get very dissonant sounding songs by using this setting."));
+                        message = div$7(h2$6("Detune"), p$2("This setting can be used to finely control the pitch of your instrument. It is in units of 'cents', 100 of which equal a pitch shift of one semitone."), p$2("Careful; you can quickly get very dissonant sounding songs by using this setting."));
                     }
                     break;
                 case "instrumentType":
                     {
-                        message = div$6(h2$5("Instrument Type"), p$2("41Box comes with many instrument presets, try them out! You can also create your own custom instruments!"), p$2("There are also options for generating random instruments towards the top of the instrument type menu and for copying and pasting instrument settings in preferences."));
+                        message = div$7(h2$6("Instrument Type"), p$2("41Box comes with many instrument presets, try them out! You can also create your own custom instruments!"), p$2("There are also options for generating random instruments towards the top of the instrument type menu and for copying and pasting instrument settings in preferences."));
                     }
                     break;
                 case "eqFilter":
                     {
-                        message = div$6(h2$5("EQ Filter"), p$2("Filters are a way of emphasizing or diminishing different parts of a sound. Musical notes have a fundamental (base) frequency, but the sound of a musical note also has parts at higher frequencies and filters can adjust the volume of each of these parts based on their frequency."), p$2("Click in the filter editor to insert, delete, or drag a filter control point. The horizontal position of the point determines which frequencies it affects, and the vertical position determines how the volume is affected at that frequency."), p$2("Insert a new point on the left side of the filter editor to add a \"high-pass\" filter point, which additionally reduces the volume of lower frequencies, or insert a new point on the right side to add a \"low-pass\" filter point which reduces the volume of higher frequencies."), p$2("You can also enable a \"Note Filter\" as an effect. EQ and note filters are mostly the same, but have different purposes. EQ filters are for overall adjustments, whereas note filters are for dynamic control and can be moved with envelopes. Note filters also change how the distortion effect sounds."));
+                        message = div$7(h2$6("EQ Filter"), p$2("Filters are a way of emphasizing or diminishing different parts of a sound. Musical notes have a fundamental (base) frequency, but the sound of a musical note also has parts at higher frequencies and filters can adjust the volume of each of these parts based on their frequency."), p$2("Click in the filter editor to insert, delete, or drag a filter control point. The horizontal position of the point determines which frequencies it affects, and the vertical position determines how the volume is affected at that frequency."), p$2("Insert a new point on the left side of the filter editor to add a \"high-pass\" filter point, which additionally reduces the volume of lower frequencies, or insert a new point on the right side to add a \"low-pass\" filter point which reduces the volume of higher frequencies."), p$2("You can also enable a \"Note Filter\" as an effect. EQ and note filters are mostly the same, but have different purposes. EQ filters are for overall adjustments, whereas note filters are for dynamic control and can be moved with envelopes. Note filters also change how the distortion effect sounds."));
                     }
                     break;
                 case "noteFilter":
                     {
-                        message = div$6(h2$5("Note Filter"), p$2("Note filters are mostly the same as EQ filters, but have a different purpose. EQ filters are for overall adjustments, whereas note filters are for dynamic control and can be moved with envelopes. Note filters also change how the distortion effect sounds."), p$2("Filters are a way of emphasizing or diminishing different parts of a sound. Musical notes have a fundamental (base) frequency, but the sound of a musical note also has parts at higher frequencies and filters can adjust the volume of each of these parts based on their frequency."), p$2("Click in the filter editor to insert, delete, or drag a filter control point. The horizontal position of the point determines which frequencies it affects, and the vertical position determines how the volume is affected at that frequency."), p$2("Insert a new point on the left side of the filter editor to add a \"high-pass\" filter point, which additionally reduces the volume of lower frequencies, or insert a new point on the right side to add a \"low-pass\" filter point which reduces the volume of higher frequencies."));
+                        message = div$7(h2$6("Note Filter"), p$2("Note filters are mostly the same as EQ filters, but have a different purpose. EQ filters are for overall adjustments, whereas note filters are for dynamic control and can be moved with envelopes. Note filters also change how the distortion effect sounds."), p$2("Filters are a way of emphasizing or diminishing different parts of a sound. Musical notes have a fundamental (base) frequency, but the sound of a musical note also has parts at higher frequencies and filters can adjust the volume of each of these parts based on their frequency."), p$2("Click in the filter editor to insert, delete, or drag a filter control point. The horizontal position of the point determines which frequencies it affects, and the vertical position determines how the volume is affected at that frequency."), p$2("Insert a new point on the left side of the filter editor to add a \"high-pass\" filter point, which additionally reduces the volume of lower frequencies, or insert a new point on the right side to add a \"low-pass\" filter point which reduces the volume of higher frequencies."));
                     }
                     break;
                 case "fadeInOut":
                     {
-                        message = div$6(h2$5("Fade In/Out"), p$2("This setting controls how long it takes for notes to reach full volume at the beginning or decay to silence at the end."), p$2("An instant fade-in sounds like instruments that are played by hitting or plucking, whereas slower fade-ins sound like instruments that are played by blowing air."), p$2("You can also make the fade-out start before the note ends to leave a gap before the next note starts, or after the note ends to allow the sound of the end of the note to overlap with the start of the next note."));
+                        message = div$7(h2$6("Fade In/Out"), p$2("This setting controls how long it takes for notes to reach full volume at the beginning or decay to silence at the end."), p$2("An instant fade-in sounds like instruments that are played by hitting or plucking, whereas slower fade-ins sound like instruments that are played by blowing air."), p$2("You can also make the fade-out start before the note ends to leave a gap before the next note starts, or after the note ends to allow the sound of the end of the note to overlap with the start of the next note."));
                     }
                     break;
                 case "transition":
                     {
-                        message = div$6(h2$5("Transition"), p$2("Usually, when one note ends at the same time another begins, the old note will fade out and the new note will fade in based on the fade in/out settings, but this setting can override that, connecting the end of one note to the beginning of the next."), p$2("The \"interrupt\" transition makes the wave suddenly change from the old note's frequency to the new note's frequency without any fading, but still restarts envelopes at the beginning of the new note. The \"continue\" transition is similar but it doesn't even restart envelopes, and can be used to make each of the notes in a chord start or stop at different times!"), p$2("The \"slide\" transition makes the pitch shift quickly but not instantaneously from the old note's frequency to the new note's frequency, and softly restarts envelopes. The \"slide in pattern\" transition is the same except it doesn't connect the last note in a pattern to the first note in the next pattern."));
+                        message = div$7(h2$6("Transition"), p$2("Usually, when one note ends at the same time another begins, the old note will fade out and the new note will fade in based on the fade in/out settings, but this setting can override that, connecting the end of one note to the beginning of the next."), p$2("The \"interrupt\" transition makes the wave suddenly change from the old note's frequency to the new note's frequency without any fading, but still restarts envelopes at the beginning of the new note. The \"continue\" transition is similar but it doesn't even restart envelopes, and can be used to make each of the notes in a chord start or stop at different times!"), p$2("The \"slide\" transition makes the pitch shift quickly but not instantaneously from the old note's frequency to the new note's frequency, and softly restarts envelopes. The \"slide in pattern\" transition is the same except it doesn't connect the last note in a pattern to the first note in the next pattern."));
                     }
                     break;
                 case "slideSpeedSlider":
                     {
-                        message = div$6(h2$5("Slide Speed"), p$2("This setting controls the speed of the slide transition, which means how long it takes to slide from one note to the other."));
+                        message = div$7(h2$6("Slide Speed"), p$2("This setting controls the speed of the slide transition, which means how long it takes to slide from one note to the other."));
                     }
                     break;
                 case "chipWave":
                     {
-                        message = div$6(h2$5("Chip Wave"), p$2("41Box comes with some sound waves based on classic electronic sound chips, as well as several unique waves. This is the basic source of the sound of the instrument, which is modified by the other instrument settings."));
+                        message = div$7(h2$6("Chip Wave"), p$2("41Box comes with some sound waves based on classic electronic sound chips, as well as several unique waves. This is the basic source of the sound of the instrument, which is modified by the other instrument settings."));
                     }
                     break;
                 case "chipNoise":
                     {
-                        message = div$6(h2$5("Noise"), p$2("41Box comes with several basic noise sounds. These do not have any distinct musical pitch, and can be used like drums to create beats and emphasize your song's rhythm."));
+                        message = div$7(h2$6("Noise"), p$2("41Box comes with several basic noise sounds. These do not have any distinct musical pitch, and can be used like drums to create beats and emphasize your song's rhythm."));
                     }
                     break;
                 case "supersawDynamism":
                     {
-                        message = div$6(h2$5("Supersaw Dynamism"), p$2("A supersaw is a combination of many sawtooth waves, and this setting controls the contribution of extra sawtooth waves."), p$2("At the low end of the slider, only the first wave is contributing to the sound, which sounds like an ordinary static sawtooth wave. At the maximum setting, all of the waves are contributing equally and the resulting tone can randomly shift depending on how the waves line up with each other, similar to the \"unison\" and \"chorus\" settings."));
+                        message = div$7(h2$6("Supersaw Dynamism"), p$2("A supersaw is a combination of many sawtooth waves, and this setting controls the contribution of extra sawtooth waves."), p$2("At the low end of the slider, only the first wave is contributing to the sound, which sounds like an ordinary static sawtooth wave. At the maximum setting, all of the waves are contributing equally and the resulting tone can randomly shift depending on how the waves line up with each other, similar to the \"unison\" and \"chorus\" settings."));
                     }
                     break;
                 case "supersawSpread":
                     {
-                        message = div$6(h2$5("Supersaw Spread"), p$2("A supersaw is a combination of many sawtooth waves, and this setting controls the distance between their frequencies. The dynamism setting must be used for the extra waves to have any effect."), p$2("At the low end of the spread slider, all of the voices have the same frequency but random phase, resulting in a different sound every time a note starts. In the middle, the waves all have slightly different frequencies that shift in and out of phase over time similar to the \"unison\" and \"chorus\" settings, creating a classic supersaw sound. At the extreme end, the frequencies are so far apart they sound dissonant."));
+                        message = div$7(h2$6("Supersaw Spread"), p$2("A supersaw is a combination of many sawtooth waves, and this setting controls the distance between their frequencies. The dynamism setting must be used for the extra waves to have any effect."), p$2("At the low end of the spread slider, all of the voices have the same frequency but random phase, resulting in a different sound every time a note starts. In the middle, the waves all have slightly different frequencies that shift in and out of phase over time similar to the \"unison\" and \"chorus\" settings, creating a classic supersaw sound. At the extreme end, the frequencies are so far apart they sound dissonant."));
                     }
                     break;
                 case "supersawShape":
                     {
-                        message = div$6(h2$5("Supersaw Shape"), p$2("This supersaw instrument includes an option to change the shape of the waves from sawtooth waves to pulse waves. Use this setting to morph between the two shapes."), p$2("When a pulse wave shape is used, you can also control the pulse width with a separate setting."));
+                        message = div$7(h2$6("Supersaw Shape"), p$2("This supersaw instrument includes an option to change the shape of the waves from sawtooth waves to pulse waves. Use this setting to morph between the two shapes."), p$2("When a pulse wave shape is used, you can also control the pulse width with a separate setting."));
                     }
                     break;
                 case "pulseWidth":
                     {
-                        message = div$6(h2$5("Pulse Wave Width"), p$2("This setting controls the shape and sound of a pulse wave. At the minimum width, it sounds light and buzzy. At the maximum width, it is shaped like a classic square wave."));
+                        message = div$7(h2$6("Pulse Wave Width"), p$2("This setting controls the shape and sound of a pulse wave. At the minimum width, it sounds light and buzzy. At the maximum width, it is shaped like a classic square wave."));
                     }
                     break;
                 case "unison":
                     {
-                        message = div$6(h2$5("Unison"), p$2("This instrument can play multiple identical waves at different frequencies. When two waves play at slightly different frequencies, they move in and out of phase with each other over time as different parts of the waves line up. This creates a dynamic, shifting sound. Pianos are a common example of this kind of sound, because each piano key strikes multiple strings that are tuned to slightly different frequencies."), p$2("The distance between two frequencies is called an \"interval\", and this setting controls how large it is. If the interval is too wide, then the waves may sound out-of-tune and \"dissonant\". However, if the interval is even larger, then the two frequencies can even be distinct pitches."), p$2("Adding more than two waves amplifies these effects. "));
+                        message = div$7(h2$6("Unison"), p$2("This instrument can play multiple identical waves at different frequencies. When two waves play at slightly different frequencies, they move in and out of phase with each other over time as different parts of the waves line up. This creates a dynamic, shifting sound. Pianos are a common example of this kind of sound, because each piano key strikes multiple strings that are tuned to slightly different frequencies."), p$2("The distance between two frequencies is called an \"interval\", and this setting controls how large it is. If the interval is too wide, then the waves may sound out-of-tune and \"dissonant\". However, if the interval is even larger, then the two frequencies can even be distinct pitches."), p$2("Adding more than two waves amplifies these effects. "));
                     }
                     break;
                 case "chords":
                     {
-                        message = div$6(h2$5("Chords"), p$2("When multiple different notes occur at the same time, this is called a chord. Chords can be created in 41Box's pattern editor by adding notes above or below another note."), p$2("This setting determines how chords are played. The standard option is \"simultaneous\" which starts playing all of the pitches in a chord at the same instant. The \"strum\" option is similar, but plays the notes starting at slightly different times. The \"arpeggio\" option is used in \"chiptune\" style music and plays a single tone that rapidly alternates between all of the pitches in the chord. The \"monophonic\" option allows you to have only one tone in a chord play at a time. "), p$2("Some 41Box instruments have an option called \"custom interval\" which uses the chord notes to control the interval between the waves of a single tone. This can create strange sound effects when combined with FM modulators."));
+                        message = div$7(h2$6("Chords"), p$2("When multiple different notes occur at the same time, this is called a chord. Chords can be created in 41Box's pattern editor by adding notes above or below another note."), p$2("This setting determines how chords are played. The standard option is \"simultaneous\" which starts playing all of the pitches in a chord at the same instant. The \"strum\" option is similar, but plays the notes starting at slightly different times. The \"arpeggio\" option is used in \"chiptune\" style music and plays a single tone that rapidly alternates between all of the pitches in the chord. The \"monophonic\" option allows you to have only one tone in a chord play at a time. "), p$2("Some 41Box instruments have an option called \"custom interval\" which uses the chord notes to control the interval between the waves of a single tone. This can create strange sound effects when combined with FM modulators."));
                     }
                     break;
                 case "vibrato":
                     {
-                        message = div$6(h2$5("Vibrato"), p$2("This setting causes the frequency of a note to wobble slightly. Singers and violinists often use vibrato."));
+                        message = div$7(h2$6("Vibrato"), p$2("This setting causes the frequency of a note to wobble slightly. Singers and violinists often use vibrato."));
                     }
                     break;
                 case "vibratoDepth":
                     {
-                        message = div$6(h2$5("Vibrato Depth"), p$2("This setting affects the depth of your instrument's vibrato, making the wobbling effect sound stronger or weaker."));
+                        message = div$7(h2$6("Vibrato Depth"), p$2("This setting affects the depth of your instrument's vibrato, making the wobbling effect sound stronger or weaker."));
                     }
                     break;
                 case "vibratoDelay":
                     {
-                        message = div$6(h2$5("Vibrato Delay"), p$2("This setting changes when vibrato starts to kick in after a note is played. Vibrato is most common for long held notes and less common in short notes, so this can help you achieve that effect."));
+                        message = div$7(h2$6("Vibrato Delay"), p$2("This setting changes when vibrato starts to kick in after a note is played. Vibrato is most common for long held notes and less common in short notes, so this can help you achieve that effect."));
                     }
                     break;
                 case "vibratoSpeed":
                     {
-                        message = div$6(h2$5("Vibrato Speed"), p$2("This setting determines how fast the vibrato's up-and-down wobble effect will happen for your instrument."));
+                        message = div$7(h2$6("Vibrato Speed"), p$2("This setting determines how fast the vibrato's up-and-down wobble effect will happen for your instrument."));
                     }
                     break;
                 case "vibratoType":
                     {
-                        message = div$6(h2$5("Vibrato Type"), p$2("This determines the way vibrato causes your instrument's pitch to wobble. The normal type is smooth up and down, the shaky type is chaotic."));
+                        message = div$7(h2$6("Vibrato Type"), p$2("This determines the way vibrato causes your instrument's pitch to wobble. The normal type is smooth up and down, the shaky type is chaotic."));
                     }
                     break;
                 case "algorithm":
                     {
-                        message = div$6(h2$5("FM Algorithm"), p$2('FM Synthesis is a mysterious but powerful technique for crafting sounds, popularized by Yamaha keyboards and the Sega Genesis/Mega Drive. It may seem confusing, but try playing around with the options until you get a feel for it, or check out some of the preset examples!'), p$2('This FM synthesizer uses up to four waves, numbered 1, 2, 3, and 4. Each wave may have its own frequency and volume.'), p$2('There are two kinds of waves: "carrier" waves play a tone out loud, but "modulator" waves distort other waves instead. Wave 1 is always a carrier and plays a tone, but other waves may distort it. The "Algorithm" setting determines which waves are modulators, and which other waves those modulators distort. For example, "1←2" means that wave 2 modulates wave 1, and wave 1 plays out loud.'));
+                        message = div$7(h2$6("FM Algorithm"), p$2('FM Synthesis is a mysterious but powerful technique for crafting sounds, popularized by Yamaha keyboards and the Sega Genesis/Mega Drive. It may seem confusing, but try playing around with the options until you get a feel for it, or check out some of the preset examples!'), p$2('This FM synthesizer uses up to four waves, numbered 1, 2, 3, and 4. Each wave may have its own frequency and volume.'), p$2('There are two kinds of waves: "carrier" waves play a tone out loud, but "modulator" waves distort other waves instead. Wave 1 is always a carrier and plays a tone, but other waves may distort it. The "Algorithm" setting determines which waves are modulators, and which other waves those modulators distort. For example, "1←2" means that wave 2 modulates wave 1, and wave 1 plays out loud.'));
                     }
                     break;
                 case "feedbackType":
                     {
-                        message = div$6(h2$5("Feedback Type"), p$2('Modulators distort in one direction (like 1←2), but you can also use the feedback setting to make any wave distort in the opposite direction (1→2), or even itself (1⟲).'));
+                        message = div$7(h2$6("Feedback Type"), p$2('Modulators distort in one direction (like 1←2), but you can also use the feedback setting to make any wave distort in the opposite direction (1→2), or even itself (1⟲).'));
                     }
                     break;
                 case "feedbackVolume":
                     {
-                        message = div$6(h2$5("Feedback Distortion"), p$2("This setting controls the amount of feedback distortion based on the feedback type setting."));
+                        message = div$7(h2$6("Feedback Distortion"), p$2("This setting controls the amount of feedback distortion based on the feedback type setting."));
                     }
                     break;
                 case "operatorFrequency":
                     {
-                        message = div$6(h2$5("Operator Frequency"), p$2('This setting controls the frequency of an individual FM wave, relative to the fundamental frequency of the note. The multiplier 1× is the same as the fundamental frequency, whereas 2x would be an octave (12 semitones) above it. The frequencies with a "~" are slightly detuned and shift in and out of phase over time compared to the other frequencies.'), p$2('Try different combinations of a "carrier" wave and a "modulator" wave with different frequencies to get a feel for how they sound together.'));
+                        message = div$7(h2$6("Operator Frequency"), p$2('This setting controls the frequency of an individual FM wave, relative to the fundamental frequency of the note. The multiplier 1× is the same as the fundamental frequency, whereas 2x would be an octave (12 semitones) above it. The frequencies with a "~" are slightly detuned and shift in and out of phase over time compared to the other frequencies.'), p$2('Try different combinations of a "carrier" wave and a "modulator" wave with different frequencies to get a feel for how they sound together.'));
                     }
                     break;
                 case "operatorVolume":
                     {
-                        message = div$6(h2$5("Operator Volume"), p$2("This setting controls the volume of \"carrier\" waves, or the amount of distortion that \"modulator\" waves apply to other waves."));
+                        message = div$7(h2$6("Operator Volume"), p$2("This setting controls the volume of \"carrier\" waves, or the amount of distortion that \"modulator\" waves apply to other waves."));
                     }
                     break;
                 case "spectrum":
                     {
-                        message = div$6(h2$5("Spectrum"), p$2("This setting allows you to draw your own noise spectrum! This is good for making drum sounds."), p$2("If you only use certain frequencies and a soft fade in/out, it's also possible to make howling wind sounds or even musical wind instruments."), p$2("The left side of the spectrum editor controls the noise energy at lower frequencies, and the right side controls higher frequencies."));
+                        message = div$7(h2$6("Spectrum"), p$2("This setting allows you to draw your own noise spectrum! This is good for making drum sounds."), p$2("If you only use certain frequencies and a soft fade in/out, it's also possible to make howling wind sounds or even musical wind instruments."), p$2("The left side of the spectrum editor controls the noise energy at lower frequencies, and the right side controls higher frequencies."));
                     }
                     break;
                 case "harmonics":
                     {
-                        message = div$6(h2$5("Harmonics"), p$2("This setting allows you to design your own sound wave! Most musical waves are actually a combination of sine waves at certain frequencies, and this lets you control the volume of each sine wave individually."), p$2("The left side of the harmonics editor controls the sine wave volumes at lower frequencies, and the right side controls higher frequencies."));
+                        message = div$7(h2$6("Harmonics"), p$2("This setting allows you to design your own sound wave! Most musical waves are actually a combination of sine waves at certain frequencies, and this lets you control the volume of each sine wave individually."), p$2("The left side of the harmonics editor controls the sine wave volumes at lower frequencies, and the right side controls higher frequencies."));
                     }
                     break;
                 case "effects":
                     {
-                        message = div$6(h2$5("Effects"), p$2("41Box has many different kinds of special effects you can add to instruments. You can turn on multiple effects at once, and they can be configured individually. Try them all out!"));
+                        message = div$7(h2$6("Effects"), p$2("41Box has many different kinds of special effects you can add to instruments. You can turn on multiple effects at once, and they can be configured individually. Try them all out!"));
                     }
                     break;
                 case "drumsetEnvelope":
                     {
-                        message = div$6(h2$5("Drumset Envelope"), p$2("This drumset comes with a low-pass filter, and this setting can dynamically change the low-pass filter frequency over time. Each row in the pattern editor can have a different envelope shape."));
+                        message = div$7(h2$6("Drumset Envelope"), p$2("This drumset comes with a low-pass filter, and this setting can dynamically change the low-pass filter frequency over time. Each row in the pattern editor can have a different envelope shape."));
                     }
                     break;
                 case "drumsetSpectrum":
                     {
-                        message = div$6(h2$5("Drumset Spectrum"), p$2("This setting allows you to draw your own noise spectrum! This is good for making drumsets. Each row in the pattern editor gets its own spectrum."), p$2("The left side of the spectrum editor controls the noise energy at lower frequencies, and the right side controls higher frequencies."));
+                        message = div$7(h2$6("Drumset Spectrum"), p$2("This setting allows you to draw your own noise spectrum! This is good for making drumsets. Each row in the pattern editor gets its own spectrum."), p$2("The left side of the spectrum editor controls the noise energy at lower frequencies, and the right side controls higher frequencies."));
                     }
                     break;
                 case "chorus":
                     {
-                        message = div$6(h2$5("Chorus"), p$2("The chorus effect combines multiple copies of the instrument's sound and adds a bit of vibrato to simulate an ensemble of instruments or voices. Drag the slider to control how much chorus is added."));
+                        message = div$7(h2$6("Chorus"), p$2("The chorus effect combines multiple copies of the instrument's sound and adds a bit of vibrato to simulate an ensemble of instruments or voices. Drag the slider to control how much chorus is added."));
                     }
                     break;
                 case "chorusMix":
                     {
-                        message = div$6(h2$5("Chorus Mix"), p$2("This setting controls the wet/dry mix of the Chorus effect."));
+                        message = div$7(h2$6("Chorus Mix"), p$2("This setting controls the wet/dry mix of the Chorus effect."));
                     }
                     break;
                 case "echo":
                     {
-                        message = div$6(h2$5("Echo"), p$2("The echo effect repeats the instrument's sound after a delay, and each echo is a little bit quieter than the last."));
+                        message = div$7(h2$6("Echo"), p$2("The echo effect repeats the instrument's sound after a delay, and each echo is a little bit quieter than the last."));
                     }
                     break;
                 case "echoSustain":
                     {
-                        message = div$6(h2$5("Echo Volume"), p$2("This setting controls the volume of each echo."));
+                        message = div$7(h2$6("Echo Volume"), p$2("This setting controls the volume of each echo."));
                     }
                     break;
                 case "echoDelay":
                     {
-                        message = div$6(h2$5("Echo Delay"), p$2("This setting controls the length of each echo delay."));
+                        message = div$7(h2$6("Echo Delay"), p$2("This setting controls the length of each echo delay."));
                     }
                     break;
                 case "pitchShift":
                     {
-                        message = div$6(h2$5("Pitch Shift"), p$2("This setting makes instruments play higher or lower pitches than the ones displayed in the pattern editor. Be careful that you don't confuse yourself!"), p$2("You can combine this with envelopes to bend pitch over time, or play multiple simultaneous instruments with different pitch shifts for interesting layered sounds."), p$2("The intervals created by this setting are in \"just intonation\" which means they stay in phase with the original pitch instead of shifting in and out of phase over time. If you want the shifting, add the detune effect!"));
+                        message = div$7(h2$6("Pitch Shift"), p$2("This setting makes instruments play higher or lower pitches than the ones displayed in the pattern editor. Be careful that you don't confuse yourself!"), p$2("You can combine this with envelopes to bend pitch over time, or play multiple simultaneous instruments with different pitch shifts for interesting layered sounds."), p$2("The intervals created by this setting are in \"just intonation\" which means they stay in phase with the original pitch instead of shifting in and out of phase over time. If you want the shifting, add the detune effect!"));
                     }
                     break;
                 case "distortion":
                     {
-                        message = div$6(h2$5("Distortion"), p$2("This is the famous electric guitar effect! However, there are some things to be aware of."), p$2("First, most chords don't sound right when combined with heavy distortion. The only chords commonly used with distorted electric guitars are \"power chords\" which consist of a root note, a \"fifth\" note above that, and/or any octaves of those two notes."), p$2("Second, the distortion sound depends a lot on filtering. In particular, I recommend enabling the note filter effect, and adding both high-pass and low-pass points to the note filter. (Note filters are applied first, then distortion which transforms the sound based on that filtering, then the EQ filter is applied last.)"), p$2("Finally, I recommend adjusting the fade-out setting to allow the end of each note to overlap a little bit with the beginning of the next, but not too much!"));
+                        message = div$7(h2$6("Distortion"), p$2("This is the famous electric guitar effect! However, there are some things to be aware of."), p$2("First, most chords don't sound right when combined with heavy distortion. The only chords commonly used with distorted electric guitars are \"power chords\" which consist of a root note, a \"fifth\" note above that, and/or any octaves of those two notes."), p$2("Second, the distortion sound depends a lot on filtering. In particular, I recommend enabling the note filter effect, and adding both high-pass and low-pass points to the note filter. (Note filters are applied first, then distortion which transforms the sound based on that filtering, then the EQ filter is applied last.)"), p$2("Finally, I recommend adjusting the fade-out setting to allow the end of each note to overlap a little bit with the beginning of the next, but not too much!"));
                     }
                     break;
                 case "distortionMix":
                     {
-                        message = div$6(h2$5("Distortion Mix"), p$2("This setting controls the wet/dry mix of the distortion effect."));
+                        message = div$7(h2$6("Distortion Mix"), p$2("This setting controls the wet/dry mix of the distortion effect."));
                     }
                     break;
                 case "bitcrusherQuantization":
                     {
-                        message = div$6(h2$5("Bitcrusher Quantization"), p$2("This effect makes stuff sounds harsher, artificial, and \"low quality\", which is great if that's what you're going for!"));
+                        message = div$7(h2$6("Bitcrusher Quantization"), p$2("This effect makes stuff sounds harsher, artificial, and \"low quality\", which is great if that's what you're going for!"));
                     }
                     break;
                 case "bitcrusherFreq":
                     {
-                        message = div$6(h2$5("Frequency Quantization"), p$2("The bitcrusher effect comes with an additional frequency quantization effect! This is a fun one to play with, especially when combined with the note filter effect."), p$2("Every other notch on this slider is aligned with the currently selected key of the song, and the in-between notches are aligned with the tritones of the key."));
+                        message = div$7(h2$6("Frequency Quantization"), p$2("The bitcrusher effect comes with an additional frequency quantization effect! This is a fun one to play with, especially when combined with the note filter effect."), p$2("Every other notch on this slider is aligned with the currently selected key of the song, and the in-between notches are aligned with the tritones of the key."));
                     }
                     break;
                 case "envelopes":
                     {
-                        message = div$6(h2$5("Envelopes"), p$2("Envelopes are a way to dynamically adjust various other settings over time, usually based on how long the note lasts. Press the + button to add an envelope, then use the menus below to select which setting to control and the curve of the envelope. Try different combinations to see how they sound!"), p$2("Most envelope curves restart from the beginning every time a new note plays. The \"note size\" option is based on the note width as drawn in the pattern editor while the \"pitch\" option is based on the pitch of the note played. The \"random\" envelope type deterministically produces a random result based on either the time or pitch of a note."), p$2("Envelope curves move in the range from 0 to 1 (or vice versa), where 0 means as quiet as possible and 1 is the same as the corresponding position selected in the instrument settings above. If multiple envelopes are targetting the same setting, they are multiplied before applying to the setting."));
+                        message = div$7(h2$6("Envelopes"), p$2("Envelopes are a way to dynamically adjust various other settings over time, usually based on how long the note lasts. Press the + button to add an envelope, then use the menus below to select which setting to control and the curve of the envelope. Try different combinations to see how they sound!"), p$2("Most envelope curves restart from the beginning every time a new note plays. The \"note size\" option is based on the note width as drawn in the pattern editor while the \"pitch\" option is based on the pitch of the note played. The \"random\" envelope type deterministically produces a random result based on either the time or pitch of a note."), p$2("Envelope curves move in the range from 0 to 1 (or vice versa), where 0 means as quiet as possible and 1 is the same as the corresponding position selected in the instrument settings above. If multiple envelopes are targetting the same setting, they are multiplied before applying to the setting."));
                     }
                     break;
                 case "discreteEnvelope":
                     {
-                        message = div$6(h2$5("Use Discrete Envelopes?"), p$2("Envelopes are usually interpolated, meaning they change continuously and smoothly. This setting, when ticked, makes envelopes not interpolate. It's a small difference, but can be helpful for some chip noises, and it's most noticeable with the 'blip' transitions."));
+                        message = div$7(h2$6("Use Discrete Envelopes?"), p$2("Envelopes are usually interpolated, meaning they change continuously and smoothly. This setting, when ticked, makes envelopes not interpolate. It's a small difference, but can be helpful for some chip noises, and it's most noticeable with the 'blip' transitions."));
                     }
                     break;
                 case "envelopeSpeed":
                     {
-                        message = div$6(h2$5("Envelope Speed"), p$2("This setting controls the speed of ALL envelopes for the instrument. Each envelope 'plays' at a certain speed, and this slider can scale it to play faster or slower. You can use this to fine-tune your tremolo or how fast something decays to get just the right effect."), p$2("Note that, while this setting is limited in the sense that it controls all envelopes at once, you can still achieve a variety of outcomes by trying combinations of modes of each envelope type, which typically differ only in speed."));
+                        message = div$7(h2$6("Envelope Speed"), p$2("This setting controls the speed of ALL envelopes for the instrument. Each envelope 'plays' at a certain speed, and this slider can scale it to play faster or slower. You can use this to fine-tune your tremolo or how fast something decays to get just the right effect."), p$2("Note that, while this setting is limited in the sense that it controls all envelopes at once, you can still achieve a variety of outcomes by trying combinations of modes of each envelope type, which typically differ only in speed."));
                     }
                     break;
                 case "perEnvelopeSpeed":
                     {
-                        message = div$6(h2$5("Individual Envelope Speed"), p$2("This setting is applied per envelope rather than all of them simultaneously, unlike the envelope speed in the top dropdown."), p$2("This controls the speed of this envelope as a multiplier of the global envelope speed and the envelope curve"), p$2("The speed of an envelope changes how fast its runs. In BeepBox, this is equivalent to the numbers beside each envelope type's name."), p$2("You can see an equivalence chart on the ", HTML.a({ href: "./faq.html", target: "_blank" }, "FAQ"), " page"), p$2("This setting will not appear for note size, pitch, punch, or none envelopes"));
+                        message = div$7(h2$6("Individual Envelope Speed"), p$2("This setting is applied per envelope rather than all of them simultaneously, unlike the envelope speed in the top dropdown."), p$2("This controls the speed of this envelope as a multiplier of the global envelope speed and the envelope curve"), p$2("The speed of an envelope changes how fast its runs. In BeepBox, this is equivalent to the numbers beside each envelope type's name."), p$2("You can see an equivalence chart on the ", HTML.a({ href: "./faq.html", target: "_blank" }, "FAQ"), " page"), p$2("This setting will not appear for note size, pitch, punch, or none envelopes"));
                     }
                     break;
                 case "usedInstrument":
                     {
-                        message = div$6(h3$1("'Is this instrument used somewhere else?'"), p$2("This indicator will light up when the instrument you're currently looking at is used in another place in your song (outside the selection)."), p$2("This can be useful when you're not sure if you've used the instrument before and making edits carelessly could change other parts of the song."));
+                        message = div$7(h3$1("'Is this instrument used somewhere else?'"), p$2("This indicator will light up when the instrument you're currently looking at is used in another place in your song (outside the selection)."), p$2("This can be useful when you're not sure if you've used the instrument before and making edits carelessly could change other parts of the song."));
                     }
                     break;
                 case "usedPattern":
                     {
-                        message = div$6(h3$1("'Is this pattern used somewhere else?'"), p$2("This indicator will light up when the pattern you're currently looking at is used in another place in your song (outside the selection)."), p$2("This can be useful when you're not sure if you've used the pattern before and making edits carelessly could change other parts of the song."));
+                        message = div$7(h3$1("'Is this pattern used somewhere else?'"), p$2("This indicator will light up when the pattern you're currently looking at is used in another place in your song (outside the selection)."), p$2("This can be useful when you're not sure if you've used the pattern before and making edits carelessly could change other parts of the song."));
                     }
                     break;
                 case "modChannel":
                     {
-                        message = div$6(h2$5("Modulator Channel"), p$2("Modulators can be used to change settings in your song automatically over time. This technique is also known as automation."), p$2("This setting controls which channel the modulators will take effect for. If you choose 'Song', you can change song-wide settings too!"));
+                        message = div$7(h2$6("Modulator Channel"), p$2("Modulators can be used to change settings in your song automatically over time. This technique is also known as automation."), p$2("This setting controls which channel the modulators will take effect for. If you choose 'Song', you can change song-wide settings too!"));
                     }
                     break;
                 case "modInstrument":
                     {
-                        message = div$6(h2$5("Modulator Instrument"), p$2("Modulators can be used to change settings in your song automatically over time. This technique is also known as automation."), p$2("This setting controls which instrument your modulator will apply to within the given channel you've chosen."), p$2("If you choose 'all', every instrument in the channel will be affected. If you choose 'active', just the current ones used in this pattern will be instead."), p$2("Note that with 'all' or 'active', effects will only be applied to instruments that the effect is applicable on. For example if an instrument does not have panning effects, modulating panning will not affect it."));
+                        message = div$7(h2$6("Modulator Instrument"), p$2("Modulators can be used to change settings in your song automatically over time. This technique is also known as automation."), p$2("This setting controls which instrument your modulator will apply to within the given channel you've chosen."), p$2("If you choose 'all', every instrument in the channel will be affected. If you choose 'active', just the current ones used in this pattern will be instead."), p$2("Note that with 'all' or 'active', effects will only be applied to instruments that the effect is applicable on. For example if an instrument does not have panning effects, modulating panning will not affect it."));
                     }
                     break;
                 case "modSet":
                     {
-                        message = div$6(h2$5("Modulator Setting"), p$2("This is the parameter that you want to change with this modulator. For example, if you set this to 'Tempo', you can speed up or slow down your song by laying notes in the pattern editor."), p$2("Note that you'll see different options if your channel is set to 'Song' versus a channel number. With 'Song', you'll see song-wide settings such as tempo. With a channel, you'll see specific instrument settings. Adding more effects to the instrument causes modulators for them to be available, so be sure to experiment!"), p$2("Most modulators behave as you'd expect and work just as if you were moving their associated slider. Click the '?' when you have a setting selected to get more info about it!"));
+                        message = div$7(h2$6("Modulator Setting"), p$2("This is the parameter that you want to change with this modulator. For example, if you set this to 'Tempo', you can speed up or slow down your song by laying notes in the pattern editor."), p$2("Note that you'll see different options if your channel is set to 'Song' versus a channel number. With 'Song', you'll see song-wide settings such as tempo. With a channel, you'll see specific instrument settings. Adding more effects to the instrument causes modulators for them to be available, so be sure to experiment!"), p$2("Most modulators behave as you'd expect and work just as if you were moving their associated slider. Click the '?' when you have a setting selected to get more info about it!"));
                     }
                     break;
                 case "modFilter":
                     {
-                        message = div$6(h2$5("Filter Target"), p$2("This setting specifies which parameter of your targeted filter you would like to change."), p$2("With the 'morph' setting, the note value for your modulator represents the number of a subfilter to 'morph' into over time. For example, dragging a note from 0 to 7 will morph from your main filter to the 7th subfilter. To change how your subfilters are set up, click the '+' button on the target filter."), p$2("With a Dot setting, you can fine-tune the exact location of every dot on your filter graph. Note that this is extremely intensive if you want to modulate all dots - a morph is better in that case - but this can come in handy for small adjustments."));
+                        message = div$7(h2$6("Filter Target"), p$2("This setting specifies which parameter of your targeted filter you would like to change."), p$2("With the 'morph' setting, the note value for your modulator represents the number of a subfilter to 'morph' into over time. For example, dragging a note from 0 to 7 will morph from your main filter to the 7th subfilter. To change how your subfilters are set up, click the '+' button on the target filter."), p$2("With a Dot setting, you can fine-tune the exact location of every dot on your filter graph. Note that this is extremely intensive if you want to modulate all dots - a morph is better in that case - but this can come in handy for small adjustments."));
                     }
                     break;
                 case "transitionBar":
                     {
-                        message = div$6(h2$5("Tie Notes Over Bars"), p$2("With this option ticked, notes won't transition across bars if you put notes with the same pitches at the start of the next bar. Instead they will 'tie over' and sound like one long note."));
+                        message = div$7(h2$6("Tie Notes Over Bars"), p$2("With this option ticked, notes won't transition across bars if you put notes with the same pitches at the start of the next bar. Instead they will 'tie over' and sound like one long note."));
                     }
                     break;
                 case "clicklessTransition":
                     {
-                        message = div$6(h2$5("Clickless Transition"), p$2("Sometimes, seamless and other transition types can make audible 'clicks' when changing between notes. Ticking this option will cause those clicks to be silenced as much as possible."));
+                        message = div$7(h2$6("Clickless Transition"), p$2("Sometimes, seamless and other transition types can make audible 'clicks' when changing between notes. Ticking this option will cause those clicks to be silenced as much as possible."));
                     }
                     break;
                 case "aliases":
                     {
-                        message = div$6(h2$5("Aliasing"), p$2("41Box applies a technique called 'anti-aliasing' to instruments normally to help them sound cleaner even at high frequencies and low sample rates."), p$2("When this setting is ticked that technique is disabled, so you may hear strange audio artifacts especially at high pitches and when bending notes. However, this can lend a grungy sound to an instrument that could be desirable."));
+                        message = div$7(h2$6("Aliasing"), p$2("41Box applies a technique called 'anti-aliasing' to instruments normally to help them sound cleaner even at high frequencies and low sample rates."), p$2("When this setting is ticked that technique is disabled, so you may hear strange audio artifacts especially at high pitches and when bending notes. However, this can lend a grungy sound to an instrument that could be desirable."));
                     }
                     break;
                 case "operatorWaveform":
                     {
-                        message = div$6(h2$5("Operator Waveform"), p$2('This setting controls the what kind of sound wave an individual FM wave uses.'), p$2('By defualt the FM synth uses sinewaves.'));
+                        message = div$7(h2$6("Operator Waveform"), p$2('This setting controls the what kind of sound wave an individual FM wave uses.'), p$2('By defualt the FM synth uses sinewaves.'));
                     }
                     break;
                 case "filterType":
                     {
-                        message = div$6(h2$5("Filter Type"), p$2('Toggling these buttons lets you choose between a simple filter interface with two sliders, or the more advanced filter graph.'), p$2('The two-slider version controls a single low-pass filter and was used in legacy versions. It is not as powerful, but if you feel overwhelmed you can start with this.'), p$2('Note that switching from the simple interface to the advanced interface will convert your current settings, so you can also use it as a basis for later tweaking.'));
+                        message = div$7(h2$6("Filter Type"), p$2('Toggling these buttons lets you choose between a simple filter interface with two sliders, or the more advanced filter graph.'), p$2('The two-slider version controls a single low-pass filter and was used in legacy versions. It is not as powerful, but if you feel overwhelmed you can start with this.'), p$2('Note that switching from the simple interface to the advanced interface will convert your current settings, so you can also use it as a basis for later tweaking.'));
                     }
                     break;
                 case "filterCutoff":
                     {
-                        message = div$6(h2$5("Low-Pass Filter Cutoff Frequency"), p$2("The lowest setting feels \"muffled\" or \"dark\", and the highest setting feels \"harsh\" or \"bright\"."), p$2("Most sounds include a range of frequencies from low to high. 41Box instruments have a filter that allows the lowest frequencies to pass through at full volume, but can reduce the volume of the higher frequencies that are above a cutoff frequency. This setting controls the cutoff frequency and thus the range of higher frequencies that are reduced."), p$2("This cutoff setting also determines which frequency resonates when the resonance peak setting is used."));
+                        message = div$7(h2$6("Low-Pass Filter Cutoff Frequency"), p$2("The lowest setting feels \"muffled\" or \"dark\", and the highest setting feels \"harsh\" or \"bright\"."), p$2("Most sounds include a range of frequencies from low to high. 41Box instruments have a filter that allows the lowest frequencies to pass through at full volume, but can reduce the volume of the higher frequencies that are above a cutoff frequency. This setting controls the cutoff frequency and thus the range of higher frequencies that are reduced."), p$2("This cutoff setting also determines which frequency resonates when the resonance peak setting is used."));
                     }
                     break;
                 case "filterResonance":
                     {
-                        message = div$6(h2$5("Low-Pass Filter Resonance Peak"), p$2("Increasing this setting emphasizes a narrow range of frequencies, based on the position of the filter cutoff setting. This can be used to imitate the resonant bodies of acoustic instruments and other interesting effects."), p$2("The filter preserves the volume of frequencies that are below the cutoff frequency, and reduces the volume of frequencies that are above the cutoff. If this setting is used, the filter also increases the volume of frequencies that are near the cutoff."));
+                        message = div$7(h2$6("Low-Pass Filter Resonance Peak"), p$2("Increasing this setting emphasizes a narrow range of frequencies, based on the position of the filter cutoff setting. This can be used to imitate the resonant bodies of acoustic instruments and other interesting effects."), p$2("The filter preserves the volume of frequencies that are below the cutoff frequency, and reduces the volume of frequencies that are above the cutoff. If this setting is used, the filter also increases the volume of frequencies that are near the cutoff."));
                     }
                     break;
                 case "loopControls":
                     {
-                        message = div$6(h2$5("Loop Controls"), p$2("This enables the use of parameters that control how a chip wave should repeat."));
+                        message = div$7(h2$6("Loop Controls"), p$2("This enables the use of parameters that control how a chip wave should repeat."));
                     }
                     break;
                 case "loopMode":
                     {
-                        message = div$6(h2$5("Loop Mode"), p$2("This sets the way the chip wave loops when its ends are reached."), p$2("The \"Loop\" mode is the default: when the end of the loop is reached, it will jump back to the starting point of the loop."), p$2("The \"Ping-Pong\" mode starts playing the chip wave backwards when the end of the loop is reached. Once it reaches the start of the loop, it will start playing forwards again, endlessly going back and forth."), p$2("The \"Play Once\" mode stops the chip wave once the end is reached (or the start of the loop, if it's playing backwards)."), p$2("The \"Play Loop Once\" mode stops the chip wave once the end of the loop is reached (or the start of the loop, if it's playing backwards)."));
+                        message = div$7(h2$6("Loop Mode"), p$2("This sets the way the chip wave loops when its ends are reached."), p$2("The \"Loop\" mode is the default: when the end of the loop is reached, it will jump back to the starting point of the loop."), p$2("The \"Ping-Pong\" mode starts playing the chip wave backwards when the end of the loop is reached. Once it reaches the start of the loop, it will start playing forwards again, endlessly going back and forth."), p$2("The \"Play Once\" mode stops the chip wave once the end is reached (or the start of the loop, if it's playing backwards)."), p$2("The \"Play Loop Once\" mode stops the chip wave once the end of the loop is reached (or the start of the loop, if it's playing backwards)."));
                     }
                     break;
                 case "loopStart":
                     {
-                        message = div$6(h2$5("Loop Start Point"), p$2("This specifies where the loop region of the chip wave starts. It's measured in \"samples\", or rather, it refers to a point on a waveform."), p$2("Be careful with tiny loop sizes (especially combined with high pitches), they may re-introduce aliasing even if the \"Aliasing\" checkbox is unchecked."));
+                        message = div$7(h2$6("Loop Start Point"), p$2("This specifies where the loop region of the chip wave starts. It's measured in \"samples\", or rather, it refers to a point on a waveform."), p$2("Be careful with tiny loop sizes (especially combined with high pitches), they may re-introduce aliasing even if the \"Aliasing\" checkbox is unchecked."));
                     }
                     break;
                 case "loopEnd":
                     {
-                        message = div$6(h2$5("Loop End Point"), p$2("This specifies where the loop region of the chip wave ends. It's measured in \"samples\", or rather, it refers to a point on a waveform."), p$2("The button next to the input box sets this to end of the chip wave."), p$2("Be careful with tiny loop sizes (especially combined with high pitches), they may re-introduce aliasing even if the \"Aliasing\" checkbox is unchecked."));
+                        message = div$7(h2$6("Loop End Point"), p$2("This specifies where the loop region of the chip wave ends. It's measured in \"samples\", or rather, it refers to a point on a waveform."), p$2("The button next to the input box sets this to end of the chip wave."), p$2("Be careful with tiny loop sizes (especially combined with high pitches), they may re-introduce aliasing even if the \"Aliasing\" checkbox is unchecked."));
                     }
                     break;
                 case "offset":
                     {
-                        message = div$6(h2$5("Offset"), p$2("This specifies where the chip wave should start playing from. You can use this to chop up a large sample, to say, turn a drum loop into a drum kit! It's measured in \"samples\", or rather, it refers to a point on a waveform."));
+                        message = div$7(h2$6("Offset"), p$2("This specifies where the chip wave should start playing from. You can use this to chop up a large sample, to say, turn a drum loop into a drum kit! It's measured in \"samples\", or rather, it refers to a point on a waveform."));
                     }
                     break;
                 case "backwards":
                     {
-                        message = div$6(h2$5("Backwards"), p$2("When set, the chip wave will start playing backwards. After checking this, you may want to adjust the offset to start from a different point that makes sense for this mode."));
+                        message = div$7(h2$6("Backwards"), p$2("When set, the chip wave will start playing backwards. After checking this, you may want to adjust the offset to start from a different point that makes sense for this mode."));
                     }
                     break;
                 case "decimalOffset":
                     {
-                        message = div$6(h2$5("Decimal Offset"), p$2("The decimal offset is subtracted from the pulse width value, enabling the use of numbers such as 12.5 or 6.25. This could be useful if you're trying to recreate the sound of old soundchips."));
+                        message = div$7(h2$6("Decimal Offset"), p$2("The decimal offset is subtracted from the pulse width value, enabling the use of numbers such as 12.5 or 6.25. This could be useful if you're trying to recreate the sound of old soundchips."));
                     }
                     break;
                 case "unisonVoices":
                     {
-                        message = div$6(h2$5("Unison Voices"), p$2("This setting controls how many voices there are in a unison. Unisons such as \"none\" or \"detune\" use 1 voice, many other unisons use 2 voices, and some use up to " + Config.unisonVoicesMax + " voices"));
+                        message = div$7(h2$6("Unison Voices"), p$2("This setting controls how many voices there are in a unison. Unisons such as \"none\" or \"detune\" use 1 voice, many other unisons use 2 voices, and some use up to " + Config.unisonVoicesMax + " voices"));
                     }
                     break;
                 case "unisonSpread":
                     {
-                        message = div$6(h2$5("Unison Spread"), p$2("This setting controls the distance between the voices, in semitones. A small amount of spread causes the voice's waves to shift in and out from each other, causing a shimmering effect. Larger spread will cause the voices to act like separate notes."));
+                        message = div$7(h2$6("Unison Spread"), p$2("This setting controls the distance between the voices, in semitones. A small amount of spread causes the voice's waves to shift in and out from each other, causing a shimmering effect. Larger spread will cause the voices to act like separate notes."));
                     }
                     break;
                 case "unisonOffset":
                     {
-                        message = div$6(h2$5("Unison Offset"), p$2("This setting controls the detune applied to ALL voices, in semitones."));
+                        message = div$7(h2$6("Unison Offset"), p$2("This setting controls the detune applied to ALL voices, in semitones."));
                     }
                     break;
                 case "unisonExpression":
                     {
-                        message = div$6(h2$5("Unison Volume"), p$2("This setting controls the unison volume. Use this if the unison makes your instrument too loud in comparison to other instruments."), p$2("If this is set to a negative value, it will invert the wave!"));
+                        message = div$7(h2$6("Unison Volume"), p$2("This setting controls the unison volume. Use this if the unison makes your instrument too loud in comparison to other instruments."), p$2("If this is set to a negative value, it will invert the wave!"));
                     }
                     break;
                 case "unisonSign":
                     {
-                        message = div$6(h2$5("Unison Sign"), p$2("This setting is a volume multiplier applied to every voice EXCEPT the first. This setting will only work correctly with more than one voices."));
+                        message = div$7(h2$6("Unison Sign"), p$2("This setting is a volume multiplier applied to every voice EXCEPT the first. This setting will only work correctly with more than one voices."));
                     }
                     break;
                 case "pitchRange":
                     {
-                        message = div$6(h2$5("Pitch Envelope Start and End"), p$2("These two settings will adjust where the start and end of the pitch envelope affects. Everything below start envelope will be the value of the lower bound, everything above end envelope will be upper bound, and everything inbetween will scale linearly based on pitch (the opposite is true if inverted)."), p$2("This will NOT work properly if pitch start is greater than pitch end."), p$2("These values are different than the MIDI numbers. These correspond to how many paino keys from the bottom of the song player a specific pitch is"));
+                        message = div$7(h2$6("Pitch Envelope Start and End"), p$2("These two settings will adjust where the start and end of the pitch envelope affects. Everything below start envelope will be the value of the lower bound, everything above end envelope will be upper bound, and everything inbetween will scale linearly based on pitch (the opposite is true if inverted)."), p$2("This will NOT work properly if pitch start is greater than pitch end."), p$2("These values are different than the MIDI numbers. These correspond to how many paino keys from the bottom of the song player a specific pitch is"));
                     }
                     break;
                 case "noteSizeRange":
                     {
-                        message = div$6(h2$5("Note Size Envelope Start and End"), p$2("These two settings work vert similarly to the pitch range bounds, except for note size envelopes instead. Everything below start envelope will be the value of the lower bound, everything above end envelope will be upper bound, and everything inbetween will scale linearly based on note size (the opposite is true if inverted)."), p$2("This will NOT work properly if note size start is greater than note size end."));
+                        message = div$7(h2$6("Note Size Envelope Start and End"), p$2("These two settings work vert similarly to the pitch range bounds, except for note size envelopes instead. Everything below start envelope will be the value of the lower bound, everything above end envelope will be upper bound, and everything inbetween will scale linearly based on note size (the opposite is true if inverted)."), p$2("This will NOT work properly if note size start is greater than note size end."));
                     }
                     break;
                 case "envelopeInvert":
                     {
-                        message = div$6(h2$5("Envelope Inversion"), p$2("This setting will invert the envelope curve. So instead of, for example, lower pitches leading to a smaller output, lower pitches can lead to a greater output."));
+                        message = div$7(h2$6("Envelope Inversion"), p$2("This setting will invert the envelope curve. So instead of, for example, lower pitches leading to a smaller output, lower pitches can lead to a greater output."));
                     }
                     break;
                 case "envelopeRange":
                     {
-                        message = div$6(h2$5("Envelope Bounds"), p$2("These two settings stretch or shrink the envelope vertically, allowing for different ranges of affect."), p$2("This will NOT work properly if lower bound is greater than upper bound."));
+                        message = div$7(h2$6("Envelope Bounds"), p$2("These two settings stretch or shrink the envelope vertically, allowing for different ranges of affect."), p$2("This will NOT work properly if lower bound is greater than upper bound."));
                     }
                     break;
                 case "modEnvelope":
                     {
-                        message = div$6(h2$5("Envelope Target"), p$2("This setting specifies which envelope of the specified instrument you would like to change."));
+                        message = div$7(h2$6("Envelope Target"), p$2("This setting specifies which envelope of the specified instrument you would like to change."));
                     }
                     break;
                 case "randomSteps":
                     {
-                        message = div$6(h2$5("Random Envelope Steps"), p$2("This setting changes how many \"steps\", or different possible values can be outputted. For example, a step size of 2 will output either 0 or 1, and a step size of 3 either 0, 0.5, or 1. Every step is equidistant from each other"));
+                        message = div$7(h2$6("Random Envelope Steps"), p$2("This setting changes how many \"steps\", or different possible values can be outputted. For example, a step size of 2 will output either 0 or 1, and a step size of 3 either 0, 0.5, or 1. Every step is equidistant from each other"));
                     }
                     break;
                 case "randomSeed":
                     {
-                        message = div$6(h2$5("Random Envelope Seed"), p$2("There are 64 seeds, or pseudorandom patterns that you can choose from when enveloping a setting."), p$2("The same seed will output the same value per tick or pitch if the other envelope settings are also the same, meaning that if two different songs use the same seed for their envelope they will have the same \"randomization\"."));
+                        message = div$7(h2$6("Random Envelope Seed"), p$2("There are 64 seeds, or pseudorandom patterns that you can choose from when enveloping a setting."), p$2("The same seed will output the same value per tick or pitch if the other envelope settings are also the same, meaning that if two different songs use the same seed for their envelope they will have the same \"randomization\"."));
                     }
                     break;
                 case "songeq":
                     {
-                        message = div$6(h2$5("Song Eq Filter"), p$2("Filters are a way of emphasizing or diminishing different parts of a sound. Musical notes have a fundamental (base) frequency, but the sound of a musical note also has parts at higher frequencies and filters can adjust the volume of each of these parts based on their frequency."), p$2("Click in the filter editor to insert, delete, or drag a filter control point. The horizontal position of the point determines which frequencies it affects, and the vertical position determines how the volume is affected at that frequency."), p$2("Insert a new point on the left side of the filter editor to add a \"high-pass\" filter point, which additionally reduces the volume of lower frequencies, or insert a new point on the right side to add a \"low-pass\" filter point which reduces the volume of higher frequencies."), p$2("The Song Eq Filter applies to all instruments. This can be handy for getting the sound of a certain genre or fading in and out in combination with modulation"));
+                        message = div$7(h2$6("Song Eq Filter"), p$2("Filters are a way of emphasizing or diminishing different parts of a sound. Musical notes have a fundamental (base) frequency, but the sound of a musical note also has parts at higher frequencies and filters can adjust the volume of each of these parts based on their frequency."), p$2("Click in the filter editor to insert, delete, or drag a filter control point. The horizontal position of the point determines which frequencies it affects, and the vertical position determines how the volume is affected at that frequency."), p$2("Insert a new point on the left side of the filter editor to add a \"high-pass\" filter point, which additionally reduces the volume of lower frequencies, or insert a new point on the right side to add a \"low-pass\" filter point which reduces the volume of higher frequencies."), p$2("The Song Eq Filter applies to all instruments. This can be handy for getting the sound of a certain genre or fading in and out in combination with modulation"));
                     }
                     break;
                 case "lfoEnvelopeWaveform":
                     {
-                        message = div$6(h2$5("LFO Envelope Waveform"), p$2("LFO envelopes can output a variety of different waveforms, from old tremolo's sine to more complex ones."), p$2("These waves are: sines, squares, triangles, sawtooths, trapezoids, and stepped variants of triangles and sawtooths."));
+                        message = div$7(h2$6("LFO Envelope Waveform"), p$2("LFO envelopes can output a variety of different waveforms, from old tremolo's sine to more complex ones."), p$2("These waves are: sines, squares, triangles, sawtooths, trapezoids, and stepped variants of triangles and sawtooths."));
                     }
                     break;
                 case "randomEnvelopeType":
                     {
-                        message = div$6(h2$5("Random Envelope Type"), p$2("Random Envelopes can switch between being determined by the time in the song, the pitch of the note, or per note trigger."));
+                        message = div$7(h2$6("Random Envelope Type"), p$2("Random Envelopes can switch between being determined by the time in the song, the pitch of the note, or per note trigger."));
                     }
                     break;
                 case "ringMod":
                     {
-                        message = div$6(h2$5("Ring Modulation"), p$2(`This setting multiplies a selected wave's frequency with an instrument frequency, this is useful for "bell-like" instruments.`));
+                        message = div$7(h2$6("Ring Modulation"), p$2(`This setting multiplies a selected wave's frequency with an instrument frequency, this is useful for "bell-like" instruments.`));
                     }
                     break;
                 case "RingModHz":
                     {
-                        message = div$6(h2$5("Ring Modulation (Hertz)"), p$2(`This setting changes the Hertz of the multiplied frequency.`));
+                        message = div$7(h2$6("Ring Modulation (Hertz)"), p$2(`This setting changes the Hertz of the multiplied frequency.`));
                     }
                     break;
                 case "ringModChipWave":
                     {
-                        message = div$6(h2$5("Ring Mod Chip Wave"), p$2("This is the shape of the wave modulating your instrument's sound"));
+                        message = div$7(h2$6("Ring Mod Chip Wave"), p$2("This is the shape of the wave modulating your instrument's sound"));
                     }
                     break;
                 case "granular":
                     {
-                        message = div$6(h2$5("Granular Synthesis"), p$2(`This effect is based on granular synthesis! It takes random points from a wave and rearranges them to form "sonic clouds".`));
+                        message = div$7(h2$6("Granular Synthesis"), p$2(`This effect is based on granular synthesis! It takes random points from a wave and rearranges them to form "sonic clouds".`));
                     }
                     break;
                 case "granularMix":
                     {
-                        message = div$6(h2$5("Granular Mix"), p$2("This setting controls the wet/dry mix of the granular effect."));
+                        message = div$7(h2$6("Granular Mix"), p$2("This setting controls the wet/dry mix of the granular effect."));
                     }
                     break;
                 case "grainSize":
                     {
-                        message = div$6(h2$5("Grain Size"), p$2(`This setting controls the size of the grain.`));
+                        message = div$7(h2$6("Grain Size"), p$2(`This setting controls the size of the grain.`));
                     }
                     break;
                 case "grainAmount":
                     {
-                        message = div$6(h2$5("Grain Freq"), p$2(`This setting controls about how often a grain (a group of audio samples) is added to the output, from rarely to multiple at once.`));
+                        message = div$7(h2$6("Grain Freq"), p$2(`This setting controls about how often a grain (a group of audio samples) is added to the output, from rarely to multiple at once.`));
                     }
                     break;
                 case "grainRange":
                     {
-                        message = div$6(h2$5("Grain Range"), p$2(`This setting controls the range of randomization for grain sizes. `));
+                        message = div$7(h2$6("Grain Range"), p$2(`This setting controls the range of randomization for grain sizes. `));
                     }
                     break;
                 case "flanger":
                     {
-                        message = div$6(h2$5("Flanger"), p$2(`This effect creates a sweep-like sound! It takes the audio and duplicates it by the depth, and the depth is modulated, creating a swoosh-like sound.`));
+                        message = div$7(h2$6("Flanger"), p$2(`This effect creates a sweep-like sound! It takes the audio and duplicates it by the depth, and the depth is modulated, creating a swoosh-like sound.`));
                     }
                     break;
                 case "flangerMix":
                     {
-                        message = div$6(h2$5("Flanger Mix"), p$2(`This setting controls the wet/dry mix of the flanger effect. `));
+                        message = div$7(h2$6("Flanger Mix"), p$2(`This setting controls the wet/dry mix of the flanger effect. `));
                     }
                     break;
                 case "flangerDepth":
                     {
-                        message = div$6(h2$5("Flanger Depth"), p$2(`This setting controls the depth of the flanger. `));
+                        message = div$7(h2$6("Flanger Depth"), p$2(`This setting controls the depth of the flanger. `));
                     }
                     break;
                 case "flangerDelay":
                     {
-                        message = div$6(h2$5("Flanger Delay"), p$2(`This setting controls the delay of the flanger. `));
+                        message = div$7(h2$6("Flanger Delay"), p$2(`This setting controls the delay of the flanger. `));
                     }
                     break;
                 case "flangerRate":
                     {
-                        message = div$6(h2$5("Flanger Rate"), p$2(`This setting controls the rate of the flanger. `));
+                        message = div$7(h2$6("Flanger Rate"), p$2(`This setting controls the rate of the flanger. `));
                     }
                     break;
                 case "flangerFeedback":
                     {
-                        message = div$6(h2$5("Flanger Feedback"), p$2(`This setting controls the feedback of the flanger. `));
+                        message = div$7(h2$6("Flanger Feedback"), p$2(`This setting controls the feedback of the flanger. `));
                     }
                     break;
                 default:
@@ -51939,14 +52535,14 @@ You should be redirected to the song at:<br /><br />
                                 .replace("$HI", "" + (Config.modulators[modulator].convertRealFactor + Config.modulators[modulator].maxRawVol))));
                         }
                         pList[pList.length - 1].style.setProperty("color", "var(--secondary-text)");
-                        message = div$6(h2$5(Config.modulators[modulator].promptName), pList);
+                        message = div$7(h2$6(Config.modulators[modulator].promptName), pList);
                         break;
                     }
                     else {
                         throw new Error("Unhandled TipPrompt type: " + type);
                     }
             }
-            this.container = div$6({ class: "prompt", style: "width: 300px;" }, message, this._closeButton, this._okayButton);
+            this.container = div$7({ class: "prompt", style: "width: 300px;" }, message, this._closeButton, this._okayButton);
             setTimeout(() => this._closeButton.focus());
             this._closeButton.addEventListener("click", this._close);
             this._okayButton.addEventListener("click", this._close);
@@ -52363,7 +52959,7 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { div: div$5, input: input$4, button: button$5, h2: h2$4, select: select$4, option: option$4, canvas: canvas$1 } = HTML;
+    const { div: div$6, input: input$5, button: button$6, h2: h2$5, select: select$4, option: option$4, canvas: canvas$1 } = HTML;
     const defaultShapeFunction = (cnv, ctx, x, y, w, h) => {
         ctx.fillRect(x, y, w, h);
     };
@@ -52607,22 +53203,22 @@ You should be redirected to the song at:<br /><br />
             this._waveformContext = null;
             this._overlayCanvas = canvas$1({ width: this._waveformCanvasWidth, height: this._waveformCanvasHeight, style: "cursor: default; position: absolute; top: 0; left: 0; width: 100%;" });
             this._overlayContext = null;
-            this._waveformContainer = div$5({ style: `position: relative; margin-bottom: 0.5em; margin-left: auto; margin-right: auto; width: 100%; outline: 1px solid ${ColorConfig.uiWidgetBackground};` }, this._waveformCanvas, this._overlayCanvas);
-            this._viewportOffsetSlider = input$4({ style: "width: 100%; flex-grow: 1; margin: 0;", type: "range", min: "0", max: "1", value: "0", step: "0.00001" });
-            this._zoomInButton = button$5({ type: "button", title: "Zoom In", style: "height: var(--button-size); margin-left: 0.5em;" }, SVG.svg({ width: "20", height: "20", viewBox: "-10 -10 20 20", "pointer-events": "none", style: "width: 100%; height: 100%;" }, SVG.circle({ cx: -1, cy: -1, r: 6, "stroke-width": 2, stroke: ColorConfig.primaryText, fill: "none" }), SVG.path({ stroke: ColorConfig.primaryText, "stroke-width": 2, d: "M 3 3 L 7 7 M -1 -4 L -1 2 M -4 -1 L 2 -1", fill: "none" })));
-            this._zoomOutButton = button$5({ type: "button", title: "Zoom Out", style: "height: var(--button-size); margin-left: 0.5em;" }, SVG.svg({ width: "20", height: "20", viewBox: "-10 -10 20 20", "pointer-events": "none", style: "width: 100%; height: 100%;" }, SVG.circle({ cx: -1, cy: -1, r: 6, "stroke-width": 2, stroke: ColorConfig.primaryText, fill: "none" }), SVG.path({ stroke: ColorConfig.primaryText, "stroke-width": 2, d: "M 3 3 L 7 7 M -4 -1 L 2 -1", fill: "none" })));
-            this._zoom100Button = button$5({ type: "button", title: "Zoom 100%", style: "height: var(--button-size); margin-left: 0.5em;" }, "100%");
+            this._waveformContainer = div$6({ style: `position: relative; margin-bottom: 0.5em; margin-left: auto; margin-right: auto; width: 100%; outline: 1px solid ${ColorConfig.uiWidgetBackground};` }, this._waveformCanvas, this._overlayCanvas);
+            this._viewportOffsetSlider = input$5({ style: "width: 100%; flex-grow: 1; margin: 0;", type: "range", min: "0", max: "1", value: "0", step: "0.00001" });
+            this._zoomInButton = button$6({ type: "button", title: "Zoom In", style: "height: var(--button-size); margin-left: 0.5em;" }, SVG.svg({ width: "20", height: "20", viewBox: "-10 -10 20 20", "pointer-events": "none", style: "width: 100%; height: 100%;" }, SVG.circle({ cx: -1, cy: -1, r: 6, "stroke-width": 2, stroke: ColorConfig.primaryText, fill: "none" }), SVG.path({ stroke: ColorConfig.primaryText, "stroke-width": 2, d: "M 3 3 L 7 7 M -1 -4 L -1 2 M -4 -1 L 2 -1", fill: "none" })));
+            this._zoomOutButton = button$6({ type: "button", title: "Zoom Out", style: "height: var(--button-size); margin-left: 0.5em;" }, SVG.svg({ width: "20", height: "20", viewBox: "-10 -10 20 20", "pointer-events": "none", style: "width: 100%; height: 100%;" }, SVG.circle({ cx: -1, cy: -1, r: 6, "stroke-width": 2, stroke: ColorConfig.primaryText, fill: "none" }), SVG.path({ stroke: ColorConfig.primaryText, "stroke-width": 2, d: "M 3 3 L 7 7 M -4 -1 L 2 -1", fill: "none" })));
+            this._zoom100Button = button$6({ type: "button", title: "Zoom 100%", style: "height: var(--button-size); margin-left: 0.5em;" }, "100%");
             this._loopModeSelect = select$4({ style: "width: 100%; flex-grow: 1; margin-left: 0.5em;" }, option$4({ value: 0 }, "Loop"), option$4({ value: 1 }, "Ping-Pong"), option$4({ value: 2 }, "Play Once"), option$4({ value: 3 }, "Play Loop Once"));
-            this._startOffsetStepper = input$4({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: this._chipWaveStartOffset, min: "0", step: "1" });
-            this._loopStartStepper = input$4({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: this._chipWaveLoopStart, min: "0", step: "1" });
-            this._loopEndStepper = input$4({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: this._chipWaveLoopEnd, min: "0", step: "1" });
-            this._playBackwardsBox = input$4({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: auto; margin-right: auto;" });
-            this._playSongButton = button$5({ style: "width: 55%;", type: "button" });
-            this._cancelButton = button$5({ class: "cancelButton" });
-            this._okayButton = button$5({ class: "okayButton", style: "width: 25%;" }, "Okay");
-            this._sampleIsLoadingMessage = div$5({ style: "margin-bottom: 0.5em; display: none;" }, "Sample is loading");
-            this._loopControlsContainer = div$5(div$5({ style: "display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, div$5({ style: `width: 100%; margin-bottom: 0.5em; text-align: center; color: ${ColorConfig.secondaryText};` }, "You can also zoom by dragging horizontally on the waveform.")), this._startOffsetHandle.canvas, this._waveformContainer, this._loopStartHandle.canvas, this._loopEndHandle.canvas, div$5({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, this._viewportOffsetSlider, this._zoomInButton, this._zoomOutButton, this._zoom100Button), div$5({ style: "display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, div$5({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$5({ style: `flex-shrink: 0; text-align: right: color: ${ColorConfig.primaryText}; align-self: center;` }, "Loop Mode"), this._loopModeSelect), div$5({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$5({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText}; align-self: center;` }, "Offset"), this._startOffsetStepper), div$5({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$5({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText}; align-self: center;` }, "Loop Start"), this._loopStartStepper), div$5({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$5({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText}; align-self: center;` }, "Loop End"), this._loopEndStepper), div$5({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$5({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText}; align-self: center;` }, "Backwards"), this._playBackwardsBox), div$5({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em; justify-content: center;" }, this._playSongButton)));
-            this.container = div$5({ class: "prompt noSelection", style: "width: 500px;" }, div$5(h2$4({ style: "margin-bottom: 0.5em;" }, "Loop Controls"), this._sampleIsLoadingMessage, this._loopControlsContainer, div$5({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton)), this._cancelButton);
+            this._startOffsetStepper = input$5({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: this._chipWaveStartOffset, min: "0", step: "1" });
+            this._loopStartStepper = input$5({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: this._chipWaveLoopStart, min: "0", step: "1" });
+            this._loopEndStepper = input$5({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: this._chipWaveLoopEnd, min: "0", step: "1" });
+            this._playBackwardsBox = input$5({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: auto; margin-right: auto;" });
+            this._playSongButton = button$6({ style: "width: 55%;", type: "button" });
+            this._cancelButton = button$6({ class: "cancelButton" });
+            this._okayButton = button$6({ class: "okayButton", style: "width: 25%;" }, "Okay");
+            this._sampleIsLoadingMessage = div$6({ style: "margin-bottom: 0.5em; display: none;" }, "Sample is loading");
+            this._loopControlsContainer = div$6(div$6({ style: "display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, div$6({ style: `width: 100%; margin-bottom: 0.5em; text-align: center; color: ${ColorConfig.secondaryText};` }, "You can also zoom by dragging horizontally on the waveform.")), this._startOffsetHandle.canvas, this._waveformContainer, this._loopStartHandle.canvas, this._loopEndHandle.canvas, div$6({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, this._viewportOffsetSlider, this._zoomInButton, this._zoomOutButton, this._zoom100Button), div$6({ style: "display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, div$6({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$6({ style: `flex-shrink: 0; text-align: right: color: ${ColorConfig.primaryText}; align-self: center;` }, "Loop Mode"), this._loopModeSelect), div$6({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$6({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText}; align-self: center;` }, "Offset"), this._startOffsetStepper), div$6({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$6({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText}; align-self: center;` }, "Loop Start"), this._loopStartStepper), div$6({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$6({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText}; align-self: center;` }, "Loop End"), this._loopEndStepper), div$6({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em;" }, div$6({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText}; align-self: center;` }, "Backwards"), this._playBackwardsBox), div$6({ style: "width: 100%; display: flex; flex-direction: row; margin-bottom: 0.5em; justify-content: center;" }, this._playSongButton)));
+            this.container = div$6({ class: "prompt noSelection", style: "width: 500px;" }, div$6(h2$5({ style: "margin-bottom: 0.5em;" }, "Loop Controls"), this._sampleIsLoadingMessage, this._loopControlsContainer, div$6({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton)), this._cancelButton);
             this.gotMouseUp = false;
             this._waveformSampleLookup = (x) => {
                 const n = this._waveformDataLength;
@@ -53139,16 +53735,16 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { div: div$4, h2: h2$3, span: span$2, input: input$3, button: button$4 } = HTML;
+    const { div: div$5, h2: h2$4, span: span$2, input: input$4, button: button$5 } = HTML;
     class SampleLoadingStatusPrompt {
         constructor(_doc) {
             this._intervalDuration = 2000;
             this._interval = null;
             this._renderedWhenAllHaveStoppedChanging = false;
-            this._cancelButton = button$4({ class: "cancelButton" });
-            this._statusesContainer = div$4();
-            this._noSamplesMessage = div$4({ style: "margin-top: 0.5em; display: none;" }, "There are no custom samples in this song");
-            this.container = div$4({ class: "prompt noSelection", style: "width: 350px;" }, div$4(h2$3("Sample Loading Status"), div$4({ style: "display: flex; flex-direction: column; align-items: center; margin-bottom: 0.5em;" }, this._noSamplesMessage, div$4({ style: "width: 100%; max-height: 350px; overflow-y: scroll;" }, this._statusesContainer))), this._cancelButton);
+            this._cancelButton = button$5({ class: "cancelButton" });
+            this._statusesContainer = div$5();
+            this._noSamplesMessage = div$5({ style: "margin-top: 0.5em; display: none;" }, "There are no custom samples in this song");
+            this.container = div$5({ class: "prompt noSelection", style: "width: 350px;" }, div$5(h2$4("Sample Loading Status"), div$5({ style: "display: flex; flex-direction: column; align-items: center; margin-bottom: 0.5em;" }, this._noSamplesMessage, div$5({ style: "width: 100%; max-height: 350px; overflow-y: scroll;" }, this._statusesContainer))), this._cancelButton);
             this._close = () => {
                 this._doc.prompt = null;
                 this._doc.undo();
@@ -53190,14 +53786,14 @@ You should be redirected to the song at:<br /><br />
                     const sampleName = chipWave.name;
                     const url = sampleLoadingState.urlTable[chipWaveIndex];
                     const loadingStatus = getSampleLoadingStatusName(sampleLoadingState.statusTable[chipWaveIndex]);
-                    const urlDisplay = input$3({ style: `margin-left: 0.5em; color: ${ColorConfig.primaryText}; background-color: ${ColorConfig.editorBackground}; width: 100%; border: 1px solid ${ColorConfig.uiWidgetBackground}; -webkit-user-select: none; -webkit-touch-callout: none; -moz-user-select: none; -ms-user-select: none; user-select: none;`, value: url, title: url, disabled: true });
+                    const urlDisplay = input$4({ style: `margin-left: 0.5em; color: ${ColorConfig.primaryText}; background-color: ${ColorConfig.editorBackground}; width: 100%; border: 1px solid ${ColorConfig.uiWidgetBackground}; -webkit-user-select: none; -webkit-touch-callout: none; -moz-user-select: none; -ms-user-select: none; user-select: none;`, value: url, title: url, disabled: true });
                     const loadingStatusColor = loadingStatus === "loaded" ? ColorConfig.indicatorPrimary : ColorConfig.secondaryText;
                     const loadingStatusDisplay = span$2({ style: `margin-left: 0.5em; color: ${loadingStatusColor}` }, loadingStatus);
-                    const chipWaveElement = div$4({ style: `padding: 0.6em; margin: 0.4em; border: 1px solid ${ColorConfig.uiWidgetBackground}; border-radius: 4px;` }, div$4({
+                    const chipWaveElement = div$5({ style: `padding: 0.6em; margin: 0.4em; border: 1px solid ${ColorConfig.uiWidgetBackground}; border-radius: 4px;` }, div$5({
                         class: "add-sample-prompt-sample-name",
                         style: `margin-bottom: 0.5em; color: ${ColorConfig.secondaryText}; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;`,
                         title: sampleName,
-                    }, sampleName), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, div$4({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "URL"), urlDisplay), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, div$4({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "Status"), loadingStatusDisplay));
+                    }, sampleName), div$5({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, div$5({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "URL"), urlDisplay), div$5({ style: "display: flex; flex-direction: row; align-items: center; justify-content: center; margin-bottom: 0.5em;" }, div$5({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "Status"), loadingStatusDisplay));
                     this._statusesContainer.appendChild(chipWaveElement);
                 }
                 if (allHaveStoppedChanging) {
@@ -53211,29 +53807,29 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { div: div$3, input: input$2, button: button$3, a, code, textarea, details, summary, span: span$1, ul, li, select: select$3, option: option$3, h2: h2$2, p: p$1 } = HTML;
+    const { div: div$4, input: input$3, button: button$4, a, code, textarea: textarea$1, details, summary, span: span$1, ul, li, select: select$3, option: option$3, h2: h2$3, p: p$1 } = HTML;
     class AddSamplesPrompt {
         constructor(_doc) {
             this._maxSamples = 64;
             this._entries = [];
             this._entryOptionsDisplayStates = {};
-            this._cancelButton = button$3({ class: "cancelButton" });
-            this._okayButton = button$3({ class: "okayButton", style: "width: 45%;" }, "Okay");
-            this._addSampleButton = button$3({ style: "height: auto; min-height: var(--button-size);" }, "Add sample");
-            this._entryContainer = div$3();
-            this._addMultipleSamplesButton = button$3({ style: "height: auto; min-height: var(--button-size); margin-left: 0.5em;" }, "Add multiple samples");
-            this._addSamplesAreaBottom = div$3({ style: "margin-top: 0.5em;" }, this._addSampleButton, this._addMultipleSamplesButton);
+            this._cancelButton = button$4({ class: "cancelButton" });
+            this._okayButton = button$4({ class: "okayButton", style: "width: 45%;" }, "Okay");
+            this._addSampleButton = button$4({ style: "height: auto; min-height: var(--button-size);" }, "Add sample");
+            this._entryContainer = div$4();
+            this._addMultipleSamplesButton = button$4({ style: "height: auto; min-height: var(--button-size); margin-left: 0.5em;" }, "Add multiple samples");
+            this._addSamplesAreaBottom = div$4({ style: "margin-top: 0.5em;" }, this._addSampleButton, this._addMultipleSamplesButton);
             this._instructionsLink = a({ href: "#", style: "color:var(--loop-accent, red); font-weight:bold;" }, "> Click Here for instructions on adding samples <");
-            this._description = div$3(div$3({ style: "margin-bottom: 0.5em; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; cursor: text;" }, "In order to use the old Slarmoo's Box samples, you should add ", code("legacySamples"), " for the PaandorasBox Samples.", p$1({}), "You can also use ", code("nintariboxSamples"), " and ", code("marioPaintboxSamples"), " for more built-in sample packs."), div$3({ style: "margin-bottom: 0.5em;" }, "The order of these samples is important - if you change their order or remove them you'll break your song!"), div$3({ style: "margin-bottom: 0.5em; font-size: 17px;" }, this._instructionsLink));
-            this._closeInstructionsButton = button$3({ style: "height: auto; min-height: var(--button-size); width: 100%;" }, "Close instructions");
-            this._instructionsArea = div$3({ style: "display: none; margin-top: 0; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; cursor: text; overflow-y: auto;" }, h2$2("Add Samples"), div$3({ style: "margin-top: 0.5em; margin-bottom: 0.5em;" }, "In Slarmoo's Box, custom samples are loaded from arbitrary URLs."), div$3({ style: `margin-top: 0.5em; margin-bottom: 0.5em; color: ${ColorConfig.secondaryText};` }, "(Technically, the web server behind the URL needs to support ", a({ href: "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS", target: "_blank", }, "CORS"), ", but you don't need to know about that: ", " the sample just won't load if that's not the case)"), div$3({ style: "margin-top: 0.5em; margin-bottom: 0.5em;" }, details(summary("Why arbitrary URLs?"), a({ href: "https://pandoras-box-archive.neptendo.repl.co/" }, "A certain BeepBox mod"), " did this with one central server, but it went down, taking down", " the samples with it, though thankfully it got archived.", " This is always an issue with servers: it may run out of space,", " stop working, and so on. With arbitrary URLs, you can always ", " change them to different ones if they stop working."), p$1({}), "Simply go and upload your samples to a website we suggest down below, once you do that you can copy that URL and paste it into the text input you can find after pressing the 'Add Sample' button.", "You know the sample works once you see the name of the sample appear above the text input! Then just press 'Okay' and your sample will appear! To use samples just change your instrument to a chip wave instrument type and scroll down until you find the samples."), div$3({ style: "margin-top: 0.5em; margin-bottom: 0.5em;" }, "As for where to upload your samples, here are some suggestions:", ul({ style: "text-align: left;" }, li(a({ href: "https://filegarden.com" }, "File Garden")), li(a({ href: "https://www.dropbox.com" }, "Dropbox"), " (domain needs to be ", code("https://dl.dropboxusercontent.com"), ")"))), div$3({ style: "margin-top: 0.5em; margin-bottom: 0.5em;" }, "Static website hosting services may also work (such as ", a({ href: "https://pages.github.com" }, "GitHub Pages"), ")", " but those require a bit more setup."), div$3({ style: "margin-top: 0.5em; margin-bottom: 1em;" }, "Finally, if have a soundfont you'd like to get samples from, consider using this ", a({ href: "./sample_extractor.html", target: "_blank" }, "sample extractor"), "."), div$3({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between; margin-top: 0.5em;" }, this._closeInstructionsButton));
-            this._addSamplesArea = div$3({ style: "overflow-y: auto;" }, h2$2("Add Samples"), div$3({ style: "display: flex; flex-direction: column; align-items: center; margin-bottom: 0.5em;" }, this._description, div$3({ style: "width: 100%; max-height: 450px; overflow-y: scroll;" }, this._entryContainer), this._addSamplesAreaBottom), div$3({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton));
-            this._bulkAddTextarea = textarea({
+            this._description = div$4(div$4({ style: "margin-bottom: 0.5em; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; cursor: text;" }, "In order to use the old Slarmoo's Box samples, you should add ", code("legacySamples"), " for the PaandorasBox Samples.", p$1({}), "You can also use ", code("nintariboxSamples"), " and ", code("marioPaintboxSamples"), " for more built-in sample packs."), div$4({ style: "margin-bottom: 0.5em;" }, "The order of these samples is important - if you change their order or remove them you'll break your song!"), div$4({ style: "margin-bottom: 0.5em; font-size: 17px;" }, this._instructionsLink));
+            this._closeInstructionsButton = button$4({ style: "height: auto; min-height: var(--button-size); width: 100%;" }, "Close instructions");
+            this._instructionsArea = div$4({ style: "display: none; margin-top: 0; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; cursor: text; overflow-y: auto;" }, h2$3("Add Samples"), div$4({ style: "margin-top: 0.5em; margin-bottom: 0.5em;" }, "In Slarmoo's Box, custom samples are loaded from arbitrary URLs."), div$4({ style: `margin-top: 0.5em; margin-bottom: 0.5em; color: ${ColorConfig.secondaryText};` }, "(Technically, the web server behind the URL needs to support ", a({ href: "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS", target: "_blank", }, "CORS"), ", but you don't need to know about that: ", " the sample just won't load if that's not the case)"), div$4({ style: "margin-top: 0.5em; margin-bottom: 0.5em;" }, details(summary("Why arbitrary URLs?"), a({ href: "https://pandoras-box-archive.neptendo.repl.co/" }, "A certain BeepBox mod"), " did this with one central server, but it went down, taking down", " the samples with it, though thankfully it got archived.", " This is always an issue with servers: it may run out of space,", " stop working, and so on. With arbitrary URLs, you can always ", " change them to different ones if they stop working."), p$1({}), "Simply go and upload your samples to a website we suggest down below, once you do that you can copy that URL and paste it into the text input you can find after pressing the 'Add Sample' button.", "You know the sample works once you see the name of the sample appear above the text input! Then just press 'Okay' and your sample will appear! To use samples just change your instrument to a chip wave instrument type and scroll down until you find the samples."), div$4({ style: "margin-top: 0.5em; margin-bottom: 0.5em;" }, "As for where to upload your samples, here are some suggestions:", ul({ style: "text-align: left;" }, li(a({ href: "https://filegarden.com" }, "File Garden")), li(a({ href: "https://www.dropbox.com" }, "Dropbox"), " (domain needs to be ", code("https://dl.dropboxusercontent.com"), ")"))), div$4({ style: "margin-top: 0.5em; margin-bottom: 0.5em;" }, "Static website hosting services may also work (such as ", a({ href: "https://pages.github.com" }, "GitHub Pages"), ")", " but those require a bit more setup."), div$4({ style: "margin-top: 0.5em; margin-bottom: 1em;" }, "Finally, if have a soundfont you'd like to get samples from, consider using this ", a({ href: "./sample_extractor.html", target: "_blank" }, "sample extractor"), "."), div$4({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between; margin-top: 0.5em;" }, this._closeInstructionsButton));
+            this._addSamplesArea = div$4({ style: "overflow-y: auto;" }, h2$3("Add Samples"), div$4({ style: "display: flex; flex-direction: column; align-items: center; margin-bottom: 0.5em;" }, this._description, div$4({ style: "width: 100%; max-height: 450px; overflow-y: scroll;" }, this._entryContainer), this._addSamplesAreaBottom), div$4({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton));
+            this._bulkAddTextarea = textarea$1({
                 style: "width: 100%; height: 100%; resize: none; box-sizing: border-box;",
             });
-            this._bulkAddConfirmButton = button$3({ style: "height: auto; min-height: var(--button-size); width: 100%;" }, "Add");
-            this._bulkAddArea = div$3({ style: "display: none; overflow-y: auto;" }, h2$2({ style: "margin-bottom: 0.5em;" }, "Add Multiple Samples"), div$3({ style: "display: flex; flex-direction: column; align-items: center;" }, div$3(`Add one URL per line. Remember that you can only have ${this._maxSamples} samples!`), div$3({ style: `color: ${ColorConfig.secondaryText}` }, "(This supports the syntax used to store samples in the song URLs as well)"), div$3({ style: "width: 100%; height: 250px; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._bulkAddTextarea)), div$3({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._bulkAddConfirmButton));
-            this.container = div$3({ class: "prompt noSelection", style: "width: 450px; max-height: calc(100% - 100px);" }, this._addSamplesArea, this._bulkAddArea, this._instructionsArea, this._cancelButton);
+            this._bulkAddConfirmButton = button$4({ style: "height: auto; min-height: var(--button-size); width: 100%;" }, "Add");
+            this._bulkAddArea = div$4({ style: "display: none; overflow-y: auto;" }, h2$3({ style: "margin-bottom: 0.5em;" }, "Add Multiple Samples"), div$4({ style: "display: flex; flex-direction: column; align-items: center;" }, div$4(`Add one URL per line. Remember that you can only have ${this._maxSamples} samples!`), div$4({ style: `color: ${ColorConfig.secondaryText}` }, "(This supports the syntax used to store samples in the song URLs as well)"), div$4({ style: "width: 100%; height: 250px; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._bulkAddTextarea)), div$4({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._bulkAddConfirmButton));
+            this.container = div$4({ class: "prompt noSelection", style: "width: 450px; max-height: calc(100% - 100px);" }, this._addSamplesArea, this._bulkAddArea, this._instructionsArea, this._cancelButton);
             this.cleanUp = () => {
                 while (this._entryContainer.firstChild !== null) {
                     this._entryContainer.removeChild(this._entryContainer.firstChild);
@@ -53696,27 +54292,27 @@ You should be redirected to the song at:<br /><br />
                     const canMoveDown = this._entries.length >= 2 && entryIndex < this._entries.length - 1;
                     const entry = this._entries[entryIndex];
                     const optionsVisible = Boolean(this._entryOptionsDisplayStates[entryIndex]);
-                    const urlInput = input$2({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", value: entry.url });
-                    const sampleRateStepper = input$2({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + entry.sampleRate, min: "8000", max: "96000", step: "1" });
-                    const rootKeyStepper = input$2({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + entry.rootKey, min: "0", max: Config.maxPitch + Config.pitchesPerOctave, step: "1" });
+                    const urlInput = input$3({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", value: entry.url });
+                    const sampleRateStepper = input$3({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + entry.sampleRate, min: "8000", max: "96000", step: "1" });
+                    const rootKeyStepper = input$3({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + entry.rootKey, min: "0", max: Config.maxPitch + Config.pitchesPerOctave, step: "1" });
                     const rootKeyDisplay = span$1({ class: "add-sample-prompt-root-key-display", style: "margin-left: 0.4em; width: 3em; text-align: left; text-overflow: ellipsis; overflow: hidden; flex-shrink: 0;" }, `(${this._noteNameFromPitchNumber(entry.rootKey)})`);
-                    const percussionBox = input$2({ style: "width: 1em; margin-left: 1em;", type: "checkbox" });
-                    const chipWaveLoopStartStepper = input$2({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + (entry.chipWaveLoopStart != null ? entry.chipWaveLoopStart : ""), min: "0", step: "1" });
-                    const chipWaveLoopEndStepper = input$2({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + (entry.chipWaveLoopEnd != null ? entry.chipWaveLoopEnd : ""), min: "0", step: "1" });
-                    const chipWaveStartOffsetStepper = input$2({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + (entry.chipWaveStartOffset != null ? entry.chipWaveStartOffset : ""), min: "0", step: "1" });
+                    const percussionBox = input$3({ style: "width: 1em; margin-left: 1em;", type: "checkbox" });
+                    const chipWaveLoopStartStepper = input$3({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + (entry.chipWaveLoopStart != null ? entry.chipWaveLoopStart : ""), min: "0", step: "1" });
+                    const chipWaveLoopEndStepper = input$3({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + (entry.chipWaveLoopEnd != null ? entry.chipWaveLoopEnd : ""), min: "0", step: "1" });
+                    const chipWaveStartOffsetStepper = input$3({ style: "flex-grow: 1; margin-left: 1em; width: 100%;", type: "number", value: "" + (entry.chipWaveStartOffset != null ? entry.chipWaveStartOffset : ""), min: "0", step: "1" });
                     const chipWaveLoopModeSelect = select$3({ style: "width: 100%; flex-grow: 1; margin-left: 0.5em;" }, option$3({ value: -1 }, ""), option$3({ value: 0 }, "Loop"), option$3({ value: 1 }, "Ping-Pong"), option$3({ value: 2 }, "Play Once"), option$3({ value: 3 }, "Play Loop Once"));
                     if (entry.chipWaveLoopMode != null) {
                         chipWaveLoopModeSelect.value = "" + entry.chipWaveLoopMode;
                     }
-                    const chipWavePlayBackwardsBox = input$2({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: auto; margin-right: auto;" });
+                    const chipWavePlayBackwardsBox = input$3({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: auto; margin-right: auto;" });
                     chipWavePlayBackwardsBox.checked = entry.chipWavePlayBackwards;
                     const sampleName = this._getSampleName(entry);
                     percussionBox.checked = entry.percussion;
-                    const copyLinkPresetButton = button$3({ style: "height: auto; min-height: var(--button-size);", title: "For use with \"Add multiple samples\"" }, "Copy link preset");
-                    const removeButton = button$3({ style: "height: auto; min-height: var(--button-size); margin-left: 0.5em;" }, "Remove");
-                    const moveUpButton = button$3({ style: "height: auto; min-height: var(--button-size); margin-left: 0.5em;" }, SVG.svg({ width: "16", height: "16", viewBox: "-13 -14 26 26", "pointer-events": "none", style: "width: 100%; height: 100%;" }, SVG.path({ d: "M -6 6 L 0 -6 L 6 6 z", fill: ColorConfig.primaryText })));
-                    const moveDownButton = button$3({ style: "height: auto; min-height: var(--button-size); margin-left: 0.5em;" }, SVG.svg({ width: "16", height: "16", viewBox: "-13 -14 26 26", "pointer-events": "none", style: "width: 100%; height: 100%;" }, SVG.path({ d: "M -6 -6 L 6 -6 L 0 6 z", fill: ColorConfig.primaryText })));
-                    const optionsContainer = details({ open: optionsVisible, style: "margin-bottom: 2em; margin-top: 1em;" }, summary({ style: "margin-bottom: 1em;" }, "Options"), div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$3({ style: `flex-shrink: 0; :text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "What rate to resample to" }, "Sample rate")), sampleRateStepper), div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$3({ style: `text-align: right; color: ${ColorConfig.primaryText}; flex-shrink: 0;` }, span$1({ title: "Pitch where the sample is played as-is" }, "Root key")), rootKeyDisplay, rootKeyStepper), div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 0.5em;" }, div$3({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "Percussion (pitch doesn't change with key)"), percussionBox), div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$3({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Loop Start\" loop control option of the preset created for this sample" }, "Loop Start")), chipWaveLoopStartStepper), div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$3({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Loop End\" loop control option of the preset created for this sample" }, "Loop End")), chipWaveLoopEndStepper), div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$3({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Offset\" loop control option of the preset created for this sample" }, "Sample Start Offset")), chipWaveStartOffsetStepper), div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$3({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Loop Mode\" loop control option of the preset created for this sample" }, "Loop Mode")), chipWaveLoopModeSelect), div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$3({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Backwards\" loop control option of the preset created for this sample" }, "Backwards")), chipWavePlayBackwardsBox));
+                    const copyLinkPresetButton = button$4({ style: "height: auto; min-height: var(--button-size);", title: "For use with \"Add multiple samples\"" }, "Copy link preset");
+                    const removeButton = button$4({ style: "height: auto; min-height: var(--button-size); margin-left: 0.5em;" }, "Remove");
+                    const moveUpButton = button$4({ style: "height: auto; min-height: var(--button-size); margin-left: 0.5em;" }, SVG.svg({ width: "16", height: "16", viewBox: "-13 -14 26 26", "pointer-events": "none", style: "width: 100%; height: 100%;" }, SVG.path({ d: "M -6 6 L 0 -6 L 6 6 z", fill: ColorConfig.primaryText })));
+                    const moveDownButton = button$4({ style: "height: auto; min-height: var(--button-size); margin-left: 0.5em;" }, SVG.svg({ width: "16", height: "16", viewBox: "-13 -14 26 26", "pointer-events": "none", style: "width: 100%; height: 100%;" }, SVG.path({ d: "M -6 -6 L 6 -6 L 0 6 z", fill: ColorConfig.primaryText })));
+                    const optionsContainer = details({ open: optionsVisible, style: "margin-bottom: 2em; margin-top: 1em;" }, summary({ style: "margin-bottom: 1em;" }, "Options"), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$4({ style: `flex-shrink: 0; :text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "What rate to resample to" }, "Sample rate")), sampleRateStepper), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$4({ style: `text-align: right; color: ${ColorConfig.primaryText}; flex-shrink: 0;` }, span$1({ title: "Pitch where the sample is played as-is" }, "Root key")), rootKeyDisplay, rootKeyStepper), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 0.5em;" }, div$4({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "Percussion (pitch doesn't change with key)"), percussionBox), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$4({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Loop Start\" loop control option of the preset created for this sample" }, "Loop Start")), chipWaveLoopStartStepper), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$4({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Loop End\" loop control option of the preset created for this sample" }, "Loop End")), chipWaveLoopEndStepper), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$4({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Offset\" loop control option of the preset created for this sample" }, "Sample Start Offset")), chipWaveStartOffsetStepper), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$4({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Loop Mode\" loop control option of the preset created for this sample" }, "Loop Mode")), chipWaveLoopModeSelect), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$4({ style: `flex-shrink: 0; text-align: right; color: ${ColorConfig.primaryText};` }, span$1({ title: "Applies to the \"Backwards\" loop control option of the preset created for this sample" }, "Backwards")), chipWavePlayBackwardsBox));
                     urlInput.dataset.index = "" + entryIndex;
                     sampleRateStepper.dataset.index = "" + entryIndex;
                     rootKeyStepper.dataset.index = "" + entryIndex;
@@ -53731,18 +54327,18 @@ You should be redirected to the song at:<br /><br />
                     moveUpButton.dataset.index = "" + entryIndex;
                     moveDownButton.dataset.index = "" + entryIndex;
                     optionsContainer.dataset.index = "" + entryIndex;
-                    const bottomButtons = div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end;" }, copyLinkPresetButton, removeButton);
+                    const bottomButtons = div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end;" }, copyLinkPresetButton, removeButton);
                     if (canMoveUp) {
                         bottomButtons.appendChild(moveUpButton);
                     }
                     if (canMoveDown) {
                         bottomButtons.appendChild(moveDownButton);
                     }
-                    const entryElement = div$3({ style: `padding: 0.6em; margin: 0.4em; border: 1px solid ${ColorConfig.uiWidgetBackground}; border-radius: 4px;` }, div$3({
+                    const entryElement = div$4({ style: `padding: 0.6em; margin: 0.4em; border: 1px solid ${ColorConfig.uiWidgetBackground}; border-radius: 4px;` }, div$4({
                         class: "add-sample-prompt-sample-name",
                         style: `margin-bottom: 0.5em; color: ${ColorConfig.secondaryText}; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;`,
                         title: sampleName,
-                    }, sampleName), div$3({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$3({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "URL"), urlInput), optionsContainer, bottomButtons);
+                    }, sampleName), div$4({ style: "display: flex; flex-direction: row; align-items: center; justify-content: flex-end; margin-bottom: 0.5em;" }, div$4({ style: `text-align: right; color: ${ColorConfig.primaryText};` }, "URL"), urlInput), optionsContainer, bottomButtons);
                     optionsContainer.addEventListener("toggle", this._whenOptionsAreToggled);
                     urlInput.addEventListener("change", this._whenURLChanges);
                     sampleRateStepper.addEventListener("change", this._whenSampleRateChanges);
@@ -53804,14 +54400,14 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$2, div: div$2, h2: h2$1, select: select$2, option: option$2 } = HTML;
+    const { button: button$3, div: div$3, h2: h2$2, select: select$2, option: option$2 } = HTML;
     class ShortenerConfigPrompt {
         constructor(_doc) {
             this._doc = _doc;
             this._shortenerStrategySelect = select$2({ style: "width: 100%;" }, option$2({ value: "tinyurl" }, "tinyurl.com"), option$2({ value: "isgd" }, "is.gd"));
-            this._cancelButton = button$2({ class: "cancelButton" });
-            this._okayButton = button$2({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this.container = div$2({ class: "prompt noSelection", style: "width: 250px;" }, h2$1("Configure Shortener"), div$2({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$2({ class: "selectContainer", style: "width: 100%;" }, this._shortenerStrategySelect)), div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._cancelButton = button$3({ class: "cancelButton" });
+            this._okayButton = button$3({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this.container = div$3({ class: "prompt noSelection", style: "width: 250px;" }, h2$2("Configure Shortener"), div$3({ style: "display: flex; flex-direction: row; align-items: center; height: 2em; justify-content: flex-end;" }, div$3({ class: "selectContainer", style: "width: 100%;" }, this._shortenerStrategySelect)), div$3({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._close = () => {
                 this._doc.undo();
             };
@@ -53840,7 +54436,7 @@ You should be redirected to the song at:<br /><br />
         }
     }
 
-    const { button: button$1, label, div: div$1, p, h2, h3, form, input: input$1, select: select$1, option: option$1 } = HTML;
+    const { button: button$2, label, div: div$2, p, h2: h2$1, h3, form, input: input$2, select: select$1, option: option$1 } = HTML;
     function buildOptions$1(menu, items) {
         for (let index = 0; index < items.length; index++) {
             menu.appendChild(option$1({ value: index }, items[index]));
@@ -54111,37 +54707,38 @@ You should be redirected to the song at:<br /><br />
             this._pattern = _pattern;
             this._pattern2 = _pattern2;
             this._pattern3 = _pattern3;
-            this._showFifth = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showThird = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._ACS = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._notesFlashWhenPlayed = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._frostedGlassBackground = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showChannels = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showInstrumentScrollbars = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._instrumentCopyPaste = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._instrumentImportExport = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._instrumentButtonsAtTop = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showLetters = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._displayVolumeBar = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showOscilloscope = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showSampleLoadingStatus = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showDescription = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._rainbowifyLoop = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._layoutForm = form({ style: "display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; text-align: center;" }, label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "small" }), SVG(`\
+            this._showFifth = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showThird = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._ACS = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._notesFlashWhenPlayed = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._frostedGlassBackground = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showChannels = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showInstrumentScrollbars = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._instrumentCopyPaste = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._instrumentImportExport = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._instrumentButtonsAtTop = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showLetters = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._displayVolumeBar = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showOscilloscope = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showSampleLoadingStatus = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showDescription = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._rainbowifyLoop = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._promptSongDetails = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._layoutForm = form({ style: "display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; text-align: center;" }, label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "small" }), SVG(`\
 			  <svg viewBox="-4 -1 28 22">
 			  <rect x="0" y="0" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="2" y="2" width="11" height="10" fill="currentColor"/>
 			  <rect x="14" y="2" width="4" height="16" fill="currentColor"/>
 			  <rect x="2" y="13" width="11" height="5" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Small")), label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "small+" }), SVG(`\
+			  `), div$2("Small")), label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "small+" }), SVG(`\
 			  <svg viewBox="-4 -1 28 22">
 			  <rect x="0" y="0" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="2" y="2" width="11" height="10" fill="currentColor"/>
 			  <rect x="14" y="2" width="4" height="16" fill="currentColor"/>
 			  <rect x="2" y="13" width="11" height="5" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Small+")), label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "long" }), SVG(`\
+			  `), div$2("Small+")), label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "long" }), SVG(`\
 			  <svg viewBox="-1 -1 28 22">
 			  <rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="2" y="2" width="12" height="10" fill="currentColor"/>
@@ -54149,14 +54746,14 @@ You should be redirected to the song at:<br /><br />
 			  <rect x="20" y="2" width="4" height="10" fill="currentColor"/>
 			  <rect x="2" y="13" width="22" height="5" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Long")), label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "tall" }), SVG(`\
+			  `), div$2("Long")), label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "tall" }), SVG(`\
 			  <svg viewBox="-1 -1 28 22">
 			  <rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="11" y="2" width="8" height="16" fill="currentColor"/>
 			  <rect x="20" y="2" width="4" height="16" fill="currentColor"/>
 			  <rect x="2" y="2" width="8" height="16" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Tall")), label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "wide" }), SVG(`\
+			  `), div$2("Tall")), label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "wide" }), SVG(`\
 			  <svg viewBox="-1 -1 28 22">
 			  <rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="2" y="2" width="4" height="16" fill="currentColor"/>
@@ -54164,7 +54761,7 @@ You should be redirected to the song at:<br /><br />
 			  <rect x="21.5" y="2" width="2.5" height="16" fill="currentColor"/>
 			  <rect x="7" y="2" width="10" height="16" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Wide")), label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "wide long" }), SVG(`\
+			  `), div$2("Wide")), label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "wide long" }), SVG(`\
 			  <svg viewBox="-1 -1 28 22">
 			  <rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="2" y="2" width="12" height="10" fill="currentColor"/>
@@ -54172,7 +54769,7 @@ You should be redirected to the song at:<br /><br />
 			  <rect x="20" y="2" width="4" height="16" fill="currentColor"/>
 			  <rect x="2" y="13" width="12" height="5" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Wide Long")), label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "flipped long" }), SVG(`\
+			  `), div$2("Wide Long")), label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "flipped long" }), SVG(`\
 			  <svg viewBox="-1 -1 28 22">
 			  <rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="2" y="2" width="22" height="2" fill="currentColor"/>
@@ -54180,14 +54777,14 @@ You should be redirected to the song at:<br /><br />
 			  <rect x="7" y="5" width="17" height="8" fill="currentColor"/>
 			  <rect x="2" y="14" width="22" height="4" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Flipped Long")), label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "focused long" }), SVG(`\
+			  `), div$2("Flipped Long")), label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "focused long" }), SVG(`\
 			  <svg viewBox="-1 -1 28 22">
 			  <rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="2" y="2" width="17" height="10" fill="currentColor"/>
 			  <rect x="20" y="2" width="4" height="16" fill="currentColor"/>
 			  <rect x="2" y="13" width="17" height="5" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Focused long")), label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "switched long" }), SVG(`\
+			  `), div$2("Focused long")), label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "switched long" }), SVG(`\
 			  <svg viewBox="-1 -1 28 22">
 			  <rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="2" y="2" width="12" height="10" fill="currentColor"/>
@@ -54195,7 +54792,7 @@ You should be redirected to the song at:<br /><br />
 			  <rect x="20" y="2" width="4" height="16" fill="currentColor"/>
 			  <rect x="2" y="13" width="12" height="5" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Switched Long")), label({ class: "layout-option" }, input$1({ type: "radio", name: "layout", value: "custom" }), SVG(`\
+			  `), div$2("Switched Long")), label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "custom" }), SVG(`\
 			  <svg viewBox="-1 -1 28 22">
 			  <rect x="0" y="0" width="26" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
 			  <rect x="2" y="2" width="12" height="10" fill="currentColor"/>
@@ -54203,8 +54800,8 @@ You should be redirected to the song at:<br /><br />
 			  <rect x="20" y="2" width="4" height="10" fill="currentColor"/>
 			  <rect x="2" y="13" width="22" height="5" fill="currentColor"/>
 			  </svg>
-			  `), div$1("Custom")));
-            this._resetButton = button$1({ style: "height: auto; min-height: var(--button-size);" }, "Reset to defaults");
+			  `), div$2("Custom")));
+            this._resetButton = button$2({ style: "height: auto; min-height: var(--button-size);" }, "Reset to defaults");
             this._layoutInput = Object.assign(document.createElement("textarea"), {
                 rows: 24, style: "resize: none; width: 100%; text-align: left", value: localStorage.getItem("customLayout") ||
                     `\
@@ -54291,49 +54888,49 @@ You should be redirected to the song at:<br /><br />
 			}`,
             });
             this._themeSelect = select$1({ style: "width: 100%;" }, option$1({ value: "forest" }, "Forest"), option$1({ value: "canyon" }, "Canyon"), option$1({ value: "midnight" }, "Midnight"), option$1({ value: "beachcombing" }, "Beachcombing"), option$1({ value: "violet verdant" }, "Violet Verdant"), option$1({ value: "sunset" }, "Sunset"), option$1({ value: "autumn" }, "Autumn"), option$1({ value: "fruit" }, "Shadowfruit"), option$1({ value: "toxic" }, "Toxic"), option$1({ value: "roe" }, "Roe"), option$1({ value: "moonlight" }, "Moonlight"), option$1({ value: "portal" }, "Portal"), option$1({ value: "fusion" }, "Fusion"), option$1({ value: "nebula" }, "Nebula"), option$1({ value: "amoled dark" }, "High Contrast Dark"), option$1({ value: "energized" }, "Energized"), option$1({ value: "neapolitan" }, "Neapolitan"), option$1({ value: "poly" }, "Poly"), option$1({ value: "blutonium" }, "Blutonium"), option$1({ value: "greyscale" }, "Greyscale"), option$1({ value: "slushie" }, "Slushie"));
-            this._customThemeFileInput = input$1({ type: "file", accept: "image/*", text: "choose editor background image" });
-            this._customThemeFileInput2 = input$1({ type: "file", accept: "image/*", text: "choose website background image" });
-            this._colorInput = input$1({ type: "text", style: "width: auto" });
-            this._customThemeFileReset = button$1({ style: "height: auto; min-height: var(--button-size);" }, "Reset background images");
-            this._autoPlay = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._autoFollow = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._enableNotePreview = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._notesOutsideScale = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._alwaysFineNoteVol = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showScrollBar = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._enableChannelMuting = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._displayBrowserUrl = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._closePromptByClickoff = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._customThemeFileInput = input$2({ type: "file", accept: "image/*", text: "choose editor background image" });
+            this._customThemeFileInput2 = input$2({ type: "file", accept: "image/*", text: "choose website background image" });
+            this._colorInput = input$2({ type: "text", style: "width: auto" });
+            this._customThemeFileReset = button$2({ style: "height: auto; min-height: var(--button-size);" }, "Reset background images");
+            this._autoPlay = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._autoFollow = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._enableNotePreview = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._notesOutsideScale = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._alwaysFineNoteVol = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showScrollBar = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._enableChannelMuting = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._displayBrowserUrl = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._closePromptByClickoff = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
             this._defaultScaleSelect = buildOptions$1(select$1({ style: "width: 100%;" }), Config.scales.map(scale => scale.name));
             this._keyboardMode = select$1({ style: "width: 100%;" }, option$1({ value: "useCapsLockForNotes" }, "use caps lock to play notes"), option$1({ value: "pressControlForShortcuts" }, "press " + EditorConfig.ctrlName + " for shortcuts"));
             this._keyboardLayout = select$1({ style: "width: 100%;" }, option$1({ value: "wickiHayden" }, "Wicki-Hayden"), option$1({ value: "songScale" }, "selected song scale"), option$1({ value: "pianoAtC" }, "piano starting at C :)"), option$1({ value: "pianoAtA" }, "piano starting at A :("), option$1({ value: "pianoTransposingC" }, "piano transposing C :) to song key"), option$1({ value: "pianoTransposingA" }, "piano transposing A :( to song key"));
             this._bassOffset = select$1({ style: "width: 100%;" }, option$1({ value: "0" }, "disabled"), option$1({ value: "-1" }, "before"), option$1({ value: "1" }, "after"));
-            this._keyboardLayoutPreview = div$1({ style: "display: grid; row-gap: 4px; margin: 4px auto; font-size: 10px;" });
-            this._enableMidi = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._showRecordButton = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._snapRecordedNotesToRhythm = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._ignorePerformedNotesNotInScale = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._metronomeCountIn = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
-            this._metronomeWhileRecording = input$1({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._keyboardLayoutPreview = div$2({ style: "display: grid; row-gap: 4px; margin: 4px auto; font-size: 10px;" });
+            this._enableMidi = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._showRecordButton = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._snapRecordedNotesToRhythm = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._ignorePerformedNotesNotInScale = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._metronomeCountIn = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._metronomeWhileRecording = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
             this._defaultShortcuts = DefaultShortcuts;
-            this._shortcutLabels = div$1();
+            this._shortcutLabels = div$2();
             this._recordRebind = "";
-            this._resetDefaultButton = button$1({ style: "height: auto; margin: 1em;" }, "Reset to Defaults");
-            this._appearanceAreaButton = button$1({ class: "appearanceAreaButton", style: "width:16%;" }, "Appearance");
-            this._themeAreaButton = button$1({ class: "themeAreaButton", style: "width:16%;" }, "Theme");
-            this._layoutAreaButton = button$1({ class: "layoutAreaButton", style: "width:16%;" }, "Layout");
-            this._generalAreaButton = button$1({ class: "generalAreaButton", style: "width:16%;" }, "General");
-            this._recordingAreaButton = button$1({ class: "recordingAreaButton", style: "width:16%;" }, "Recording");
-            this._keybindAreaButton = button$1({ class: "keybindAreaButton", style: "width:16%;" }, "Shortcuts");
-            this._appearanceArea = div$1({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2("Appearance"), div$1({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "fifth" note:', div$1({ style: "width: 50%; text-align: center;" }, this._showFifth)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "third" note:', div$1({ style: "width: 50%; text-align: center;" }, this._showThird)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Advanced Color Scheme:', div$1({ style: "width: 50%; text-align: center;" }, this._ACS)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Flash notes when played:', div$1({ style: "width: 50%; text-align: center;" }, this._notesFlashWhenPlayed)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$1({ style: "width: 50%;" }, "Blur background while in prompt:"), div$1({ style: "width: 50%; text-align: center;" }, this._frostedGlassBackground)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show all channels:", div$1({ style: "width: 50%; text-align: center;" }, this._showChannels)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show instrument scrollbars:", div$1({ style: "width: 50%; text-align: center;" }, this._showInstrumentScrollbars)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$1({ style: "width: 50%;" }, "Show instrument copy/paste buttons:"), div$1({ style: "width: 50%; text-align: center;" }, this._instrumentCopyPaste)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$1({ style: "width: 50%;" }, "Show instrument import/export buttons:"), div$1({ style: "width: 50%; text-align: center;" }, this._instrumentImportExport)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$1({ style: "width: 50%;" }, "Show instrument buttons at top:"), div$1({ style: "width: 50%; text-align: center;" }, this._instrumentButtonsAtTop)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show piano keys:", div$1({ style: "width: 50%; text-align: center;" }, this._showLetters)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show volume bar:", div$1({ style: "width: 50%; text-align: center;" }, this._displayVolumeBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show oscilloscope:", div$1({ style: "width: 50%; text-align: center;" }, this._showOscilloscope)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show sample loading status:", div$1({ style: "width: 50%; text-align: center;" }, this._showSampleLoadingStatus)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show description:", div$1({ style: "width: 50%; text-align: center;" }, this._showDescription)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Rainbowify Song Loop:", div$1({ style: "width: 50%; text-align: center;" }, this._rainbowifyLoop))));
-            this._themeArea = div$1({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2("Theme"), div$1({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Color palette:", div$1({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._themeSelect)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Custom color palette data:", div$1({ style: "width: 50%; text-align: center;" }, this._colorInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$1({ style: "width: 50%;" }, "Editor background image:"), div$1({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$1({ style: "width: 50%;" }, "Website background image:"), div$1({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput2)), div$1({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._customThemeFileReset)));
-            this._layoutArea = div$1({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2("Layout"), div$1({ style: "text-align: left;" }, h3({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "Layout"), div$1({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, div$1({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, ""), div$1({ style: "width: 90%; height: 30em; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._layoutForm), div$1({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "")), h2("Custom Layout"), p({ style: "text-align: left; margin: 0; margin-left: 1em; margin-bottom: 5px;" }, "Replace the text below with your custom layout data to load it:"), div$1({ style: "display: grid; place-items: center; margin: 0 20px;" }, this._layoutInput), div$1({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._resetButton), div$1({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" })));
-            this._recordingArea = div$1({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2("Recording"), div$1({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Always show recording button:", div$1({ style: "width: 50%; text-align: center;" }, this._showRecordButton)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$1({ style: "width: 50%;" }, "Snap recorded notes to rhythm:"), div$1({ style: "width: 50%; text-align: center;" }, this._snapRecordedNotesToRhythm)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$1({ style: "width: 50%;" }, "Ignore recorded notes outside of the scale:"), div$1({ style: "width: 50%; text-align: center;" }, this._ignorePerformedNotesNotInScale)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Recording keyboard layout:", div$1({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardLayout)), div$1({ style: "display: flex; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._keyboardLayoutPreview), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 0.5em; height: 2em;" }, "Shortcut / Recording mode:", div$1({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardMode)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable MIDI performance:", div$1({ style: "width: 50%; text-align: center;" }, this._enableMidi)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Record with metronome:", div$1({ style: "width: 50%; text-align: center;" }, this._metronomeWhileRecording)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$1({ style: "width: 50%;" }, "Count-in recording with metronome:"), div$1({ style: "width: 50%; text-align: center;" }, this._metronomeCountIn)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Bass channel offset:", div$1({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._bassOffset))));
-            this._generalArea = div$1({ style: "overflow-y: visible; overflow-x: hidden;" }, h2("General"), div$1({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Auto-play on load:", div$1({ style: "width: 50%; text-align: center;" }, this._autoPlay)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Automatically view current bar:", div$1({ style: "width: 50%; text-align: center;" }, this._autoFollow)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Hear preview of placed notes:", div$1({ style: "width: 50%; text-align: center;" }, this._enableNotePreview)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Place notes out of scale:", div$1({ style: "width: 50%; text-align: center;" }, this._notesOutsideScale)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Set default scale:", div$1({ style: "width: 50%; text-align: center;", class: "selectContainer" }, this._defaultScaleSelect)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Always use fine note volume:", div$1({ style: "width: 50%; text-align: center;" }, this._alwaysFineNoteVol)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable octave scroll bar:", div$1({ style: "width: 50%; text-align: center;" }, this._showScrollBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable channel muting:", div$1({ style: "width: 50%; text-align: center;" }, this._enableChannelMuting)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable song data in URL:", div$1({ style: "width: 50%; text-align: center;" }, this._displayBrowserUrl)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Close prompts on click-off:", div$1({ style: "width: 50%; text-align: center;" }, this._closePromptByClickoff))));
-            this._keybindArea = div$1({ style: "display: none;  overflow-y: visible; overflow-x: hidden;" }, h2("Shortcuts"), this._shortcutLabels, this._resetDefaultButton);
-            this._okayButton = button$1({ class: "okayButton", style: "width:45%;" }, "Okay");
-            this._cancelButton = button$1({ class: "cancelButton" });
-            this.container = div$1({ class: "prompt noSelection recordingSetupPrompt", style: "width: 600px; max-height: 90%;" }, div$1({ style: "display: flex; flex-direction: row; justify-content: space-evenly;" }, this._generalAreaButton, this._appearanceAreaButton, this._themeAreaButton, this._layoutAreaButton, this._recordingAreaButton, this._keybindAreaButton), this._generalArea, this._appearanceArea, this._themeArea, this._layoutArea, this._recordingArea, this._keybindArea, div$1({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._resetDefaultButton = button$2({ style: "height: auto; margin: 1em;" }, "Reset to Defaults");
+            this._appearanceAreaButton = button$2({ class: "appearanceAreaButton", style: "width:16%;" }, "Appearance");
+            this._themeAreaButton = button$2({ class: "themeAreaButton", style: "width:16%;" }, "Theme");
+            this._layoutAreaButton = button$2({ class: "layoutAreaButton", style: "width:16%;" }, "Layout");
+            this._generalAreaButton = button$2({ class: "generalAreaButton", style: "width:16%;" }, "General");
+            this._recordingAreaButton = button$2({ class: "recordingAreaButton", style: "width:16%;" }, "Recording");
+            this._keybindAreaButton = button$2({ class: "keybindAreaButton", style: "width:16%;" }, "Shortcuts");
+            this._appearanceArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Appearance"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "fifth" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showFifth)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "third" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showThird)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Advanced Color Scheme:', div$2({ style: "width: 50%; text-align: center;" }, this._ACS)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Flash notes when played:', div$2({ style: "width: 50%; text-align: center;" }, this._notesFlashWhenPlayed)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Blur background while in prompt:"), div$2({ style: "width: 50%; text-align: center;" }, this._frostedGlassBackground)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show all channels:", div$2({ style: "width: 50%; text-align: center;" }, this._showChannels)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show instrument scrollbars:", div$2({ style: "width: 50%; text-align: center;" }, this._showInstrumentScrollbars)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument copy/paste buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentCopyPaste)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument import/export buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentImportExport)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument buttons at top:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentButtonsAtTop)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show piano keys:", div$2({ style: "width: 50%; text-align: center;" }, this._showLetters)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show volume bar:", div$2({ style: "width: 50%; text-align: center;" }, this._displayVolumeBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show oscilloscope:", div$2({ style: "width: 50%; text-align: center;" }, this._showOscilloscope)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show sample loading status:", div$2({ style: "width: 50%; text-align: center;" }, this._showSampleLoadingStatus)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show description:", div$2({ style: "width: 50%; text-align: center;" }, this._showDescription)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Rainbowify Song Loop:", div$2({ style: "width: 50%; text-align: center;" }, this._rainbowifyLoop))));
+            this._themeArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Theme"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Color palette:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._themeSelect)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Custom color palette data:", div$2({ style: "width: 50%; text-align: center;" }, this._colorInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Editor background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Website background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput2)), div$2({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._customThemeFileReset)));
+            this._layoutArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Layout"), div$2({ style: "text-align: left;" }, h3({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "Layout"), div$2({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, div$2({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, ""), div$2({ style: "width: 90%; height: 30em; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._layoutForm), div$2({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "")), h2$1("Custom Layout"), p({ style: "text-align: left; margin: 0; margin-left: 1em; margin-bottom: 5px;" }, "Replace the text below with your custom layout data to load it:"), div$2({ style: "display: grid; place-items: center; margin: 0 20px;" }, this._layoutInput), div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._resetButton), div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" })));
+            this._recordingArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Recording"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Always show recording button:", div$2({ style: "width: 50%; text-align: center;" }, this._showRecordButton)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Snap recorded notes to rhythm:"), div$2({ style: "width: 50%; text-align: center;" }, this._snapRecordedNotesToRhythm)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Ignore recorded notes outside of the scale:"), div$2({ style: "width: 50%; text-align: center;" }, this._ignorePerformedNotesNotInScale)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Recording keyboard layout:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardLayout)), div$2({ style: "display: flex; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._keyboardLayoutPreview), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 0.5em; height: 2em;" }, "Shortcut / Recording mode:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardMode)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable MIDI performance:", div$2({ style: "width: 50%; text-align: center;" }, this._enableMidi)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Record with metronome:", div$2({ style: "width: 50%; text-align: center;" }, this._metronomeWhileRecording)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Count-in recording with metronome:"), div$2({ style: "width: 50%; text-align: center;" }, this._metronomeCountIn)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Bass channel offset:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._bassOffset))));
+            this._generalArea = div$2({ style: "overflow-y: visible; overflow-x: hidden;" }, h2$1("General"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Auto-play on load:", div$2({ style: "width: 50%; text-align: center;" }, this._autoPlay)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Automatically view current bar:", div$2({ style: "width: 50%; text-align: center;" }, this._autoFollow)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Hear preview of placed notes:", div$2({ style: "width: 50%; text-align: center;" }, this._enableNotePreview)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Place notes out of scale:", div$2({ style: "width: 50%; text-align: center;" }, this._notesOutsideScale)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Set default scale:", div$2({ style: "width: 50%; text-align: center;", class: "selectContainer" }, this._defaultScaleSelect)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Always use fine note volume:", div$2({ style: "width: 50%; text-align: center;" }, this._alwaysFineNoteVol)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable octave scroll bar:", div$2({ style: "width: 50%; text-align: center;" }, this._showScrollBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable channel muting:", div$2({ style: "width: 50%; text-align: center;" }, this._enableChannelMuting)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable song data in URL:", div$2({ style: "width: 50%; text-align: center;" }, this._displayBrowserUrl)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Close prompts on click-off:", div$2({ style: "width: 50%; text-align: center;" }, this._closePromptByClickoff)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Prompt song details on load:", div$2({ style: "width: 50%; text-align: center;" }, this._promptSongDetails))));
+            this._keybindArea = div$2({ style: "display: none;  overflow-y: visible; overflow-x: hidden;" }, h2$1("Shortcuts"), this._shortcutLabels, this._resetDefaultButton);
+            this._okayButton = button$2({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this._cancelButton = button$2({ class: "cancelButton" });
+            this.container = div$2({ class: "prompt noSelection recordingSetupPrompt", style: "width: 600px; max-height: 90%;" }, div$2({ style: "display: flex; flex-direction: row; justify-content: space-evenly;" }, this._generalAreaButton, this._appearanceAreaButton, this._themeAreaButton, this._layoutAreaButton, this._recordingAreaButton, this._keybindAreaButton), this._generalArea, this._appearanceArea, this._themeArea, this._layoutArea, this._recordingArea, this._keybindArea, div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._lastTheme = window.localStorage.getItem("colorTheme");
             this._newTheme = false;
             this._resetCustomTheme = false;
@@ -54387,6 +54984,7 @@ You should be redirected to the song at:<br /><br />
                 this._doc.prefs.showOscilloscope = this._showOscilloscope.checked;
                 this._doc.prefs.showSampleLoadingStatus = this._showSampleLoadingStatus.checked;
                 this._doc.prefs.showDescription = this._showDescription.checked;
+                this._doc.prefs.promptSongDetails = this._promptSongDetails.checked;
                 this._doc.prefs.rainbowLoop = this._rainbowifyLoop.checked;
                 this._doc.prefs.layout = this._layoutForm.elements["layout"].value;
                 this._doc.prefs.colorTheme = this._themeSelect.value;
@@ -54428,7 +55026,8 @@ You should be redirected to the song at:<br /><br />
                 this._doc.prefs.save();
                 Layout.setLayout(this._doc.prefs.layout);
                 this._close();
-                setTimeout(() => { window.location.reload(); }, 50);
+                if (localStorage.getItem("customLayout") != this._layoutInput.value)
+                    setTimeout(() => { window.location.reload(); }, 50);
             };
             this._renderAppearanceArea = (event) => {
                 event.preventDefault();
@@ -54491,12 +55090,12 @@ You should be redirected to the song at:<br /><br />
                 const rowLengths = [12, 12, 11, 10];
                 const scale = Config.scales[this._doc.song.scale].flags;
                 for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
-                    const row = div$1({ style: "display: flex;" });
+                    const row = div$2({ style: "display: flex;" });
                     this._keyboardLayoutPreview.appendChild(row);
-                    const spacer = div$1({ style: "width: " + (rowIndex * 12) + "px; height: 20px; flex-shrink: 0;" });
+                    const spacer = div$2({ style: "width: " + (rowIndex * 12) + "px; height: 20px; flex-shrink: 0;" });
                     row.appendChild(spacer);
                     for (let colIndex = 0; colIndex < rowLengths[rowIndex]; colIndex++) {
-                        const key = div$1({ style: `width: 20px; height: 20px; margin: 0 2px; box-sizing: border-box; flex-shrink: 0; display: flex; justify-content: center; align-items: center;` });
+                        const key = div$2({ style: `width: 20px; height: 20px; margin: 0 2px; box-sizing: border-box; flex-shrink: 0; display: flex; justify-content: center; align-items: center;` });
                         row.appendChild(key);
                         const pitch = KeyboardLayout.keyPosToPitch(this._doc, colIndex, 3 - rowIndex, this._keyboardLayout.value);
                         if (pitch != null) {
@@ -54608,16 +55207,16 @@ You should be redirected to the song at:<br /><br />
             this._renderShortcuts = () => {
                 this._shortcutLabels.replaceChildren();
                 for (let categoryIndex = 0; categoryIndex < 5; categoryIndex++) {
-                    this._shortcutLabels.appendChild(div$1({ style: `display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;` }, h3({ style: "text-align: center; width: 100%;" }, ["Playback", "Edit", "Selection", "Settings", "File"][categoryIndex])));
+                    this._shortcutLabels.appendChild(div$2({ style: `display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;` }, h3({ style: "text-align: center; width: 100%;" }, ["Playback", "Edit", "Selection", "Settings", "File"][categoryIndex])));
                     let i;
                     for (i in this._shortcuts) {
                         if (this._defaultShortcuts[i] && this._defaultShortcuts[i].category == categoryIndex) {
-                            const ctrlKeyBox = input$1({ style: "width: 1em; margin: 1em;", type: "checkbox" });
-                            const shiftKeyBox = input$1({ style: "width: 1em; margin: 1em;", type: "checkbox" });
-                            const recordRebindButton = button$1({ style: "height: auto; margin: 1em;" }, "Hold to Rebind");
+                            const ctrlKeyBox = input$2({ style: "width: 1em; margin: 1em;", type: "checkbox" });
+                            const shiftKeyBox = input$2({ style: "width: 1em; margin: 1em;", type: "checkbox" });
+                            const recordRebindButton = button$2({ style: "height: auto; margin: 1em;" }, "Hold to Rebind");
                             ctrlKeyBox.checked = this._shortcuts[i].ctrlKey;
                             shiftKeyBox.checked = this._shortcuts[i].shiftKey;
-                            this._shortcutLabels.appendChild(div$1({ style: `display: flex; flex-direction: row; height: 2em; justify-content: space-between; align-items: center; margin: 2px; border: 2px solid ${ColorConfig.uiWidgetBackground}; border-radius: 4px;` }, p({ style: "margin: 1em;" }, this._shortcuts[i].displayName), div$1({ style: "display: flex; flex-direction: row; width: 60%;" }, div$1("ctrl", ctrlKeyBox), div$1("shift", shiftKeyBox), div$1(recordRebindButton), div$1({ style: "margin: 1em" }, keyboardMap[this._shortcuts[i].keyCode]))));
+                            this._shortcutLabels.appendChild(div$2({ style: `display: flex; flex-direction: row; height: 2em; justify-content: space-between; align-items: center; margin: 2px; border: 2px solid ${ColorConfig.uiWidgetBackground}; border-radius: 4px;` }, p({ style: "margin: 1em;" }, this._shortcuts[i].displayName), div$2({ style: "display: flex; flex-direction: row; width: 60%;" }, div$2("ctrl", ctrlKeyBox), div$2("shift", shiftKeyBox), div$2(recordRebindButton), div$2({ style: "margin: 1em" }, keyboardMap[this._shortcuts[i].keyCode]))));
                             ctrlKeyBox.dataset.index = i;
                             shiftKeyBox.dataset.index = i;
                             recordRebindButton.dataset.index = i;
@@ -54644,6 +55243,7 @@ You should be redirected to the song at:<br /><br />
             this._showOscilloscope.checked = this._doc.prefs.showOscilloscope;
             this._showSampleLoadingStatus.checked = this._doc.prefs.showSampleLoadingStatus;
             this._showDescription.checked = this._doc.prefs.showDescription;
+            this._promptSongDetails.checked = this._doc.prefs.promptSongDetails;
             this._rainbowifyLoop.checked = this._doc.prefs.rainbowLoop;
             this._layoutForm.elements["layout"].value = this._doc.prefs.layout;
             if (this._lastTheme != null) {
@@ -54692,6 +55292,46 @@ You should be redirected to the song at:<br /><br />
             this._okayButton.addEventListener("click", this._confirm);
             this._cancelButton.addEventListener("click", this._close);
             this.container.addEventListener("keydown", this._whenKeyPressed);
+        }
+    }
+
+    const { button: button$1, div: div$1, h2, input: input$1, br, textarea } = HTML;
+    class SongDetailsPrompt {
+        constructor(_doc) {
+            this._doc = _doc;
+            this._cancelButton = button$1({ class: "cancelButton" });
+            this._okayButton = button$1({ class: "okayButton", style: "width:45%;" }, "Okay");
+            this._songTitle = input$1({ placeholder: "Enter Title Here", type: "text", style: "width: 100%;", maxlength: 30, "autofocus": "autofocus" });
+            this._songAuthor = input$1({ placeholder: "Enter Name Here", type: "text", style: "width: 100%;", maxlength: 30 });
+            this._songDescription = textarea({ placeholder: "Enter Description Here", style: "width: 100%; resize: none; background: var(--editor-background); color: white; height: 64px; border: 0.5px solid var(--input-box-outline); font-size: 14px;", maxlength: 1200 });
+            this._showSongDetailsBox = input$1({ style: "width: 3em; margin-left: 1em;", type: "checkbox" });
+            this._computedSamplesLabel = div$1({ style: "width: 10em;" }, new Text("0:00"));
+            this._cantShortenLabel = div$1({}, "You cannot shorten this url!");
+            this.container = div$1({ class: "prompt noSelection", style: "width: 250px;" }, h2("Song Details"), div$1({ style: "display: flex; flex-direction: row; align-items: baseline; gap: 10px;" }, "Title: ", this._songTitle), div$1({ style: "display: flex; flex-direction: row; align-items: baseline; gap: 10px;" }, "Author: ", this._songAuthor), div$1({ style: "display: flex; flex-direction: column; align-items: baseline;" }, "Description: ", this._songDescription), div$1({ style: "vertical-align: middle; align-items: center; justify-content: space-between;" }, "Show info on load: ", this._showSongDetailsBox), div$1({ style: "text-align: left;" }, div$1({ style: "display:flex; gap: 3px; margin-bottom: 1em;" }, "Song Length: ", this._computedSamplesLabel), br(), "URL Length: " + location.href.length, this._cantShortenLabel, br()), div$1({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this._close = () => {
+                this._doc.undo();
+            };
+            this.cleanUp = () => {
+                this._okayButton.removeEventListener("click", this._saveChanges);
+                this._cancelButton.removeEventListener("click", this._close);
+            };
+            this._saveChanges = () => {
+                const group = new ChangeGroup();
+                group.append(new ChangeSongTitle(this._doc, this._doc.song.title, this._songTitle.value));
+                group.append(new ChangeSongAuthor(this._doc, this._doc.song.author, this._songAuthor.value));
+                group.append(new ChangeSongDescription(this._doc, this._doc.song.description, this._songDescription.value));
+                group.append(new ChangeShowSongDetails(this._doc, this._doc.song.showSongDetails, this._showSongDetailsBox.checked));
+                this._doc.prompt = null;
+                this._doc.record(group, true);
+            };
+            this._showSongDetailsBox.checked = this._doc.song.showSongDetails;
+            this._songTitle.value = this._doc.song.title;
+            this._songAuthor.value = this._doc.song.author;
+            this._songDescription.value = this._doc.song.description;
+            this._cantShortenLabel.style.display = (location.href.length > (window.localStorage.getItem("shortenerStrategySelect") == "isgd" ? 5010 : 12233)) ? "" : "none";
+            this._computedSamplesLabel.firstChild.textContent = this._doc.samplesToTime(this._doc.synth.getTotalSamples(true, true, 0));
+            this._okayButton.addEventListener("click", this._saveChanges);
+            this._cancelButton.addEventListener("click", this._close);
         }
     }
 
@@ -55293,6 +55933,22 @@ You should be redirected to the song at:<br /><br />
             this._tempoStepper = input({ style: "width: 4em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", type: "number", step: "1" });
             this._songEqFilterEditor = new FilterEditor(this.doc, false, false, true);
             this._songEqFilterZoom = button({ style: "margin-left:0em; padding-left:0.2em; height:1.5em; max-width: 12px;", onclick: () => this._openPrompt("customSongEQFilterSettings") }, "+");
+            this._rhythmInput = input({ type: "number", min: "1", max: "32", style: "width: 5em;" });
+            this._rhythmActionSelect = select({ type: "button", style: "width: 1.7em; height: 1.7em; margin-left: 5px;", }, "");
+            this._rhythmActionOption = option({ value: "toggleRhythm" }, "disable subgrid");
+            this._favoriteRhythmOption = option({ value: "toggleFavoriteRhythm" }, "add current division to favorites");
+            this._rhythmDisabledLabel = span({ style: ` position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; display: none; color: currentColor; font-style: italic; ` }, "(disabled)");
+            this._favoriteRhythms = [];
+            this._favoriteRhythmGroup = optgroup({ label: "favorites" });
+            this._panSlider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: Config.panMax, value: Config.panCenter, step: "1" }), this.doc, (oldValue, newValue) => new ChangePan(this.doc, oldValue, newValue), true);
+            this._panKnob = new Knob(0, Config.panMax, 1, Config.panCenter, true, this.doc, (oldValue, newValue) => new ChangePan(this.doc, oldValue, newValue), [0, 50, 100]);
+            this._panDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(1) }, "▼");
+            this._panSliderInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "panSliderInputBox", type: "number", step: "1", min: "0", max: "100", value: "0" });
+            this._panKnobRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, div({}, span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("pan") }, "pan "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._panSliderInputBox)), this._panDropdown, this._panKnob.container);
+            this._panDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.modulators.dictionary["pan delay"].maxRawVol, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePanDelay(this.doc, oldValue, newValue), false);
+            this._panDelayRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("panDelay") }, "‣ delay"), this._panDelaySlider.container);
+            this._panDropdownGroup = div({ class: "editor-controls-alt", style: "display: none;" }, this._panDelayRow);
+            this._panContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "panning"), this._panKnobRow, this._panDropdownGroup);
             this._chorusSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.chorusRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeChorus(this.doc, oldValue, newValue), false);
             this._chorusRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chorusMix") }, "mix"), this._chorusSlider.container);
             this._chorusContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "chorus"), this._chorusRow);
@@ -55337,13 +55993,6 @@ You should be redirected to the song at:<br /><br />
             this._echoDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.echoDelayRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEchoDelay(this.doc, oldValue, newValue), true);
             this._echoDelayRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("echoDelay") }, "delay "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.echoDelayNum)), this._echoDelaySlider.container);
             this._echoContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "echo"), this._echoSustainRow, this._echoDelayRow);
-            this._rhythmInput = input({ type: "number", min: "1", max: "32", style: "width: 5em;" });
-            this._rhythmActionSelect = select({ type: "button", style: "width: 1.7em; height: 1.7em; margin-left: 5px;", }, "");
-            this._rhythmActionOption = option({ value: "toggleRhythm" }, "disable subgrid");
-            this._favoriteRhythmOption = option({ value: "toggleFavoriteRhythm" }, "add current division to favorites");
-            this._rhythmDisabledLabel = span({ style: ` position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; display: none; color: #d77777; font-style: italic; ` }, "(disabled)");
-            this._favoriteRhythms = [];
-            this._favoriteRhythmGroup = optgroup({ label: "favorites" });
             this.flangerRateNum = div({ style: "font-size: 80%;", id: "flangerRateNum" });
             this.flangerDelayNum = div({ style: "font-size: 80%;", id: "flangerDelayNum" });
             this.flangerDepthNum = div({ style: "font-size: 80%;", id: "flangerDepthNum" });
@@ -55358,6 +56007,15 @@ You should be redirected to the song at:<br /><br />
             this._flangerFeedbackSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.flangerFeedbackRange - 1, value: "0", step: "1", }), this.doc, (oldValue, newValue) => new ChangeFlangerFeedback(this.doc, oldValue, newValue), false);
             this._flangerFeedbackRow = div({ class: "selectRow" }, span({ style: "text-align: left", class: "tip", onclick: () => this._openPrompt("flangerFeedback"), }, span("feedback")), this._flangerFeedbackSlider.container);
             this._flangerContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "flanger"), this._flangerMixRow, this._flangerDelayRow, this._flangerDepthRow, this._flangerRateRow, this._flangerFeedbackRow);
+            this._phaserMixSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.phaserMixRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePhaserMix(this.doc, oldValue, newValue), false);
+            this._phaserMixRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaserMix") }, span("mix")), this._phaserMixSlider.container);
+            this._phaserFreqSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.phaserFreqRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePhaserFreq(this.doc, oldValue, newValue), false);
+            this._phaserFreqRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaserFreq") }, span(" freq")), this._phaserFreqSlider.container);
+            this._phaserFeedbackSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.phaserFeedbackRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePhaserFeedback(this.doc, oldValue, newValue), false);
+            this._phaserFeedbackRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaserFeedback") }, span(" feedback")), this._phaserFeedbackSlider.container);
+            this._phaserStagesSlider = new Slider(input({ style: "margin: 0;", type: "range", min: Config.phaserMinStages, max: Config.phaserMaxStages, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePhaserStages(this.doc, oldValue, newValue), false);
+            this._phaserStagesRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaserStages") }, span(" stages")), this._phaserStagesSlider.container);
+            this._phaserContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "phaser"), this._phaserMixRow, this._phaserFreqRow, this._phaserFeedbackRow, this._phaserStagesRow);
             this._pitchedPresetSelect = buildPresetOptions(false, "pitchPresetSelect");
             this._drumPresetSelect = buildPresetOptions(true, "drumPresetSelect");
             this._algorithmSelect = buildOptions(select(), Config.algorithms.map(algorithm => algorithm.name));
@@ -55371,14 +56029,6 @@ You should be redirected to the song at:<br /><br />
             this._instrumentVolumeSliderInputBox = input({ style: "width: 4em; font-size: 80%", id: "volumeSliderInputBox", type: "number", step: "1", min: Math.floor(-Config.volumeRange / 2), max: Math.floor(Config.volumeRange / 2), value: "0" });
             this._instrumentVolumeSliderTip = div({ class: "selectRow", style: "height: 1em" }, span({ class: "tip", style: "font-size: smaller;", onclick: () => this._openPrompt("instrumentVolume") }, "volume: "));
             this._instrumentVolumeSliderRow = div({ class: "selectRow" }, div({}, div({ style: `color: ${ColorConfig.secondaryText};` }, span({ class: "tip" }, this._instrumentVolumeSliderTip)), div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._instrumentVolumeSliderInputBox)), this._instrumentVolumeSlider.container);
-            this._panSlider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: Config.panMax, value: Config.panCenter, step: "1" }), this.doc, (oldValue, newValue) => new ChangePan(this.doc, oldValue, newValue), true);
-            this._panDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(1) }, "▼");
-            this._panSliderInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "panSliderInputBox", type: "number", step: "1", min: "0", max: "100", value: "0" });
-            this._panSliderRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, div({}, span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("pan") }, "pan: "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._panSliderInputBox)), this._panDropdown, this._panSlider.container);
-            this._panDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.modulators.dictionary["pan delay"].maxRawVol, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePanDelay(this.doc, oldValue, newValue), false);
-            this._panDelayRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("panDelay") }, "‣ delay"), this._panDelaySlider.container);
-            this._panDropdownGroup = div({ class: "editor-controls-alt", style: "display: none;" }, this._panDelayRow);
-            this._panContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "panning"), this._panSliderRow, this._panDropdownGroup);
             this._chipWaveSelect = buildOptions(select(), Config.chipWaves.map(wave => wave.name));
             this._chipNoiseSelect = buildOptions(select(), Config.chipNoises.map(wave => wave.name));
             this._useChipWaveAdvancedLoopControlsBox = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-left: 0.4em; margin-right: 4em;" });
@@ -55572,7 +56222,7 @@ You should be redirected to the song at:<br /><br />
             this._feedbackAmplitudeSlider = new Slider(input({ type: "range", min: "0", max: Config.operatorAmplitudeMax, value: "0", step: "1", title: "Feedback Amplitude" }), this.doc, (oldValue, newValue) => new ChangeFeedbackAmplitude(this.doc, oldValue, newValue), false);
             this._feedbackRow2 = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("feedbackVolume") }, "feed. vol."), this._feedbackAmplitudeSlider.container);
             this._addEnvelopeButton = button({ type: "button", class: "add-envelope" });
-            this._customInstrumentSettingsGroup = div({ class: "editor-controls-alt" }, this._eqFilterTypeRow, this._eqFilterRow, this._eqFilterSimpleCutRow, this._eqFilterSimplePeakRow, this._fadeInOutRow, this._algorithmSelectRow, this._algorithm6OpSelectRow, this._phaseModGroup, this._feedbackRow1, this._feedback6OpRow1, this._feedbackRow2, this._chipWaveSelectRow, this._chipNoiseSelectRow, this._customWaveDraw, this._spectrumRow, this._harmonicsRow, this._drumsetGroup, this._supersawDynamismRow, this._supersawSpreadRow, this._supersawShapeRow, this._pulseWidthRow, this._pulseWidthDropdownGroup, this._stringSustainRow, this._unisonSelectRow, this._unisonDropdownGroup, this._useChipWaveAdvancedLoopControlsRow, this._chipWaveLoopModeSelectRow, this._chipWaveLoopStartRow, this._chipWaveLoopEndRow, this._chipWaveStartOffsetRow, this._chipWavePlayBackwardsRow, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("effects") }, "effects")), div({ class: "effects-menu" }, this._effectsSelect)), this._panContainer, this._transitionContainer, this._chordContainer, this._pitchShiftContainer, this._detuneContainer, this._vibratoContainer, this._noteFilterContainer, this._granularContainer, this._distortionContainer, this._bitcrusherContainer, this._chorusContainer, this._echoContainer, this._reverbContainer, this._ringModContainer, this._flangerContainer, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("envelopes") }, "envelopes")), this._envelopeDropdown, this._addEnvelopeButton), this._envelopeDropdownGroup, this.envelopeEditor.container);
+            this._customInstrumentSettingsGroup = div({ class: "editor-controls-alt" }, this._eqFilterTypeRow, this._eqFilterRow, this._eqFilterSimpleCutRow, this._eqFilterSimplePeakRow, this._fadeInOutRow, this._algorithmSelectRow, this._algorithm6OpSelectRow, this._phaseModGroup, this._feedbackRow1, this._feedback6OpRow1, this._feedbackRow2, this._chipWaveSelectRow, this._chipNoiseSelectRow, this._customWaveDraw, this._spectrumRow, this._harmonicsRow, this._drumsetGroup, this._supersawDynamismRow, this._supersawSpreadRow, this._supersawShapeRow, this._pulseWidthRow, this._pulseWidthDropdownGroup, this._stringSustainRow, this._unisonSelectRow, this._unisonDropdownGroup, this._useChipWaveAdvancedLoopControlsRow, this._chipWaveLoopModeSelectRow, this._chipWaveLoopStartRow, this._chipWaveLoopEndRow, this._chipWaveStartOffsetRow, this._chipWavePlayBackwardsRow, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("effects") }, "effects")), div({ class: "effects-menu" }, this._effectsSelect)), this._panContainer, this._transitionContainer, this._chordContainer, this._pitchShiftContainer, this._detuneContainer, this._vibratoContainer, this._noteFilterContainer, this._granularContainer, this._distortionContainer, this._bitcrusherContainer, this._chorusContainer, this._echoContainer, this._reverbContainer, this._ringModContainer, this._flangerContainer, this._phaserContainer, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("envelopes") }, "envelopes")), this._envelopeDropdown, this._addEnvelopeButton), this._envelopeDropdownGroup, this.envelopeEditor.container);
             this._instrumentCopyGroup = div({ class: "editor-controls-alt" }, div({ class: "selectRow" }, this._instrumentCopyButton, this._instrumentPasteButton));
             this._instrumentExportGroup = div({ class: "editor-controls-alt" }, div({ class: "selectRow" }, this._instrumentExportButton, this._instrumentImportButton));
             this._instrumentSettingsTextRow = div({ id: "instrumentSettingsText", style: `padding: 3px 0; max-width: 15em; text-align: center; color: ${ColorConfig.secondaryText};` }, "instrument settings");
@@ -55602,9 +56252,10 @@ You should be redirected to the song at:<br /><br />
             this._sampleLoadingBar = div({ style: `width: 0%; height: 100%; background-color: ${ColorConfig.indicatorPrimary};` });
             this._sampleLoadingBarContainer = div({ style: `width: 80%; height: 4px; overflow: hidden; margin-left: auto; margin-right: auto; margin-top: 0.5em; cursor: pointer; background-color: ${ColorConfig.indicatorSecondary};` }, this._sampleLoadingBar);
             this._sampleLoadingStatusContainer = div({ style: "cursor: pointer;" }, div({ style: `margin-top: 0.5em; text-align: center; color: ${ColorConfig.secondaryText};` }, "sample loading status"), div({ class: "selectRow", style: "height: 6px; margin-bottom: 0.5em;" }, this._sampleLoadingBarContainer));
-            this._songSettingsArea = div({ class: "song-settings-area" }, div({ class: "editor-controls" }, div({ class: "editor-song-settings" }, div({ style: "margin: 3px 0; position: relative; text-align: center; color: ${ColorConfig.secondaryText};" }, div({ class: "tip", style: "flex-shrink: 0; position:absolute; left: 0; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedPattern") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "0.5em", viewBox: "-6 -6 12 12" }, this._usedPatternIndicator)), div({ class: "tip", style: "flex-shrink: 0; position: absolute; left: 14px; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedInstrument") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "1em", viewBox: "-6 -6 12 12" }, this._usedInstrumentIndicator)), "song settings", div({ style: "width: 100%; left: 0; top: -1px; position:absolute; overflow-x:clip;" }, this._jumpToModIndicator))), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("scale") }, "scale "), div({ class: "selectContainer" }, this._scaleSelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("key") }, "key "), this._octaveStepper, div({ class: "selectContainer" }, this._keySelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("tempo") }, "tempo "), span({ style: "display: flex;" }, this._tempoSlider.container, this._tempoStepper)), div({ class: "selectRow" }, span({ class: "tip", style: "white-space: nowrap;", onclick: () => this._openPrompt("rhythm") }, "subgrid "), div({ style: "position: relative; display: inline-block;" }, this._rhythmInput, this._rhythmDisabledLabel), this._rhythmActionSelect), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("songeq") }, span("song EQ")), this._songEqFilterZoom, this._songEqFilterEditor.container), this._sampleLoadingStatusContainer));
+            this._songSettingsArea = div({ class: "song-settings-area" }, div({ class: "editor-controls" }, div({ class: "editor-song-settings" }, div({ style: "margin: 3px 0; position: relative; text-align: center; color: ${ColorConfig.secondaryText};" }, div({ class: "tip", style: "flex-shrink: 0; position:absolute; left: 0; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedPattern") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "0.5em", viewBox: "-6 -6 12 12" }, this._usedPatternIndicator)), div({ class: "tip", style: "flex-shrink: 0; position: absolute; left: 14px; top: 0; width: 12px; height: 12px", onclick: () => this._openPrompt("usedInstrument") }, SVG.svg({ style: "flex-shrink: 0; position: absolute; left: 0; top: 0; pointer-events: none;", width: "12px", height: "12px", "margin-right": "1em", viewBox: "-6 -6 12 12" }, this._usedInstrumentIndicator)), "song settings", div({ style: "width: 100%; left: 0; top: -1px; position:absolute; overflow-x:clip;" }, this._jumpToModIndicator))), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("scale") }, "scale "), div({ class: "selectContainer" }, this._scaleSelect)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("key") }, "key "), span({ style: "display: flex;" }, div({ class: "selectContainer" }, this._keySelect), this._octaveStepper)), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("tempo") }, "tempo "), span({ style: "display: flex;" }, this._tempoSlider.container, this._tempoStepper)), div({ class: "selectRow" }, span({ class: "tip", style: "white-space: nowrap;", onclick: () => this._openPrompt("rhythm") }, "subgrid "), div({ style: "position: relative; display: inline-block;" }, this._rhythmInput, this._rhythmDisabledLabel), this._rhythmActionSelect), div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("songeq") }, span("song EQ")), this._songEqFilterZoom, this._songEqFilterEditor.container), this._sampleLoadingStatusContainer));
+            this._songDetailsButton = button({ class: "details-button" });
             this._instrumentSettingsArea = div({ class: "instrument-settings-area" }, this._instrumentSettingsGroup, this._modulatorGroup);
-            this._settingsArea = div({ class: "settings-area noSelection" }, div({ class: "version-area" }, div({ style: `text-align: center; margin: 3px 0; color: ${ColorConfig.secondaryText};` }, this._songTitleInputBox.input)), div({ class: "play-pause-area" }, this._volumeBarBox, div({ class: "playback-bar-controls" }, this._playButton, this._pauseButton, this._recordButton, this._stopButton, this._prevBarButton, this._nextBarButton), div({ class: "playback-volume-controls" }, span({ class: "volume-speaker" }), this._volumeSlider.container), this._globalOscscopeContainer), this._menuArea, this._songSettingsArea, this._instrumentSettingsArea);
+            this._settingsArea = div({ class: "settings-area noSelection" }, div({ class: "version-area" }, div({ style: `text-align: center; margin: 3px 0; color: ${ColorConfig.secondaryText}; display:flex;` }, this._songTitleInputBox.input, this._songDetailsButton)), div({ class: "play-pause-area" }, this._volumeBarBox, div({ class: "playback-bar-controls" }, this._playButton, this._pauseButton, this._recordButton, this._stopButton, this._prevBarButton, this._nextBarButton), div({ class: "playback-volume-controls" }, span({ class: "volume-speaker" }), this._volumeSlider.container), this._globalOscscopeContainer), this._menuArea, this._songSettingsArea, this._instrumentSettingsArea);
             this.mainLayer = div({ class: "beepboxEditor", tabIndex: "0" }, this._patternArea, this._trackArea, this._settingsArea, this._promptContainer);
             this._wasPlaying = false;
             this._currentPromptName = null;
@@ -55648,8 +56299,37 @@ You should be redirected to the song at:<br /><br />
             this.lastOutVolumeCapR = 0;
             this.patternUsed = false;
             this._modRecTimeout = -1;
+            this._openDetails = () => {
+                this._openPrompt("songDetails");
+            };
             this._whenSampleLoadingStatusClicked = () => {
                 this._openPrompt("sampleLoadingStatus");
+            };
+            this._loopTypeEvent = () => {
+                if (this.doc.song.loopType == 3) {
+                    this.doc.synth.loopRepeatCount = 0;
+                    this._loopEditor.container.style.display = "none";
+                    SongEditor._styleElement.textContent = SongEditor._setLoopIcon[3];
+                    this.doc.synth.loopBarStart = -1;
+                    this.doc.synth.loopBarEnd = -1;
+                    this._loopEditor.setLoopAt(this.doc.synth.loopBarStart, this.doc.synth.loopBarEnd);
+                    this._trackAndMuteContainer.style.marginBottom = "0.3em";
+                }
+                else if (this.doc.song.loopType == 2) {
+                    this.doc.synth.loopRepeatCount = -1;
+                    this._loopEditor.container.style.display = "none";
+                    SongEditor._styleElement.textContent = SongEditor._setLoopIcon[2];
+                    this.doc.synth.loopBarStart = -1;
+                    this.doc.synth.loopBarEnd = -1;
+                    this._loopEditor.setLoopAt(this.doc.synth.loopBarStart, this.doc.synth.loopBarEnd);
+                    this._trackAndMuteContainer.style.marginBottom = "0.3em";
+                }
+                else if (this.doc.song.loopType == 1) {
+                    this.doc.synth.loopRepeatCount = -1;
+                    this._loopEditor.container.style.display = "";
+                    SongEditor._styleElement.textContent = SongEditor._setLoopIcon[1];
+                    this._trackAndMuteContainer.style.marginBottom = "0.3em";
+                }
             };
             this.refocusStage = () => {
                 this.mainLayer.focus({ preventScroll: true });
@@ -55678,6 +56358,7 @@ You should be redirected to the song at:<br /><br />
                 this._barScrollBar.render();
                 this._trackEditor.render();
                 this._muteEditor.render();
+                this._loopTypeEvent();
                 this._trackAndMuteContainer.scrollLeft = this.doc.barScrollPos * this.doc.getBarWidth();
                 this._trackAndMuteContainer.scrollTop = this.doc.channelScrollPos * ChannelRow.patternHeight;
                 if (document.activeElement != this._patternEditor.modDragValueLabel && this._patternEditor.editingModLabel) {
@@ -55747,7 +56428,7 @@ You should be redirected to the song at:<br /><br />
                 }
                 else {
                     this._rhythmDisabledLabel.style.display = "block";
-                    this._rhythmDisabledLabel.style.color = "#c77";
+                    this._rhythmDisabledLabel.style.color = "#ffffff";
                     this._rhythmInput.style.color = "transparent";
                     this._rhythmInput.style.setProperty("appearance", "textfield");
                     this._rhythmInput.style.setProperty("-moz-appearance", "textfield");
@@ -55807,7 +56488,7 @@ You should be redirected to the song at:<br /><br />
                 }
                 if (!this.doc.song.getChannelIsMod(this.doc.channel)) {
                     this._customInstrumentSettingsGroup.style.display = "";
-                    this._panSliderRow.style.display = "";
+                    this._panKnobRow.style.display = "";
                     this._panDropdownGroup.style.display = (this._openPanDropdown ? "" : "none");
                     this._panContainer.style.display = "";
                     this._detuneSliderRow.style.display = "";
@@ -56201,14 +56882,13 @@ You should be redirected to the song at:<br /><br />
                         this._bitcrusherContainer.style.display = "none";
                     }
                     if (effectsIncludePanning(instrument.effects)) {
-                        this._panSliderRow.style.display = "";
                         if (this._openPanDropdown)
                             this._panDropdownGroup.style.display = "";
                         this._panSlider.updateValue(instrument.pan);
+                        this._panKnob.updateValue(instrument.pan);
                         this._panContainer.style.display = "";
                     }
                     else {
-                        this._panSliderRow.style.display = "none";
                         this._panDropdownGroup.style.display = "none";
                         this._panContainer.style.display = "none";
                     }
@@ -56259,6 +56939,24 @@ You should be redirected to the song at:<br /><br />
                         this._flangerDepthRow.style.display = "none";
                         this._flangerFeedbackRow.style.display = "none";
                         this._flangerContainer.style.display = "none";
+                    }
+                    if (effectsIncludePhaser(instrument.effects)) {
+                        this._phaserMixRow.style.display = "";
+                        this._phaserMixSlider.updateValue(instrument.phaserMix);
+                        this._phaserFreqRow.style.display = "";
+                        this._phaserFreqSlider.updateValue(instrument.phaserFreq);
+                        this._phaserStagesRow.style.display = "";
+                        this._phaserStagesSlider.updateValue(instrument.phaserStages);
+                        this._phaserFeedbackRow.style.display = "";
+                        this._phaserFeedbackSlider.updateValue(instrument.phaserFeedback);
+                        this._phaserContainer.style.display = "";
+                    }
+                    else {
+                        this._phaserMixRow.style.display = "none";
+                        this._phaserFreqRow.style.display = "none";
+                        this._phaserStagesRow.style.display = "none";
+                        this._phaserFeedbackRow.style.display = "none";
+                        this._phaserContainer.style.display = "none";
                     }
                     if (effectsIncludeReverb(instrument.effects)) {
                         this._reverbMixRow.style.display = "";
@@ -56365,7 +57063,7 @@ You should be redirected to the song at:<br /><br />
                     this._panDelaySlider.input.title = "" + instrument.panDelay;
                     this._arpeggioSpeedSlider.input.title = "x" + prettyNumber(Config.arpSpeedScale[instrument.arpeggioSpeed]);
                     this._arpeggioSpeedDisplay.textContent = "x" + prettyNumber(Config.arpSpeedScale[instrument.arpeggioSpeed]);
-                    this._strumSpeedDisplay.textContent = prettyNumber(instrument.strumParts / Config.partsPerBeat) + " beat(s)";
+                    this._strumSpeedDisplay.textContent = prettyNumber(instrument.strumParts / Config.partsPerBeat * 10) + " beat(s)";
                     this._eqFilterSimpleCutSlider.updateValue(instrument.eqFilterSimpleCut);
                     this._eqFilterSimplePeakSlider.updateValue(instrument.eqFilterSimplePeak);
                     this._noteFilterSimpleCutSlider.updateValue(instrument.noteFilterSimpleCut);
@@ -56434,7 +57132,7 @@ You should be redirected to the song at:<br /><br />
                     this._envelopeDropdownGroup.style.display = "none";
                     this._detuneSliderRow.style.display = "none";
                     this._detuneContainer.style.display = "none";
-                    this._panSliderRow.style.display = "none";
+                    this._panKnobRow.style.display = "none";
                     this._panDropdownGroup.style.display = "none";
                     this._panContainer.style.display = "none";
                     this._pulseWidthDropdownGroup.style.display = "none";
@@ -56956,7 +57654,7 @@ You should be redirected to the song at:<br /><br />
                         }
                     }
                     this._customInstrumentSettingsGroup.style.display = "none";
-                    this._panSliderRow.style.display = "none";
+                    this._panKnobRow.style.display = "none";
                     this._panDropdownGroup.style.display = "none";
                     this._instrumentVolumeSliderRow.style.display = "none";
                     this._instrumentTypeSelectRow.style.setProperty("display", "none");
@@ -57917,7 +58615,7 @@ You should be redirected to the song at:<br /><br />
                 }
             };
             this._animate = () => {
-                this._modSliderUpdate();
+                this._modSliderAndKnobUpdate();
                 if (this.doc.prefs.displayVolumeBar) {
                     this._volumeUpdate();
                 }
@@ -58097,7 +58795,7 @@ You should be redirected to the song at:<br /><br />
                         else {
                             this._rhythmInput.disabled = true;
                             this._rhythmDisabledLabel.style.display = "block";
-                            this._rhythmDisabledLabel.style.color = "#c77";
+                            this._rhythmDisabledLabel.style.color = "#ffffff";
                             this._rhythmInput.style.color = "transparent";
                             this._rhythmInput.style.setProperty("appearance", "textfield");
                             this._rhythmInput.style.setProperty("-moz-appearance", "textfield");
@@ -58487,7 +59185,7 @@ You should be redirected to the song at:<br /><br />
             }
             else {
                 this._rhythmDisabledLabel.style.display = "block";
-                this._rhythmDisabledLabel.style.color = "#c77";
+                this._rhythmDisabledLabel.style.color = "#ffffff";
                 this._rhythmInput.style.color = "transparent";
                 this._rhythmInput.style.setProperty("appearance", "textfield");
                 this._rhythmInput.style.setProperty("-moz-appearance", "textfield");
@@ -58630,6 +59328,7 @@ You should be redirected to the song at:<br /><br />
             this._pauseButton.addEventListener("click", this.togglePlay);
             this._recordButton.addEventListener("click", this._toggleRecord);
             this._stopButton.addEventListener("click", this._toggleRecord);
+            this._muteEditor._loopButtonInput.addEventListener("click", this._loopTypeEvent);
             this._recordButton.addEventListener("contextmenu", (event) => {
                 if (event.ctrlKey) {
                     event.preventDefault();
@@ -58645,6 +59344,7 @@ You should be redirected to the song at:<br /><br />
             this._prevBarButton.addEventListener("click", this._whenPrevBarPressed);
             this._nextBarButton.addEventListener("click", this._whenNextBarPressed);
             this._volumeSlider.input.addEventListener("input", this._setVolumeSlider);
+            this._songDetailsButton.addEventListener("click", this._openDetails);
             this._zoomInButton.addEventListener("click", this._zoomIn);
             this._zoomOutButton.addEventListener("click", this._zoomOut);
             this._patternArea.addEventListener("mousedown", this._refocusStageNotEditing);
@@ -58963,7 +59663,7 @@ You should be redirected to the song at:<br /><br />
                 group.style.display = "none";
             }
         }
-        _modSliderUpdate() {
+        _modSliderAndKnobUpdate() {
             if (!this.doc.synth.playing) {
                 this._hasActiveModSliders = false;
                 this._songEqFilterEditor.render();
@@ -58972,9 +59672,15 @@ You should be redirected to the song at:<br /><br />
                         if (this._showModSliders[setting][index] == true) {
                             this._showModSliders[setting][index] = false;
                             this._newShowModSliders[setting][index] = false;
+                            this._modSliderValues[setting][index] = NaN;
                             let slider = this.getSliderForModSetting(setting, index);
+                            let knob = this.getKnobForModSetting(setting, index);
                             if (slider != null) {
                                 slider.container.classList.remove("modSlider");
+                            }
+                            if (knob != null) {
+                                knob.updateModulation(null);
+                                knob.container.classList.remove("modKnob");
                             }
                         }
                     }
@@ -58984,53 +59690,52 @@ You should be redirected to the song at:<br /><br />
                 let instrument = this.doc.getCurrentInstrument();
                 const anyModActive = this.doc.synth.isAnyModActive(this.doc.channel, instrument);
                 if (anyModActive) {
-                    let instrument = this.doc.getCurrentInstrument();
-                    function updateModSlider(editor, slider, setting, channel, instrument, index) {
-                        if (editor.doc.synth.isModActive(setting, channel, instrument)) {
-                            if (Config.modulators[setting].maxIndex > 0) {
-                                const envelope = editor.doc.synth.song.channels[channel].instruments[instrument].envelopes[index];
-                                if (!envelope)
-                                    return false;
-                                switch (setting) {
-                                    case Config.modulators.dictionary["individual envelope speed"].index: {
-                                        if (envelope.tempEnvelopeSpeed == null || envelope.tempEnvelopeSpeed == undefined) {
-                                            return false;
-                                        }
-                                        break;
-                                    }
-                                    case Config.modulators.dictionary["individual envelope lower bound"].index: {
-                                        if (envelope.tempEnvelopeLowerBound == null || envelope.tempEnvelopeLowerBound == undefined) {
-                                            return false;
-                                        }
-                                        break;
-                                    }
-                                    case Config.modulators.dictionary["individual envelope upper bound"].index: {
-                                        if (envelope.tempEnvelopeUpperBound == null || envelope.tempEnvelopeUpperBound == undefined) {
-                                            return false;
-                                        }
-                                        break;
-                                    }
-                                }
+                    function updateModControl(editor, setting, channel, instrument, index) {
+                        if (!editor.doc.synth.isModActive(setting, channel, instrument)) {
+                            return false;
+                        }
+                        if (Config.modulators[setting].maxIndex > 0) {
+                            const envelope = editor.doc.synth.song.channels[channel].instruments[instrument].envelopes[index];
+                            if (!envelope)
+                                return false;
+                            switch (setting) {
+                                case Config.modulators.dictionary["individual envelope speed"].index:
+                                    if (envelope.tempEnvelopeSpeed == null)
+                                        return false;
+                                    break;
+                                case Config.modulators.dictionary["individual envelope lower bound"].index:
+                                    if (envelope.tempEnvelopeLowerBound == null)
+                                        return false;
+                                    break;
+                                case Config.modulators.dictionary["individual envelope upper bound"].index:
+                                    if (envelope.tempEnvelopeUpperBound == null)
+                                        return false;
+                                    break;
                             }
-                            let currentVal = (editor.doc.synth.getModValue(setting, channel, instrument, false) - Config.modulators[setting].convertRealFactor) / Config.modulators[setting].maxRawVol;
-                            if (Config.modulators[setting].invertSliderIndicator == true) {
-                                currentVal = 1 - currentVal;
+                        }
+                        let currentVal = (editor.doc.synth.getModValue(setting, channel, instrument, false)
+                            - Config.modulators[setting].convertRealFactor)
+                            / Config.modulators[setting].maxRawVol;
+                        if (Config.modulators[setting].invertSliderIndicator) {
+                            currentVal = 1 - currentVal;
+                        }
+                        if (currentVal != editor._modSliderValues[setting][index]) {
+                            editor._modSliderValues[setting][index] = currentVal;
+                            let knob = editor.getKnobForModSetting(setting, index);
+                            let slider = editor.getSliderForModSetting(setting, index);
+                            if (knob != null) {
+                                knob.updateModulation(currentVal);
                             }
-                            if (currentVal != editor._modSliderValues[setting][index]) {
-                                editor._modSliderValues[setting][index] = currentVal;
+                            if (slider != null) {
                                 slider.container.style.setProperty("--mod-position", (currentVal * 96.0 + 2.0) + "%");
                             }
-                            return true;
                         }
-                        return false;
+                        return true;
                     }
                     for (let setting = 0; setting < Config.modulators.length; setting++) {
                         for (let index = 0; index <= Config.modulators[setting].maxIndex; index++) {
-                            this._newShowModSliders[setting][index] = Boolean(this._showModSliders[setting][index]);
-                            let slider = this.getSliderForModSetting(setting, index);
-                            if (slider != null) {
-                                this._newShowModSliders[setting][index] = updateModSlider(this, slider, setting, this.doc.channel, instrument, index);
-                            }
+                            this._newShowModSliders[setting][index] =
+                                updateModControl(this, setting, this.doc.channel, instrument, index);
                         }
                     }
                 }
@@ -59042,26 +59747,37 @@ You should be redirected to the song at:<br /><br />
                     }
                 }
                 if (anyModActive || this._hasActiveModSliders) {
-                    let anySliderActive = false;
+                    let anyKnobActive = false;
                     for (let setting = 0; setting < Config.modulators.length; setting++) {
                         for (let index = 0; index <= Config.modulators[setting].maxIndex; index++) {
                             if (this._newShowModSliders[setting][index] != this._showModSliders[setting][index]) {
                                 this._showModSliders[setting][index] = this._newShowModSliders[setting][index];
+                                let knob = this.getKnobForModSetting(setting, index);
                                 let slider = this.getSliderForModSetting(setting, index);
-                                if (slider != null) {
-                                    if (this._showModSliders[setting][index] == true) {
+                                if (this._showModSliders[setting][index]) {
+                                    if (knob != null) {
+                                        knob.container.classList.add("modKnob");
+                                    }
+                                    if (slider != null) {
                                         slider.container.classList.add("modSlider");
                                     }
-                                    else {
+                                }
+                                else {
+                                    if (knob != null) {
+                                        knob.container.classList.remove("modKnob");
+                                        knob.updateModulation(null);
+                                    }
+                                    if (slider != null) {
                                         slider.container.classList.remove("modSlider");
                                     }
                                 }
                             }
-                            if (this._newShowModSliders[setting][index] == true)
-                                anySliderActive = true;
+                            if (this._newShowModSliders[setting][index] == true) {
+                                anyKnobActive = true;
+                            }
                         }
                     }
-                    this._hasActiveModSliders = anySliderActive;
+                    this._hasActiveModSliders = anyKnobActive;
                 }
             }
         }
@@ -59168,6 +59884,14 @@ You should be redirected to the song at:<br /><br />
                     return null;
             }
         }
+        getKnobForModSetting(setting, index) {
+            switch (setting) {
+                case Config.modulators.dictionary["pan"].index:
+                    return this._panKnob;
+                default:
+                    return null;
+            }
+        }
         _openPrompt(promptName) {
             this.doc.openPrompt(promptName);
             this._setPrompt(promptName);
@@ -59253,6 +59977,9 @@ You should be redirected to the song at:<br /><br />
                     case "generateEuclideanRhythm":
                         this.prompt = new EuclideanRhythmPrompt(this.doc);
                         break;
+                    case "songDetails":
+                        this.prompt = new SongDetailsPrompt(this.doc);
+                        break;
                     case "customTheme":
                         this.prompt = new CustomThemePrompt(this.doc, this._patternEditor, this._trackArea, document.getElementById("beepboxEditorContainer"));
                         break;
@@ -59329,6 +60056,12 @@ You should be redirected to the song at:<br /><br />
                 this.doc.recordingModulators = false;
                 this.doc.record(new ChangeHoldingModRecording(this.doc, null, null, null));
             }
+            if (this.doc.song.showSongDetails && EditorConfig.showSongDetailsAlert && this.doc.prefs.promptSongDetails) {
+                alert((this.doc.song.title != "" ? this.doc.song.title : "Untitled") +
+                    (this.doc.song.author != "" ? "\n\nBy " + this.doc.song.author : "") +
+                    (this.doc.song.description != "" ? "\n\n\n" + this.doc.song.description : ""));
+            }
+            EditorConfig.showSongDetailsAlert = false;
         }
         _renderInstrumentBar(channel, instrumentIndex, colors) {
             if (this.doc.song.layeredInstruments || this.doc.song.patternInstruments) {
@@ -59589,6 +60322,27 @@ You should be redirected to the song at:<br /><br />
             this.doc.synth.isPlayingSong = false;
         }
     }
+    SongEditor._styleElement = document.head.appendChild(HTML.style({ type: "text/css" }));
+    SongEditor._setLoopIcon = {
+        "1": `
+        .songLoopButton::before {
+              mask-image: var(--loop-within-bar-symbol);
+              -webkit-mask-image: var(--loop-within-bar-symbol);
+            }
+        `,
+        "2": `
+        .songLoopButton::before {
+            mask-image: var(--loop-full-song-symbol);
+            -webkit-mask-image: var(--loop-full-song-symbol);
+          }
+        `,
+        "3": `
+        .songLoopButton::before {
+            mask-image: var(--dont-loop-symbol);
+            -webkit-mask-image: var(--dont-loop-symbol);
+          }
+        `,
+    };
 
     const editor = new SongEditor();
     const beepboxEditorContainer = document.getElementById("beepboxEditorContainer");
