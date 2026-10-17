@@ -833,8 +833,8 @@ var beepbox = (function (exports) {
         { name: "corrupt", voices: 2, spread: 18.0, offset: 48.0, expression: 0.7, sign: 0.7 },
     ]);
     Config.customUnisonIndex = 63;
-    Config.effectNames = ["reverb", "chorus", "panning", "distortion", "bitcrusher", "note filter", "echo", "pitch shift", "detune", "vibrato", "transition type", "chord type", "", "ring mod", "granular", "flanger", "phaser"];
-    Config.effectOrder = [2, 10, 11, 7, 8, 9, 5, 14, 3, 4, 1, 6, 0, 13, 15, 16];
+    Config.effectNames = ["reverb", "chorus", "panning", "distortion", "bitcrusher", "note filter", "echo", "pitch shift", "detune", "vibrato", "transition type", "chord type", "note range", "ring mod", "granular", "flanger", "phaser"];
+    Config.effectOrder = [2, 10, 11, 12, 7, 8, 9, 5, 14, 3, 4, 1, 6, 0, 13, 15, 16];
     Config.noteSizeMax = 6;
     Config.volumeRange = 50;
     Config.volumeLogScale = 0.1428;
@@ -1774,6 +1774,9 @@ var beepbox = (function (exports) {
     }
     function effectsIncludeGranular(effects) {
         return (effects & (1 << 14)) != 0;
+    }
+    function effectsIncludeNoteRange(effects) {
+        return (effects & (1 << 12)) != 0;
     }
     function effectsIncludePhaser(effects) {
         return (effects & (1 << 16)) != 0;
@@ -17468,6 +17471,8 @@ li.select2-results__option[role=group] > strong:hover {
             this.flangerFeedback = 0;
             this.flangerMix = 0;
             this.slideTicks = 0;
+            this.upperNoteLimit = Config.maxPitch;
+            this.lowerNoteLimit = 0;
             this.algorithm = 0;
             this.feedbackType = 0;
             this.algorithm6Op = 1;
@@ -17570,6 +17575,8 @@ li.select2-results__option[role=group] > strong:hover {
             this.flangerMix = 26;
             this.slideTicks = 3;
             this.strumParts = 1;
+            this.upperNoteLimit = Config.maxPitch;
+            this.lowerNoteLimit = 0;
             this.pan = Config.panCenter;
             this.panDelay = 0;
             this.pitchShift = Config.pitchShiftCenter;
@@ -17915,6 +17922,10 @@ li.select2-results__option[role=group] > strong:hover {
                 instrumentObject["reverbDelay"] = this.reverbDelay;
                 instrumentObject["reverbShelfHz"] = this.reverbShelfHz;
                 instrumentObject["reverbShelfGain"] = this.reverbShelfGain;
+            }
+            if (effectsIncludeNoteRange(this.effects)) {
+                instrumentObject["upperNoteLimit"] = this.upperNoteLimit;
+                instrumentObject["lowerNoteLimit"] = this.lowerNoteLimit;
             }
             if (this.type != 4) {
                 instrumentObject["fadeInSeconds"] = Math.round(10000 * fadeInSettingToSeconds(this.fadeIn)) / 10000;
@@ -18356,6 +18367,12 @@ li.select2-results__option[role=group] > strong:hover {
                 this.reverbDelay = 0;
                 this.reverbShelfHz = 32;
                 this.reverbShelfGain = 6;
+            }
+            if (instrumentObject["upperNoteLimit"] != undefined) {
+                this.upperNoteLimit = instrumentObject["upperNoteLimit"];
+            }
+            if (instrumentObject["lowerNoteLimit"] != undefined) {
+                this.lowerNoteLimit = instrumentObject["lowerNoteLimit"];
             }
             if (instrumentObject["pulseWidth"] != undefined) {
                 this.pulseWidth = clamp(1, Config.pulseWidthRange + 1, Math.round(instrumentObject["pulseWidth"]));
@@ -19331,7 +19348,7 @@ li.select2-results__option[role=group] > strong:hover {
                     const noteLengthTicks = noteEndTick - noteStartTick;
                     const maximumSlideTicks = noteLengthTicks * 0.5;
                     let slideTicks = instrument.slideTicks * 0.5;
-                    slideTicks = Math.min(maximumSlideTicks, slideTicks *= instrument.slideTicks / 2);
+                    slideTicks = Math.min(maximumSlideTicks, slideTicks *= instrument.slideTicks * 3);
                     if (tone.prevNote != null && !tone.forceContinueAtStart) {
                         if (tickTimeStartReal - noteStartTick < slideTicks) {
                             prevSlideStart = true;
@@ -22009,6 +22026,10 @@ li.select2-results__option[role=group] > strong:hover {
                         buffer.push(base64IntToCharCode[instrument.reverbShelfHz]);
                         buffer.push(base64IntToCharCode[instrument.reverbShelfGain]);
                     }
+                    if (effectsIncludeNoteRange(instrument.effects)) {
+                        buffer.push(base64IntToCharCode[instrument.upperNoteLimit >> 6], base64IntToCharCode[instrument.upperNoteLimit & 0x3f]);
+                        buffer.push(base64IntToCharCode[instrument.lowerNoteLimit >> 6], base64IntToCharCode[instrument.lowerNoteLimit & 0x3f]);
+                    }
                     if (effectsIncludeGranular(instrument.effects)) {
                         buffer.push(base64IntToCharCode[instrument.granular]);
                         buffer.push(base64IntToCharCode[instrument.grainSize]);
@@ -23750,6 +23771,10 @@ li.select2-results__option[role=group] > strong:hover {
                                         if (!beforeFour && from41Box)
                                             instrument.reverbShelfGain = clamp(0, Config.reverbShelfGainRange + 1, base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
                                     }
+                                }
+                                if (effectsIncludeNoteRange(instrument.effects)) {
+                                    instrument.upperNoteLimit = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+                                    instrument.lowerNoteLimit = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
                                 }
                                 if (effectsIncludeGranular(instrument.effects)) {
                                     instrument.granular = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
@@ -27605,14 +27630,16 @@ li.select2-results__option[role=group] > strong:hover {
                                     const chordOfCompatibleInstrument = this.adjacentPatternHasCompatibleInstrumentTransition(song, channel, pattern, prevPattern, instrumentIndex, transition, chord, note, lastNote, patternForcesContinueAtStart);
                                     if (chordOfCompatibleInstrument != null) {
                                         prevNoteForThisInstrument = lastNote;
-                                        tonesInPrevNote = chordOfCompatibleInstrument.singleTone ? 1 : prevNoteForThisInstrument.pitches.length;
+                                        let prevPitchesForThisInstrument = prevNoteForThisInstrument.pitches;
+                                        tonesInPrevNote = chordOfCompatibleInstrument.singleTone ? 1 : prevPitchesForThisInstrument.length;
                                         forceContinueAtStart = patternForcesContinueAtStart;
                                     }
                                 }
                             }
                         }
                         else if (prevNoteForThisInstrument != null) {
-                            tonesInPrevNote = chord.singleTone ? 1 : prevNoteForThisInstrument.pitches.length;
+                            let prevPitchesForThisInstrument = prevNoteForThisInstrument.pitches;
+                            tonesInPrevNote = chord.singleTone ? 1 : prevPitchesForThisInstrument.length;
                         }
                         if (note.end == partsPerBar) {
                             let nextPattern = (this.nextBar == null) ? null : song.getPattern(channelIndex, this.nextBar);
@@ -27623,16 +27650,21 @@ li.select2-results__option[role=group] > strong:hover {
                                     const chordOfCompatibleInstrument = this.adjacentPatternHasCompatibleInstrumentTransition(song, channel, pattern, nextPattern, instrumentIndex, transition, chord, note, firstNote, nextPatternForcesContinueAtStart);
                                     if (chordOfCompatibleInstrument != null) {
                                         nextNoteForThisInstrument = firstNote;
-                                        tonesInNextNote = chordOfCompatibleInstrument.singleTone ? 1 : nextNoteForThisInstrument.pitches.length;
+                                        let nextPitchesForThisInstrument = nextNoteForThisInstrument.pitches;
+                                        tonesInNextNote = chordOfCompatibleInstrument.singleTone ? 1 : nextPitchesForThisInstrument.length;
                                         forceContinueAtEnd = nextPatternForcesContinueAtStart;
                                     }
                                 }
                             }
                         }
                         else if (nextNoteForThisInstrument != null) {
-                            tonesInNextNote = chord.singleTone ? 1 : nextNoteForThisInstrument.pitches.length;
+                            let nextPitchesForThisInstrument = nextNoteForThisInstrument.pitches;
+                            tonesInNextNote = chord.singleTone ? 1 : nextPitchesForThisInstrument.length;
                         }
-                        if (chord.singleTone) {
+                        let filteredPitches = note.pitches;
+                        if (effectsIncludeNoteRange(instrument.effects))
+                            filteredPitches = note.pitches.filter(pitch => pitch >= instrument.lowerNoteLimit && pitch <= instrument.upperNoteLimit);
+                        if (chord.singleTone && !(filteredPitches.length <= 0)) {
                             const atNoteStart = (Config.ticksPerPart * note.start == currentTick);
                             let tone;
                             if (toneList.count() <= toneCount) {
@@ -27654,10 +27686,10 @@ li.select2-results__option[role=group] > strong:hover {
                                 tone = toneList.get(toneCount);
                             }
                             toneCount++;
-                            for (let i = 0; i < note.pitches.length; i++) {
-                                tone.pitches[i] = note.pitches[i];
+                            for (let i = 0; i < filteredPitches.length; i++) {
+                                tone.pitches[i] = filteredPitches[i];
                             }
-                            tone.pitchCount = note.pitches.length;
+                            tone.pitchCount = filteredPitches.length;
                             tone.chordSize = 1;
                             tone.instrumentIndex = instrumentIndex;
                             tone.note = note;
@@ -27676,12 +27708,13 @@ li.select2-results__option[role=group] > strong:hover {
                         else {
                             const transition = instrument.getTransition();
                             if (((transition.isSeamless && !transition.slides && chord.strumParts == 0) || forceContinueAtStart) && (Config.ticksPerPart * note.start == currentTick) && prevNoteForThisInstrument != null) {
-                                this.moveTonesIntoOrderedTempMatchedList(toneList, note.pitches);
+                                this.moveTonesIntoOrderedTempMatchedList(toneList, filteredPitches);
                             }
                             let strumOffsetParts = 0;
-                            for (let i = 0; i < note.pitches.length; i++) {
+                            for (let i = 0; i < filteredPitches.length; i++) {
                                 let prevNoteForThisTone = (tonesInPrevNote > i) ? prevNoteForThisInstrument : null;
                                 let noteForThisTone = note;
+                                let pitchesForThisTone = filteredPitches;
                                 let nextNoteForThisTone = (tonesInNextNote > i) ? nextNoteForThisInstrument : null;
                                 let noteStartPart = noteForThisTone.start + strumOffsetParts;
                                 let passedEndOfNote = false;
@@ -27689,6 +27722,9 @@ li.select2-results__option[role=group] > strong:hover {
                                     if (toneList.count() > i && (transition.isSeamless || forceContinueAtStart) && prevNoteForThisTone != null) {
                                         nextNoteForThisTone = noteForThisTone;
                                         noteForThisTone = prevNoteForThisTone;
+                                        pitchesForThisTone = noteForThisTone.pitches;
+                                        if (effectsIncludeNoteRange(instrument.effects))
+                                            pitchesForThisTone = pitchesForThisTone.filter(pitch => pitch >= instrument.lowerNoteLimit && pitch <= instrument.upperNoteLimit);
                                         prevNoteForThisTone = null;
                                         noteStartPart = noteForThisTone.start + strumOffsetParts;
                                         passedEndOfNote = true;
@@ -27703,7 +27739,7 @@ li.select2-results__option[role=group] > strong:hover {
                                 }
                                 if ((!transition.continues && !forceContinueAtStart) || prevNoteForThisTone == null) {
                                     if (useStrumSpeed)
-                                        strumOffsetParts += instrument.strumParts * 10;
+                                        strumOffsetParts += instrument.strumParts;
                                 }
                                 const atNoteStart = (Config.ticksPerPart * noteStartPart == currentTick);
                                 let tone;
@@ -27731,9 +27767,9 @@ li.select2-results__option[role=group] > strong:hover {
                                     tone = toneList.get(toneCount);
                                 }
                                 toneCount++;
-                                tone.pitches[0] = noteForThisTone.pitches[i];
+                                tone.pitches[0] = pitchesForThisTone[i];
                                 tone.pitchCount = 1;
-                                tone.chordSize = noteForThisTone.pitches.length;
+                                tone.chordSize = pitchesForThisTone.length;
                                 tone.instrumentIndex = instrumentIndex;
                                 tone.note = noteForThisTone;
                                 tone.noteStartPart = noteStartPart;
@@ -38047,6 +38083,24 @@ li.select2-results__option[role=group] > strong:hover {
             }
         }
     }
+    class ChangeUpperLimit extends ChangeInstrumentSlider {
+        constructor(doc, oldValue, newValue) {
+            super(doc);
+            this._instrument.upperNoteLimit = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
+    class ChangeLowerLimit extends ChangeInstrumentSlider {
+        constructor(doc, oldValue, newValue) {
+            super(doc);
+            this._instrument.lowerNoteLimit = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
     class ChangeNoiseWave extends Change {
         constructor(doc, newValue) {
             super();
@@ -38714,7 +38768,7 @@ li.select2-results__option[role=group] > strong:hover {
                 }
             }
         }
-        static getPitchName(pitchNameIndex, scaleIndex, baseVisibleOctave) {
+        static getPitchName(pitchNameIndex, scaleIndex, baseVisibleOctave, alwaysOctave = false) {
             let text;
             if (Config.keys[pitchNameIndex].isWhiteKey) {
                 text = Config.keys[pitchNameIndex].name;
@@ -38729,7 +38783,7 @@ li.select2-results__option[role=group] > strong:hover {
                     text += "♯";
                 }
             }
-            if (scaleIndex % 12 == 0) {
+            if (scaleIndex % 12 == 0 || alwaysOctave) {
                 text += Math.floor(scaleIndex / 12) + baseVisibleOctave;
             }
             return text;
@@ -48024,6 +48078,45 @@ You should be redirected to the song at:<br /><br />
         [11, 13, null, 16, 18, null, 21, 23, 25, null, 28, 30, null],
     ];
 
+    function sortNoteRangesInAscendingOrder(a, b) {
+        const lowerA = a[0];
+        const lowerB = b[0];
+        if (lowerA == -1 && lowerB != -1)
+            return 1;
+        else if (lowerA != -1 && lowerB == -1)
+            return -1;
+        if (lowerA < lowerB)
+            return -1;
+        else if (lowerA > lowerB)
+            return 1;
+        else
+            return 0;
+    }
+    function noteRangesOverlap(a, b) {
+        const lowerA = a[0];
+        const upperA = a[1];
+        const lowerB = b[0];
+        const upperB = b[1];
+        return ((lowerB >= lowerA && lowerB <= upperA)
+            || (upperB >= lowerA && upperB <= upperA)
+            || (lowerA >= lowerB && lowerA <= upperB)
+            || (upperA >= lowerB && upperA <= upperB));
+    }
+    function noteRangesAreNextToEachOther(a, b) {
+        const lowerA = a[0];
+        const upperA = a[1];
+        const lowerB = b[0];
+        const upperB = b[1];
+        if (lowerA < lowerB) {
+            if (lowerB - upperA == 1)
+                return true;
+        }
+        else {
+            if (lowerA - upperB == 1)
+                return true;
+        }
+        return false;
+    }
     function makeEmptyReplacementElement(node) {
         const clone = node.cloneNode(false);
         node.parentNode.replaceChild(clone, node);
@@ -48053,10 +48146,12 @@ You should be redirected to the song at:<br /><br />
             this._barOffset = _barOffset;
             this.controlMode = false;
             this.shiftMode = false;
+            this._svgNoteRangeIndicatorOverlay = SVG.path({ fill: "#000000", "fill-opacity": "0.7", stroke: "none", "pointer-events": "none" });
             this._defaultModBorder = 34;
             this._backgroundPitchRows = [];
             this._backgroundDrumRow = SVG.rect();
             this._backgroundModRow = SVG.rect();
+            this._maximumNoteRanges = Math.max(Config.layeredInstrumentCountMax, Config.patternInstrumentCountMax);
             this._modDragValueLabelLeft = 0;
             this._modDragValueLabelTop = 0;
             this._modDragValueLabelWidth = 0;
@@ -48105,6 +48200,14 @@ You should be redirected to the song at:<br /><br />
             this._renderedPitchChannelCount = -1;
             this._renderedNoiseChannelCount = -1;
             this._renderedModChannelCount = -1;
+            this._renderedNoteRangeLowestNoteVisible = -1;
+            this._renderedNoteRangeHighestNoteVisible = -1;
+            this._renderedNoteRanges = [];
+            this._renderedNoteRangesSorted = [];
+            this._renderedNoteRangesMerged = [];
+            this._renderedNoteRangeMergedCount = 0;
+            this._renderedNoteRangeLowestNoteLimit = -1;
+            this._renderedNoteRangeHighestNoteLimit = -1;
             this._followPlayheadBar = -1;
             this._patternBorderLeft = SVG.line({ x1: 0, y1: 0, x2: 0, y2: 0, stroke: ColorConfig.loopAccent, "stroke-width": 2, "pointer-events": "none", visibility: "hidden", });
             this._patternBorderRight = SVG.line({ x1: 0, y1: 0, x2: 0, y2: 0, stroke: ColorConfig.loopAccent, "stroke-width": 2, "pointer-events": "none", visibility: "hidden", });
@@ -48363,7 +48466,7 @@ You should be redirected to the song at:<br /><br />
             this._selectionRect = SVG.rect({ class: "dashed-line dash-move", fill: ColorConfig.boxSelectionFill, stroke: ColorConfig.hoverPreview, "stroke-width": 2, "stroke-dasharray": "5, 3", "fill-opacity": "0.4", "pointer-events": "none", visibility: "hidden" });
             this._svgPreview = SVG.path({ fill: "none", stroke: ColorConfig.hoverPreview, "stroke-width": "2", "pointer-events": "none" });
             this.modDragValueLabel = HTML.div({ width: "90", "text-anchor": "start", contenteditable: "true", style: "display: flex, justify-content: center; align-items:center; position:absolute; pointer-events: none;", "dominant-baseline": "central", });
-            this._svg = SVG.svg({ id: 'firstImage', style: `background-image: url(${getLocalStorageItem("customTheme", "")}); background-repeat: no-repeat; background-size: 100% 100%; background-color: ${ColorConfig.editorBackground}; touch-action: none; position: absolute;`, width: "100%", height: "100%" }, SVG.defs(this._svgNoteBackground, this._svgDrumBackground, this._svgModBackground), this._svgBackground, this._alternateBeatOverlays, this._selectionRect, this._svgNoteContainer, this._svgPreview, this._svgBeathead, this._svgPlayhead);
+            this._svg = SVG.svg({ id: 'firstImage', style: `background-image: url(${getLocalStorageItem("customTheme", "")}); background-repeat: no-repeat; background-size: 100% 100%; background-color: ${ColorConfig.editorBackground}; touch-action: none; position: absolute;`, width: "100%", height: "100%" }, SVG.defs(this._svgNoteBackground, this._svgDrumBackground, this._svgModBackground), this._svgBackground, this._svgNoteRangeIndicatorOverlay, this._alternateBeatOverlays, this._selectionRect, this._svgNoteContainer, this._svgPreview, this._svgBeathead, this._svgPlayhead);
             this.container = HTML.div({ style: "height: 100%; overflow:hidden; position: relative; flex-grow: 1;" }, this._svg, this.modDragValueLabel);
             for (let i = 0; i < Config.pitchesPerOctave; i++) {
                 const rectangle = SVG.rect();
@@ -48371,6 +48474,11 @@ You should be redirected to the song at:<br /><br />
                 rectangle.setAttribute("fill", (i == 0) ? ColorConfig.tonic : ColorConfig.pitchBackground);
                 this._svgNoteBackground.appendChild(rectangle);
                 this._backgroundPitchRows[i] = rectangle;
+            }
+            for (let i = 0; i < this._maximumNoteRanges; i++) {
+                this._renderedNoteRanges.push([-1, -1]);
+                this._renderedNoteRangesSorted.push([-1, -1]);
+                this._renderedNoteRangesMerged.push([-1, -1]);
             }
             this._backgroundDrumRow.setAttribute("x", "1");
             this._backgroundDrumRow.setAttribute("y", "1");
@@ -50214,6 +50322,180 @@ You should be redirected to the song at:<br /><br />
                 this._selectionRect.setAttribute("visibility", "hidden");
             }
         }
+        _redrawNoteRangeIndicator(forceRedraw) {
+            if (this._interactive) {
+                const instruments = this._doc.song.channels[this._doc.channel].instruments;
+                const pattern = this._doc.getCurrentPattern(this._barOffset);
+                let anyNoteRangeIsDifferent = false;
+                let anyNoteRangeIsEnabled = false;
+                let allNoteRangesAreEmpty = true;
+                for (let i = 0; i < this._maximumNoteRanges; i++) {
+                    const renderedNoteRange = this._renderedNoteRanges[i];
+                    const oldLowerNoteLimit = renderedNoteRange[0];
+                    const oldUpperNoteLimit = renderedNoteRange[1];
+                    let newLowerNoteLimit = -1;
+                    let newUpperNoteLimit = -1;
+                    if (i < instruments.length) {
+                        const instrument = instruments[i];
+                        const instrumentIsActiveForThisPattern = (this._doc.song.patternInstruments
+                            ? (pattern == null
+                                ? (this._doc.recentPatternInstruments[this._doc.channel].indexOf(i) != -1)
+                                : (pattern.instruments.indexOf(i) != -1))
+                            : true);
+                        const noteRangeEnabled = effectsIncludeNoteRange(instrument.effects);
+                        const noteRangeIsEmpty = instrument.lowerNoteLimit > instrument.upperNoteLimit;
+                        if (noteRangeEnabled) {
+                            anyNoteRangeIsEnabled = true;
+                            if (!noteRangeIsEmpty) {
+                                allNoteRangesAreEmpty = false;
+                            }
+                            if (instrumentIsActiveForThisPattern) {
+                                newLowerNoteLimit = instrument.lowerNoteLimit;
+                                newUpperNoteLimit = instrument.upperNoteLimit;
+                            }
+                        }
+                        else {
+                            if (instrumentIsActiveForThisPattern) {
+                                newLowerNoteLimit = 0;
+                                newUpperNoteLimit = Config.maxPitch;
+                            }
+                        }
+                        if (newLowerNoteLimit > newUpperNoteLimit) {
+                            newLowerNoteLimit = -1;
+                            newUpperNoteLimit = -1;
+                        }
+                    }
+                    if (newLowerNoteLimit != oldLowerNoteLimit || newUpperNoteLimit != oldUpperNoteLimit) {
+                        anyNoteRangeIsDifferent = true;
+                        renderedNoteRange[0] = newLowerNoteLimit;
+                        renderedNoteRange[1] = newUpperNoteLimit;
+                    }
+                }
+                if (anyNoteRangeIsEnabled && anyNoteRangeIsDifferent) {
+                    this._renderedNoteRangeLowestNoteLimit = Infinity;
+                    this._renderedNoteRangeHighestNoteLimit = -Infinity;
+                    for (let i = 0; i < this._maximumNoteRanges; i++) {
+                        this._renderedNoteRangesSorted[i][0] = this._renderedNoteRanges[i][0];
+                        this._renderedNoteRangesSorted[i][1] = this._renderedNoteRanges[i][1];
+                        this._renderedNoteRangesMerged[i][0] = -1;
+                        this._renderedNoteRangesMerged[i][1] = -1;
+                    }
+                    this._renderedNoteRangesSorted.sort(sortNoteRangesInAscendingOrder);
+                    let indexOfRangeToMergeWith = 0;
+                    this._renderedNoteRangesMerged[0][0] = this._renderedNoteRangesSorted[0][0];
+                    this._renderedNoteRangesMerged[0][1] = this._renderedNoteRangesSorted[0][1];
+                    this._renderedNoteRangeLowestNoteLimit = Math.min(this._renderedNoteRangeLowestNoteLimit, this._renderedNoteRangesMerged[0][0]);
+                    this._renderedNoteRangeHighestNoteLimit = Math.max(this._renderedNoteRangeHighestNoteLimit, this._renderedNoteRangesMerged[0][1]);
+                    for (let i = 1; i < this._maximumNoteRanges; i++) {
+                        const range = this._renderedNoteRangesSorted[i];
+                        const noteRangeToMergeWith = this._renderedNoteRangesMerged[indexOfRangeToMergeWith];
+                        const isValid = range[0] != -1;
+                        if (!isValid) {
+                            break;
+                        }
+                        const shouldMerge = (noteRangesOverlap(range, noteRangeToMergeWith)
+                            || noteRangesAreNextToEachOther(range, noteRangeToMergeWith));
+                        if (shouldMerge) {
+                            const newLowerNoteLimit = Math.min(range[0], noteRangeToMergeWith[0]);
+                            const newUpperNoteLimit = Math.max(range[1], noteRangeToMergeWith[1]);
+                            noteRangeToMergeWith[0] = newLowerNoteLimit;
+                            noteRangeToMergeWith[1] = newUpperNoteLimit;
+                            this._renderedNoteRangeLowestNoteLimit = Math.min(this._renderedNoteRangeLowestNoteLimit, noteRangeToMergeWith[0]);
+                            this._renderedNoteRangeHighestNoteLimit = Math.max(this._renderedNoteRangeHighestNoteLimit, noteRangeToMergeWith[1]);
+                        }
+                        else {
+                            indexOfRangeToMergeWith++;
+                            const appendedRange = this._renderedNoteRangesMerged[indexOfRangeToMergeWith];
+                            appendedRange[0] = range[0];
+                            appendedRange[1] = range[1];
+                            this._renderedNoteRangeLowestNoteLimit = Math.min(this._renderedNoteRangeLowestNoteLimit, appendedRange[0]);
+                            this._renderedNoteRangeHighestNoteLimit = Math.max(this._renderedNoteRangeHighestNoteLimit, appendedRange[1]);
+                        }
+                    }
+                    this._renderedNoteRangeMergedCount = indexOfRangeToMergeWith + 1;
+                }
+                const baseVisibleOctave = this._doc.getBaseVisibleOctave(this._doc.channel);
+                const pitchesPerOctave = Config.pitchesPerOctave;
+                const lowestNoteVisible = baseVisibleOctave * pitchesPerOctave;
+                const highestNoteVisible = lowestNoteVisible + (this._pitchCount - 1);
+                const changed = (forceRedraw
+                    || lowestNoteVisible != this._renderedNoteRangeLowestNoteVisible
+                    || highestNoteVisible != this._renderedNoteRangeHighestNoteVisible
+                    || anyNoteRangeIsDifferent);
+                if (changed) {
+                    this._renderedNoteRangeLowestNoteVisible = lowestNoteVisible;
+                    this._renderedNoteRangeHighestNoteVisible = highestNoteVisible;
+                    if (anyNoteRangeIsEnabled) {
+                        const width = this._editorWidth;
+                        const height = this._editorHeight;
+                        this._svgNoteRangeIndicatorOverlay.setAttribute("visibility", "visible");
+                        if (allNoteRangesAreEmpty) {
+                            const path = ("M 0 0"
+                                + " L " + width + " 0"
+                                + " L " + width + " " + height
+                                + " L 0 " + height
+                                + " z");
+                            this._svgNoteRangeIndicatorOverlay.setAttribute("d", path);
+                        }
+                        else {
+                            let path = " ";
+                            const inbetweenRectCount = this._renderedNoteRangeMergedCount - 1;
+                            for (let i = 0; i < inbetweenRectCount; i++) {
+                                const rangeA = this._renderedNoteRangesMerged[i];
+                                const rangeB = this._renderedNoteRangesMerged[i + 1];
+                                const lowerA = rangeA[0];
+                                const upperA = rangeA[1];
+                                const lowerB = rangeB[0];
+                                const upperB = rangeB[1];
+                                const rectY0 = Math.min(height, Math.max(0, this._pitchToPixelHeight((lowerB - 1) - this._octaveOffset) - this._pitchHeight / 2));
+                                const rectY1 = Math.min(height, Math.max(0, this._pitchToPixelHeight((upperA + 1) - this._octaveOffset) + this._pitchHeight / 2));
+                                const rectIsVisible = (((lowerA >= lowestNoteVisible && lowerA <= highestNoteVisible)
+                                    || (upperA >= lowestNoteVisible && upperA <= highestNoteVisible)
+                                    || (lowerB >= lowestNoteVisible && lowerB <= highestNoteVisible)
+                                    || (upperB >= lowestNoteVisible && upperB <= highestNoteVisible))
+                                    && rectY0 < rectY1);
+                                if (rectIsVisible) {
+                                    path += (" M 0 " + rectY0
+                                        + " L " + width + " " + rectY0
+                                        + " L " + width + " " + rectY1
+                                        + " L 0 " + rectY1
+                                        + " z");
+                                }
+                            }
+                            const topY0 = 0;
+                            const topY1 = Math.min(height, Math.max(0, this._pitchToPixelHeight(this._renderedNoteRangeHighestNoteLimit - this._octaveOffset) - this._pitchHeight / 2));
+                            const topIsVisible = (this._renderedNoteRangeHighestNoteLimit != -1
+                                && topY0 < topY1);
+                            if (topIsVisible) {
+                                path += (" M 0 " + topY0
+                                    + " L " + width + " " + topY0
+                                    + " L " + width + " " + topY1
+                                    + " L 0 " + topY1
+                                    + " z");
+                            }
+                            const bottomY0 = Math.min(height, Math.max(0, this._pitchToPixelHeight(this._renderedNoteRangeLowestNoteLimit - this._octaveOffset) + this._pitchHeight / 2));
+                            const bottomY1 = height;
+                            const bottomIsVisible = (this._renderedNoteRangeLowestNoteLimit != -1
+                                && bottomY0 < bottomY1);
+                            if (bottomIsVisible) {
+                                path += (" M 0 " + bottomY0
+                                    + " L " + width + " " + bottomY0
+                                    + " L " + width + " " + bottomY1
+                                    + " L 0 " + bottomY1
+                                    + " z");
+                            }
+                            this._svgNoteRangeIndicatorOverlay.setAttribute("d", path);
+                        }
+                    }
+                    else {
+                        this._svgNoteRangeIndicatorOverlay.setAttribute("visibility", "hidden");
+                    }
+                }
+            }
+            else {
+                this._svgNoteRangeIndicatorOverlay.setAttribute("visibility", "hidden");
+            }
+        }
         render() {
             for (const overlay of this._alternateBeatOverlays) {
                 overlay.remove();
@@ -50276,7 +50558,9 @@ You should be redirected to the song at:<br /><br />
                 this.resetCopiedPins();
             }
             this._copiedPins = this._copiedPinChannels[this._doc.channel];
+            let wasResized = false;
             if (this._renderedWidth != this._editorWidth || this._renderedHeight != this._editorHeight) {
+                wasResized = true;
                 this._renderedWidth = this._editorWidth;
                 this._renderedHeight = this._editorHeight;
                 this._svgBackground.setAttribute("width", "" + this._editorWidth);
@@ -50415,6 +50699,7 @@ You should be redirected to the song at:<br /><br />
                 }
             }
             this._redrawNotePatterns();
+            this._redrawNoteRangeIndicator(wasResized);
         }
         _redrawNotePatterns() {
             this._svgNoteContainer = makeEmptyReplacementElement(this._svgNoteContainer);
@@ -54804,9 +55089,9 @@ You should be redirected to the song at:<br /><br />
 			}`,
             });
             this._themeList = this._makeThemeList();
-            this._themeButtonText = div$2({ class: "themeButtonText" }, "cool theme button");
+            this._themeButtonText = div$2({ class: "themeButtonText", style: "display: grid; align-items: center" }, "cool theme button");
             this._themeButton = button$2({ style: ` width:100%; display:flex; justify-content:space-between; align-items:center padding:6px 10px; box-sizing:border-box;` }, this._themeButtonText);
-            this._themeMenu = div$2({ style: `display:none; position:absolute; top:100%; left:0; width:100%; max-height:300px; overflow-y:auto; background:${ColorConfig.uiWidgetBackground}; border:1px solid ${ColorConfig.uiWidgetFocus}; border-radius:4px; box-sizing:border-box; z-index:10;` }, this._themeList);
+            this._themeMenu = div$2({ style: `display:none; position:absolute; top:100%; left:0; width:100%; max-height:300px; overflow-y: auto; background:${ColorConfig.uiWidgetBackground}; border:1px solid ${ColorConfig.uiWidgetFocus}; border-radius:4px; box-sizing:border-box; z-index:10;` }, this._themeList);
             this._previewFrame = null;
             this._dropdownOpen = false;
             this.lastTheme = window.localStorage.getItem("colorTheme");
@@ -54845,14 +55130,14 @@ You should be redirected to the song at:<br /><br />
             this._recordingAreaButton = button$2({ class: "recordingAreaButton", style: "width:16%;" }, "Recording");
             this._keybindAreaButton = button$2({ class: "keybindAreaButton", style: "width:16%;" }, "Shortcuts");
             this._appearanceArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Appearance"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "fifth" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showFifth)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "third" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showThird)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Advanced Color Scheme:', div$2({ style: "width: 50%; text-align: center;" }, this._ACS)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Flash notes when played:', div$2({ style: "width: 50%; text-align: center;" }, this._notesFlashWhenPlayed)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Blur background while in prompt:"), div$2({ style: "width: 50%; text-align: center;" }, this._frostedGlassBackground)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show all channels:", div$2({ style: "width: 50%; text-align: center;" }, this._showChannels)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show instrument scrollbars:", div$2({ style: "width: 50%; text-align: center;" }, this._showInstrumentScrollbars)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument copy/paste buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentCopyPaste)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument import/export buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentImportExport)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument buttons at top:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentButtonsAtTop)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show piano keys:", div$2({ style: "width: 50%; text-align: center;" }, this._showLetters)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show volume bar:", div$2({ style: "width: 50%; text-align: center;" }, this._displayVolumeBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show oscilloscope:", div$2({ style: "width: 50%; text-align: center;" }, this._showOscilloscope)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show sample loading status:", div$2({ style: "width: 50%; text-align: center;" }, this._showSampleLoadingStatus)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show description:", div$2({ style: "width: 50%; text-align: center;" }, this._showDescription)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Rainbowify Song Loop:", div$2({ style: "width: 50%; text-align: center;" }, this._rainbowifyLoop))));
-            this._themeArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Theme"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Color palette:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._themeButton, this._themeMenu)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Custom color palette data:", div$2({ style: "width: 50%; text-align: center;" }, this._colorInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Editor background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Website background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput2)), div$2({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._customThemeFileReset)));
+            this._themeArea = div$2({ style: "display: none; overflow: visible;" }, h2$1("Theme"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Color palette:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._themeButton, this._themeMenu)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Custom color palette data:", div$2({ style: "width: 50%; text-align: center;" }, this._colorInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Editor background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Website background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput2)), div$2({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._customThemeFileReset)));
             this._layoutArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Layout"), div$2({ style: "text-align: left;" }, h3({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "Layout"), div$2({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, div$2({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, ""), div$2({ style: "width: 90%; height: 30em; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._layoutForm), div$2({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "")), h2$1("Custom Layout"), p({ style: "text-align: left; margin: 0; margin-left: 1em; margin-bottom: 5px;" }, "Replace the text below with your custom layout data to load it:"), div$2({ style: "display: grid; place-items: center; margin: 0 20px;" }, this._layoutInput), div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._resetButton), div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" })));
             this._recordingArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Recording"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Always show recording button:", div$2({ style: "width: 50%; text-align: center;" }, this._showRecordButton)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Snap recorded notes to rhythm:"), div$2({ style: "width: 50%; text-align: center;" }, this._snapRecordedNotesToRhythm)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Ignore recorded notes outside of the scale:"), div$2({ style: "width: 50%; text-align: center;" }, this._ignorePerformedNotesNotInScale)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Recording keyboard layout:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardLayout)), div$2({ style: "display: flex; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._keyboardLayoutPreview), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 0.5em; height: 2em;" }, "Shortcut / Recording mode:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardMode)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable MIDI performance:", div$2({ style: "width: 50%; text-align: center;" }, this._enableMidi)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Record with metronome:", div$2({ style: "width: 50%; text-align: center;" }, this._metronomeWhileRecording)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Count-in recording with metronome:"), div$2({ style: "width: 50%; text-align: center;" }, this._metronomeCountIn)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Bass channel offset:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._bassOffset))));
             this._generalArea = div$2({ style: "overflow-y: visible; overflow-x: hidden;" }, h2$1("General"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Auto-play on load:", div$2({ style: "width: 50%; text-align: center;" }, this._autoPlay)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Automatically view current bar:", div$2({ style: "width: 50%; text-align: center;" }, this._autoFollow)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Hear preview of placed notes:", div$2({ style: "width: 50%; text-align: center;" }, this._enableNotePreview)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Place notes out of scale:", div$2({ style: "width: 50%; text-align: center;" }, this._notesOutsideScale)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Set default scale:", div$2({ style: "width: 50%; text-align: center;", class: "selectContainer" }, this._defaultScaleSelect)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Always use fine note volume:", div$2({ style: "width: 50%; text-align: center;" }, this._alwaysFineNoteVol)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable octave scroll bar:", div$2({ style: "width: 50%; text-align: center;" }, this._showScrollBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable channel muting:", div$2({ style: "width: 50%; text-align: center;" }, this._enableChannelMuting)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable song data in URL:", div$2({ style: "width: 50%; text-align: center;" }, this._displayBrowserUrl)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Close prompts on click-off:", div$2({ style: "width: 50%; text-align: center;" }, this._closePromptByClickoff)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Prompt song details on load:", div$2({ style: "width: 50%; text-align: center;" }, this._promptSongDetails))));
             this._keybindArea = div$2({ style: "display: none;  overflow-y: visible; overflow-x: hidden;" }, h2$1("Shortcuts"), this._shortcutLabels, this._resetDefaultButton);
             this._okayButton = button$2({ class: "okayButton", style: "width:45%;" }, "Okay");
             this._cancelButton = button$2({ class: "cancelButton" });
-            this.container = div$2({ class: "prompt noSelection recordingSetupPrompt", style: "width: 600px; max-height: 90%;" }, div$2({ style: "display: flex; flex-direction: row; justify-content: space-evenly;" }, this._generalAreaButton, this._appearanceAreaButton, this._themeAreaButton, this._layoutAreaButton, this._recordingAreaButton, this._keybindAreaButton), this._generalArea, this._appearanceArea, this._themeArea, this._layoutArea, this._recordingArea, this._keybindArea, div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
+            this.container = div$2({ class: "prompt noSelection recordingSetupPrompt", style: "width: 600px; max-height: 90%; overflow: visible" }, div$2({ style: "display: flex; flex-direction: row; justify-content: space-evenly;" }, this._generalAreaButton, this._appearanceAreaButton, this._themeAreaButton, this._layoutAreaButton, this._recordingAreaButton, this._keybindAreaButton), this._generalArea, this._appearanceArea, this._themeArea, this._layoutArea, this._recordingArea, this._keybindArea, div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._okayButton), this._cancelButton);
             this._lastTheme = window.localStorage.getItem("colorTheme");
             this._newTheme = false;
             this._resetCustomTheme = false;
@@ -54953,7 +55238,7 @@ You should be redirected to the song at:<br /><br />
             };
             this._clickOutside = (event) => {
                 const target = event.target;
-                if (this._themeMenu.contains(target) || this._themeButton.contains(target)) {
+                if (this._themeMenu.contains(target) || this._themeButton.contains(target) || this._dropdownOpen == false) {
                     return;
                 }
                 this._dropdownOpen = false;
@@ -55205,20 +55490,29 @@ You should be redirected to the song at:<br /><br />
             this._customThemeFileReset.addEventListener("click", this._resetCustomThemeFile);
             this._colorInput.addEventListener("change", this._whenColorsChanged);
             this._selectedTheme = (_a = this.lastTheme) !== null && _a !== void 0 ? _a : ColorConfig.defaultTheme;
-            const currentTheme = themes
-                .flatMap(group => group.items)
-                .find(theme => theme.id === this._selectedTheme);
+            const currentTheme = themes.flatMap(group => group.items).find(theme => theme.id === this._selectedTheme);
             this._themeButtonText.textContent = (_b = currentTheme === null || currentTheme === void 0 ? void 0 : currentTheme.name) !== null && _b !== void 0 ? _b : this._selectedTheme;
             document.addEventListener("mousedown", this._clickOutside);
             this._themeButton.addEventListener("click", () => {
                 this._dropdownOpen = !this._dropdownOpen;
                 this._themeMenu.style.display = this._dropdownOpen ? "" : "none";
+                if (this._dropdownOpen)
+                    this._positionThemeMenu();
+            });
+            window.addEventListener("resize", () => {
+                if (this._dropdownOpen)
+                    this._positionThemeMenu();
             });
             this._themeMenu.addEventListener("mouseleave", () => {
                 var _a;
+                if (!this._dropdownOpen)
+                    return;
                 ColorConfig.setTheme(this._selectedTheme);
-                const selectedTheme = themes.flatMap(group => group.items).find(t => t.id === this._selectedTheme);
-                this._themeButtonText.textContent = (_a = selectedTheme === null || selectedTheme === void 0 ? void 0 : selectedTheme.name) !== null && _a !== void 0 ? _a : this._selectedTheme;
+                const selectedTheme = themes
+                    .flatMap(group => group.items)
+                    .find(t => t.id === this._selectedTheme);
+                this._themeButtonText.textContent =
+                    (_a = selectedTheme === null || selectedTheme === void 0 ? void 0 : selectedTheme.name) !== null && _a !== void 0 ? _a : this._selectedTheme;
             });
             this._appearanceAreaButton.addEventListener("click", this._renderAppearanceArea);
             this._themeAreaButton.addEventListener("click", this._renderThemeArea);
@@ -55278,6 +55572,21 @@ You should be redirected to the song at:<br /><br />
                 themeContainer.appendChild(groupContainer);
             }
             return themeContainer;
+        }
+        _positionThemeMenu() {
+            const buttonRect = this._themeButton.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - buttonRect.bottom;
+            const spaceAbove = buttonRect.top;
+            if (spaceAbove > spaceBelow) {
+                this._themeMenu.style.top = "auto";
+                this._themeMenu.style.bottom = "100%";
+                this._themeMenu.style.maxHeight = `${spaceAbove}px`;
+            }
+            else {
+                this._themeMenu.style.top = "100%";
+                this._themeMenu.style.bottom = "auto";
+                this._themeMenu.style.maxHeight = `${spaceBelow}px`;
+            }
         }
     }
 
@@ -56100,6 +56409,11 @@ You should be redirected to the song at:<br /><br />
             this._bitcrusherFreqSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.bitcrusherFreqRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeBitcrusherFreq(this.doc, oldValue, newValue), false);
             this._bitcrusherFreqRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("bitcrusherFreq") }, "freq-crush"), this._bitcrusherFreqSlider.container);
             this._bitcrusherContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "bitcrush"), this._bitcrusherQuantizationRow, this._bitcrusherFreqRow);
+            this._upperNoteLimitInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "upperNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
+            this._upperNoteLimitRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("upperNoteLimit") }, "upper note limit"), this._upperNoteLimitInputBox);
+            this._lowerNoteLimitInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "lowerNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
+            this._lowerNoteLimitRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("lowerNoteLimit") }, "lower note limit"), this._lowerNoteLimitInputBox);
+            this._noteRangeContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "note range"), this._upperNoteLimitRow, this._lowerNoteLimitRow);
             this._stringSustainSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.stringSustainRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeStringSustain(this.doc, oldValue, newValue), false);
             this._stringSustainLabel = span({ class: "tip", onclick: () => this._openPrompt("stringSustain") }, "sustain");
             this._stringSustainRow = div({ class: "selectRow" }, this._stringSustainLabel, this._stringSustainSlider.container);
@@ -56208,7 +56522,7 @@ You should be redirected to the song at:<br /><br />
             this._feedbackAmplitudeSlider = new Slider(input({ type: "range", min: "0", max: Config.operatorAmplitudeMax, value: "0", step: "1", title: "Feedback Amplitude" }), this.doc, (oldValue, newValue) => new ChangeFeedbackAmplitude(this.doc, oldValue, newValue), false);
             this._feedbackRow2 = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("feedbackVolume") }, "feed. vol."), this._feedbackAmplitudeSlider.container);
             this._addEnvelopeButton = button({ type: "button", class: "add-envelope" });
-            this._customInstrumentSettingsGroup = div({ class: "editor-controls-alt" }, this._eqFilterTypeRow, this._eqFilterRow, this._eqFilterSimpleCutRow, this._eqFilterSimplePeakRow, this._fadeInOutRow, this._algorithmSelectRow, this._algorithm6OpSelectRow, this._phaseModGroup, this._feedbackRow1, this._feedback6OpRow1, this._feedbackRow2, this._chipWaveSelectRow, this._chipNoiseSelectRow, this._customWaveDraw, this._spectrumRow, this._harmonicsRow, this._drumsetGroup, this._supersawDynamismRow, this._supersawSpreadRow, this._supersawShapeRow, this._pulseWidthRow, this._pulseWidthDropdownGroup, this._stringSustainRow, this._unisonSelectRow, this._unisonDropdownGroup, this._useChipWaveAdvancedLoopControlsRow, this._chipWaveLoopModeSelectRow, this._chipWaveLoopStartRow, this._chipWaveLoopEndRow, this._chipWaveStartOffsetRow, this._chipWavePlayBackwardsRow, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("effects") }, "effects")), div({ class: "effects-menu" }, this._effectsSelect)), this._panContainer, this._transitionContainer, this._chordContainer, this._pitchShiftContainer, this._detuneContainer, this._vibratoContainer, this._noteFilterContainer, this._granularContainer, this._distortionContainer, this._bitcrusherContainer, this._chorusContainer, this._echoContainer, this._reverbContainer, this._ringModContainer, this._flangerContainer, this._phaserContainer, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("envelopes") }, "envelopes")), this._envelopeDropdown, this._addEnvelopeButton), this._envelopeDropdownGroup, this.envelopeEditor.container);
+            this._customInstrumentSettingsGroup = div({ class: "editor-controls-alt" }, this._eqFilterTypeRow, this._eqFilterRow, this._eqFilterSimpleCutRow, this._eqFilterSimplePeakRow, this._fadeInOutRow, this._algorithmSelectRow, this._algorithm6OpSelectRow, this._phaseModGroup, this._feedbackRow1, this._feedback6OpRow1, this._feedbackRow2, this._chipWaveSelectRow, this._chipNoiseSelectRow, this._customWaveDraw, this._spectrumRow, this._harmonicsRow, this._drumsetGroup, this._supersawDynamismRow, this._supersawSpreadRow, this._supersawShapeRow, this._pulseWidthRow, this._pulseWidthDropdownGroup, this._stringSustainRow, this._unisonSelectRow, this._unisonDropdownGroup, this._useChipWaveAdvancedLoopControlsRow, this._chipWaveLoopModeSelectRow, this._chipWaveLoopStartRow, this._chipWaveLoopEndRow, this._chipWaveStartOffsetRow, this._chipWavePlayBackwardsRow, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("effects") }, "effects")), div({ class: "effects-menu" }, this._effectsSelect)), this._panContainer, this._transitionContainer, this._chordContainer, this._pitchShiftContainer, this._detuneContainer, this._vibratoContainer, this._noteFilterContainer, this._granularContainer, this._distortionContainer, this._bitcrusherContainer, this._chorusContainer, this._echoContainer, this._reverbContainer, this._ringModContainer, this._flangerContainer, this._phaserContainer, this._noteRangeContainer, div({ style: `padding: 2px 0; margin-left: 2em; display: flex; align-items: center;` }, span({ style: `flex-grow: 1; text-align: center;` }, span({ class: "tip", onclick: () => this._openPrompt("envelopes") }, "envelopes")), this._envelopeDropdown, this._addEnvelopeButton), this._envelopeDropdownGroup, this.envelopeEditor.container);
             this._instrumentCopyGroup = div({ class: "editor-controls-alt" }, div({ class: "selectRow" }, this._instrumentCopyButton, this._instrumentPasteButton));
             this._instrumentExportGroup = div({ class: "editor-controls-alt" }, div({ class: "selectRow" }, this._instrumentExportButton, this._instrumentImportButton));
             this._instrumentSettingsTextRow = div({ id: "instrumentSettingsText", style: `padding: 3px 0; max-width: 15em; text-align: center; color: ${ColorConfig.secondaryText};` }, "instrument settings");
@@ -56944,6 +57258,18 @@ You should be redirected to the song at:<br /><br />
                         this._phaserFeedbackRow.style.display = "none";
                         this._phaserContainer.style.display = "none";
                     }
+                    if (effectsIncludeNoteRange(instrument.effects)) {
+                        this._upperNoteLimitRow.style.display = "";
+                        this._lowerNoteLimitRow.style.display = "";
+                        this._noteRangeContainer.style.display = "";
+                        this._upperNoteLimitInputBox.value = String(instrument.upperNoteLimit);
+                        this._lowerNoteLimitInputBox.value = String(instrument.lowerNoteLimit);
+                    }
+                    else {
+                        this._upperNoteLimitRow.style.display = "none";
+                        this._lowerNoteLimitRow.style.display = "none";
+                        this._noteRangeContainer.style.display = "none";
+                    }
                     if (effectsIncludeReverb(instrument.effects)) {
                         this._reverbMixRow.style.display = "";
                         this._reverbDelayRow.style.display = "";
@@ -57057,6 +57383,10 @@ You should be redirected to the song at:<br /><br />
                     this._envelopeSpeedSlider.updateValue(instrument.envelopeSpeed);
                     this._envelopeSpeedSlider.input.title = "x" + prettyNumber(Config.arpSpeedScale[instrument.envelopeSpeed]);
                     this._envelopeSpeedDisplay.textContent = "x" + prettyNumber(Config.arpSpeedScale[instrument.envelopeSpeed]);
+                    this._upperNoteLimitRow.firstChild.textContent = "upper note limit [" + Piano.getPitchName((instrument.upperNoteLimit + Config.keys[this.doc.song.key].basePitch) % Config.pitchesPerOctave, instrument.upperNoteLimit, this.doc.song.octave, true)
+                        + "]:";
+                    this._lowerNoteLimitRow.firstChild.textContent = "lower note limit [" + Piano.getPitchName((instrument.lowerNoteLimit + Config.keys[this.doc.song.key].basePitch) % Config.pitchesPerOctave, instrument.lowerNoteLimit, this.doc.song.octave, true)
+                        + "]:";
                     if (instrument.type == 9) {
                         this._customWaveDrawCanvas.redrawCanvas();
                         if (this.prompt instanceof CustomChipPrompt) {
@@ -59389,6 +59719,8 @@ You should be redirected to the song at:<br /><br />
             this._unisonOffsetInputBox.addEventListener("input", () => { this.doc.record(new ChangeUnisonOffset(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].unisonOffset, Math.min(Config.unisonOffsetMax, Math.max(Config.unisonOffsetMin, +this._unisonOffsetInputBox.value)))); });
             this._unisonExpressionInputBox.addEventListener("input", () => { this.doc.record(new ChangeUnisonExpression(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].unisonExpression, Math.min(Config.unisonExpressionMax, Math.max(Config.unisonExpressionMin, +this._unisonExpressionInputBox.value)))); });
             this._unisonSignInputBox.addEventListener("input", () => { this.doc.record(new ChangeUnisonSign(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].unisonSign, Math.min(Config.unisonSignMax, Math.max(Config.unisonSignMin, +this._unisonSignInputBox.value)))); });
+            this._upperNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeUpperLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].upperNoteLimit, (Math.min(Config.maxPitch, Math.max(0.0, Math.round(+this._upperNoteLimitInputBox.value)))))); });
+            this._lowerNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeLowerLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].lowerNoteLimit, (Math.min(Config.maxPitch, Math.max(0.0, Math.round(+this._lowerNoteLimitInputBox.value)))))); });
             this._customWaveDraw.addEventListener("input", () => { this.doc.record(new ChangeCustomWave(this.doc, this._customWaveDrawCanvas.newArray)); });
             this._twoNoteArpBox.addEventListener("input", () => { this.doc.record(new ChangeFastTwoNoteArp(this.doc, this._twoNoteArpBox.checked)); });
             this._clicklessTransitionBox.addEventListener("input", () => { this.doc.record(new ChangeClicklessTransition(this.doc, this._clicklessTransitionBox.checked)); });
