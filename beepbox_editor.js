@@ -15189,6 +15189,11 @@ content: "";
 	font-weight: bold;
 }
 
+//.beepboxEditor select:hover {
+	//outline: 1px solid #fff;
+//}
+// This looks hella vibecoded wtf
+
 .select2-container .select2-selection--single {
   height: auto;
 }
@@ -22487,16 +22492,16 @@ li.select2-results__option[role=group] > strong:hover {
                 fromJummBox = true;
                 charIndex++;
             }
-            else if (variantTest == 0x61) {
-                fromUltraBox = true;
-                charIndex++;
-            }
             else if (variantTest == 0x73) {
                 fromSlarmoosBox = true;
                 charIndex++;
             }
             else if (variantTest == 0x70) {
                 from41Box = true;
+                charIndex++;
+            }
+            else if (variantTest == 0x61) {
+                fromUltraBox = true;
                 charIndex++;
             }
             else {
@@ -48194,18 +48199,6 @@ You should be redirected to the song at:<br /><br />
                     this._svgPlayhead.setAttribute("visibility", "visible");
                     this._svgBeathead.setAttribute("visibility", "hidden");
                     const modPlayhead = this._doc.synth.playhead - playheadBar;
-                    for (var i = 0; i < noteFlashElements.length; i++) {
-                        var element = noteFlashElements[i];
-                        const noteStart = Number(element.getAttribute("note-start")) / (this._doc.song.beatsPerBar * Config.partsPerBeat);
-                        const noteEnd = Number(element.getAttribute("note-end")) / (this._doc.song.beatsPerBar * Config.partsPerBeat);
-                        if ((modPlayhead >= noteStart) && this._doc.prefs.notesFlashWhenPlayed) {
-                            const dist = noteEnd - noteStart;
-                            element.style.opacity = String((1 - (((modPlayhead - noteStart) - (dist / 2)) / (dist / 2))));
-                        }
-                        else {
-                            element.style.opacity = "0";
-                        }
-                    }
                     let localPlayhead = this._doc.synth.playhead - (this._doc.bar + this._barOffset);
                     this.playheadX = localPlayhead;
                     if (Math.abs(modPlayhead - localPlayhead) > 0.1) {
@@ -51644,17 +51637,6 @@ You should be redirected to the song at:<br /><br />
 
     const themes = [
         {
-            group: "41Box Themes",
-            items: [
-                { id: "41box", name: "Inter Toxic" },
-                { id: "inter-energized", name: "Inter Energized" },
-                { id: "inter-nebula", name: "Inter Nebula" },
-                { id: "inter-autumn", name: "Inter Autumn" },
-                { id: "inter-forest", name: "Inter Forest" },
-                { id: "inter-moonlight", name: "Inter Moonlight" },
-            ]
-        },
-        {
             group: "BeepBox Themes",
             items: [
                 { id: "dark classic", name: "BeepBox Dark" },
@@ -51687,73 +51669,6 @@ You should be redirected to the song at:<br /><br />
                 { id: "slushie", name: "Slushie" },
             ],
         },
-        {
-            group: "ModBox Themes",
-            items: [
-                { id: "modbox classic", name: "Modbox" },
-                { id: "modbox 2", name: "Modbox 2.0" },
-                { id: "modbox arctic", name: "Arctic" },
-                { id: "modbox cinnamon", name: "Cinnamon Roll [!]" },
-                { id: "modbox ocean", name: "Ocean" },
-                { id: "modbox rainbow", name: "Rainbow [!]" },
-                { id: "modbox float", name: "Float [!]" },
-                { id: "modbox windows", name: "Windows" },
-                { id: "modbox grassland", name: "Grassland" },
-                { id: "modbox dessert", name: "Dessert" },
-                { id: "modbox kahoot", name: "Kahootiest" },
-                { id: "modbox bitbeam", name: "Beam to the Bit [!]" },
-                { id: "modbox egg", name: "Pretty Egg" },
-                { id: "modbox pony", name: "Poniryoshka" },
-                { id: "modbox gameboy", name: "Gameboy [!]" },
-                { id: "modbox woodkid", name: "Woodkid [!]" },
-                { id: "modbox midnight", name: "Midnight [!]" },
-                { id: "modbox snedbox", name: "Snedbox" },
-                { id: "modbox unnamed", name: "unnamed [!]" },
-                { id: "modbox halloween", name: "Halloween [!]" },
-                { id: "modbox frozen", name: "FrozenOver❄️ [!]" }
-            ]
-        },
-        {
-            group: "Mod Themes",
-            items: [
-                { id: "jummbox classic", name: "JummBox Classic" },
-                { id: "sandbox classic", name: "Sandbox" },
-                { id: "harrybox", name: "Haileybox" },
-                { id: "shitbox 2.0", name: "Shitbox 2.0" },
-                { id: "nerdbox", name: "Nerdbox" },
-                { id: "zefbox", name: "Zefbox" },
-                { id: "cardboardbox classic", name: "Cardboardbox" },
-                { id: "blubox classic", name: "Blubox" },
-                { id: "dogebox classic", name: "Dogebox" },
-                { id: "wackybox", name: "Wackybox" },
-                { id: "todbox dark mode", name: "Todbox Dark Mode" },
-                { id: "mainbox 1.0", name: "Mainbox" },
-                { id: "microbox", name: "MicroBox" },
-                { id: "paandorasbox", name: "PaandorasBox" },
-                { id: "foxbox", name: "FoxBox" },
-                { id: "midbox", name: "Midbox" },
-                { id: "dogebox2", name: "DogeBox2" },
-                { id: "abyssbox classic", name: "AbyssBox Classic" },
-                { id: "piano abyss", name: "AbyssBox Piano" },
-                { id: "slarmoosbox", name: "Slarmoo's Box" },
-                { id: "nepbox", name: "Nepbox" },
-                { id: "nepbox laffey", name: "Nepbox Laffey" },
-                { id: "ultrabox dark", name: "UltraBox" },
-                { id: "voxonium", name: "Voxonium" },
-                { id: "axobox", name: "AxoBox" },
-                { id: "lemmbox dark", name: "LemmBox" },
-                { id: "fmbox", name: "FMBox" },
-            ]
-        },
-        { group: "Light Themes",
-            items: [
-                { id: "inverse", name: "Inverse" },
-                { id: "roe light", name: "Roe Light" },
-                { id: "jummbox light", name: "JummBox Light" },
-                { id: "abyssbox light", name: "AbyssBox Light" },
-                { id: "light classic", name: "BeepBox Light" },
-            ]
-        }
     ];
 
     const { button: button$8, div: div$8, h2: h2$7, } = HTML;
@@ -54703,6 +54618,7 @@ You should be redirected to the song at:<br /><br />
     ];
     class PreferencesPrompt {
         constructor(_doc, _pattern, _pattern2, _pattern3) {
+            var _a, _b;
             this._doc = _doc;
             this._pattern = _pattern;
             this._pattern2 = _pattern2;
@@ -54887,7 +54803,13 @@ You should be redirected to the song at:<br /><br />
 				}
 			}`,
             });
-            this._themeSelect = select$1({ style: "width: 100%;" }, option$1({ value: "forest" }, "Forest"), option$1({ value: "canyon" }, "Canyon"), option$1({ value: "midnight" }, "Midnight"), option$1({ value: "beachcombing" }, "Beachcombing"), option$1({ value: "violet verdant" }, "Violet Verdant"), option$1({ value: "sunset" }, "Sunset"), option$1({ value: "autumn" }, "Autumn"), option$1({ value: "fruit" }, "Shadowfruit"), option$1({ value: "toxic" }, "Toxic"), option$1({ value: "roe" }, "Roe"), option$1({ value: "moonlight" }, "Moonlight"), option$1({ value: "portal" }, "Portal"), option$1({ value: "fusion" }, "Fusion"), option$1({ value: "nebula" }, "Nebula"), option$1({ value: "amoled dark" }, "High Contrast Dark"), option$1({ value: "energized" }, "Energized"), option$1({ value: "neapolitan" }, "Neapolitan"), option$1({ value: "poly" }, "Poly"), option$1({ value: "blutonium" }, "Blutonium"), option$1({ value: "greyscale" }, "Greyscale"), option$1({ value: "slushie" }, "Slushie"));
+            this._themeList = this._makeThemeList();
+            this._themeButtonText = div$2({ class: "themeButtonText" }, "cool theme button");
+            this._themeButton = button$2({ style: ` width:100%; display:flex; justify-content:space-between; align-items:center padding:6px 10px; box-sizing:border-box;` }, this._themeButtonText);
+            this._themeMenu = div$2({ style: `display:none; position:absolute; top:100%; left:0; width:100%; max-height:300px; overflow-y:auto; background:${ColorConfig.uiWidgetBackground}; border:1px solid ${ColorConfig.uiWidgetFocus}; border-radius:4px; box-sizing:border-box; z-index:10;` }, this._themeList);
+            this._previewFrame = null;
+            this._dropdownOpen = false;
+            this.lastTheme = window.localStorage.getItem("colorTheme");
             this._customThemeFileInput = input$2({ type: "file", accept: "image/*", text: "choose editor background image" });
             this._customThemeFileInput2 = input$2({ type: "file", accept: "image/*", text: "choose website background image" });
             this._colorInput = input$2({ type: "text", style: "width: auto" });
@@ -54923,7 +54845,7 @@ You should be redirected to the song at:<br /><br />
             this._recordingAreaButton = button$2({ class: "recordingAreaButton", style: "width:16%;" }, "Recording");
             this._keybindAreaButton = button$2({ class: "keybindAreaButton", style: "width:16%;" }, "Shortcuts");
             this._appearanceArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Appearance"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "fifth" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showFifth)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "third" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showThird)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Advanced Color Scheme:', div$2({ style: "width: 50%; text-align: center;" }, this._ACS)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Flash notes when played:', div$2({ style: "width: 50%; text-align: center;" }, this._notesFlashWhenPlayed)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Blur background while in prompt:"), div$2({ style: "width: 50%; text-align: center;" }, this._frostedGlassBackground)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show all channels:", div$2({ style: "width: 50%; text-align: center;" }, this._showChannels)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show instrument scrollbars:", div$2({ style: "width: 50%; text-align: center;" }, this._showInstrumentScrollbars)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument copy/paste buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentCopyPaste)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument import/export buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentImportExport)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument buttons at top:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentButtonsAtTop)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show piano keys:", div$2({ style: "width: 50%; text-align: center;" }, this._showLetters)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show volume bar:", div$2({ style: "width: 50%; text-align: center;" }, this._displayVolumeBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show oscilloscope:", div$2({ style: "width: 50%; text-align: center;" }, this._showOscilloscope)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show sample loading status:", div$2({ style: "width: 50%; text-align: center;" }, this._showSampleLoadingStatus)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show description:", div$2({ style: "width: 50%; text-align: center;" }, this._showDescription)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Rainbowify Song Loop:", div$2({ style: "width: 50%; text-align: center;" }, this._rainbowifyLoop))));
-            this._themeArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Theme"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Color palette:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._themeSelect)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Custom color palette data:", div$2({ style: "width: 50%; text-align: center;" }, this._colorInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Editor background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Website background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput2)), div$2({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._customThemeFileReset)));
+            this._themeArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Theme"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Color palette:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._themeButton, this._themeMenu)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Custom color palette data:", div$2({ style: "width: 50%; text-align: center;" }, this._colorInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Editor background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Website background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput2)), div$2({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._customThemeFileReset)));
             this._layoutArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Layout"), div$2({ style: "text-align: left;" }, h3({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "Layout"), div$2({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, div$2({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, ""), div$2({ style: "width: 90%; height: 30em; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._layoutForm), div$2({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "")), h2$1("Custom Layout"), p({ style: "text-align: left; margin: 0; margin-left: 1em; margin-bottom: 5px;" }, "Replace the text below with your custom layout data to load it:"), div$2({ style: "display: grid; place-items: center; margin: 0 20px;" }, this._layoutInput), div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._resetButton), div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" })));
             this._recordingArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Recording"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Always show recording button:", div$2({ style: "width: 50%; text-align: center;" }, this._showRecordButton)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Snap recorded notes to rhythm:"), div$2({ style: "width: 50%; text-align: center;" }, this._snapRecordedNotesToRhythm)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Ignore recorded notes outside of the scale:"), div$2({ style: "width: 50%; text-align: center;" }, this._ignorePerformedNotesNotInScale)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Recording keyboard layout:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardLayout)), div$2({ style: "display: flex; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._keyboardLayoutPreview), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 0.5em; height: 2em;" }, "Shortcut / Recording mode:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardMode)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable MIDI performance:", div$2({ style: "width: 50%; text-align: center;" }, this._enableMidi)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Record with metronome:", div$2({ style: "width: 50%; text-align: center;" }, this._metronomeWhileRecording)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Count-in recording with metronome:"), div$2({ style: "width: 50%; text-align: center;" }, this._metronomeCountIn)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Bass channel offset:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._bassOffset))));
             this._generalArea = div$2({ style: "overflow-y: visible; overflow-x: hidden;" }, h2$1("General"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Auto-play on load:", div$2({ style: "width: 50%; text-align: center;" }, this._autoPlay)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Automatically view current bar:", div$2({ style: "width: 50%; text-align: center;" }, this._autoFollow)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Hear preview of placed notes:", div$2({ style: "width: 50%; text-align: center;" }, this._enableNotePreview)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Place notes out of scale:", div$2({ style: "width: 50%; text-align: center;" }, this._notesOutsideScale)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Set default scale:", div$2({ style: "width: 50%; text-align: center;", class: "selectContainer" }, this._defaultScaleSelect)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Always use fine note volume:", div$2({ style: "width: 50%; text-align: center;" }, this._alwaysFineNoteVol)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable octave scroll bar:", div$2({ style: "width: 50%; text-align: center;" }, this._showScrollBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable channel muting:", div$2({ style: "width: 50%; text-align: center;" }, this._enableChannelMuting)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable song data in URL:", div$2({ style: "width: 50%; text-align: center;" }, this._displayBrowserUrl)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Close prompts on click-off:", div$2({ style: "width: 50%; text-align: center;" }, this._closePromptByClickoff)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Prompt song details on load:", div$2({ style: "width: 50%; text-align: center;" }, this._promptSongDetails))));
@@ -54987,7 +54909,7 @@ You should be redirected to the song at:<br /><br />
                 this._doc.prefs.promptSongDetails = this._promptSongDetails.checked;
                 this._doc.prefs.rainbowLoop = this._rainbowifyLoop.checked;
                 this._doc.prefs.layout = this._layoutForm.elements["layout"].value;
-                this._doc.prefs.colorTheme = this._themeSelect.value;
+                this._doc.prefs.colorTheme = this._selectedTheme;
                 this._newTheme = true;
                 this._doc.prefs.customColors = this._colorInput.value;
                 if (this._resetCustomTheme) {
@@ -55028,6 +54950,15 @@ You should be redirected to the song at:<br /><br />
                 this._close();
                 if (localStorage.getItem("customLayout") != this._layoutInput.value)
                     setTimeout(() => { window.location.reload(); }, 50);
+            };
+            this._clickOutside = (event) => {
+                const target = event.target;
+                if (this._themeMenu.contains(target) || this._themeButton.contains(target)) {
+                    return;
+                }
+                this._dropdownOpen = false;
+                this._themeMenu.style.display = "none";
+                ColorConfig.setTheme(this._selectedTheme);
             };
             this._renderAppearanceArea = (event) => {
                 event.preventDefault();
@@ -55126,14 +55057,10 @@ You should be redirected to the song at:<br /><br />
                     }
                 }
             };
-            this._previewTheme = () => {
-                ColorConfig.setTheme(this._themeSelect.value);
-                this._doc.prefs.customColors = "";
-            };
             this._whenColorsChanged = () => {
                 this._doc.prefs.customColors = this._colorInput.value;
                 this._doc.prefs.colorTheme = "custom";
-                this._themeSelect.value = "custom";
+                this._selectedTheme = "custom";
                 this._mustReload = true;
             };
             this._whenCustomThemeFileSelected = () => {
@@ -55246,9 +55173,6 @@ You should be redirected to the song at:<br /><br />
             this._promptSongDetails.checked = this._doc.prefs.promptSongDetails;
             this._rainbowifyLoop.checked = this._doc.prefs.rainbowLoop;
             this._layoutForm.elements["layout"].value = this._doc.prefs.layout;
-            if (this._lastTheme != null) {
-                this._themeSelect.value = this._lastTheme;
-            }
             this._colorInput.value = this._doc.prefs.customColors || "";
             this._autoPlay.checked = this._doc.prefs.autoPlay;
             this._autoFollow.checked = this._doc.prefs.autoFollow;
@@ -55280,7 +55204,22 @@ You should be redirected to the song at:<br /><br />
             this._customThemeFileInput2.addEventListener("change", this._whenCustomThemeFileSelected2);
             this._customThemeFileReset.addEventListener("click", this._resetCustomThemeFile);
             this._colorInput.addEventListener("change", this._whenColorsChanged);
-            this._themeSelect.addEventListener("change", this._previewTheme);
+            this._selectedTheme = (_a = this.lastTheme) !== null && _a !== void 0 ? _a : ColorConfig.defaultTheme;
+            const currentTheme = themes
+                .flatMap(group => group.items)
+                .find(theme => theme.id === this._selectedTheme);
+            this._themeButtonText.textContent = (_b = currentTheme === null || currentTheme === void 0 ? void 0 : currentTheme.name) !== null && _b !== void 0 ? _b : this._selectedTheme;
+            document.addEventListener("mousedown", this._clickOutside);
+            this._themeButton.addEventListener("click", () => {
+                this._dropdownOpen = !this._dropdownOpen;
+                this._themeMenu.style.display = this._dropdownOpen ? "" : "none";
+            });
+            this._themeMenu.addEventListener("mouseleave", () => {
+                var _a;
+                ColorConfig.setTheme(this._selectedTheme);
+                const selectedTheme = themes.flatMap(group => group.items).find(t => t.id === this._selectedTheme);
+                this._themeButtonText.textContent = (_a = selectedTheme === null || selectedTheme === void 0 ? void 0 : selectedTheme.name) !== null && _a !== void 0 ? _a : this._selectedTheme;
+            });
             this._appearanceAreaButton.addEventListener("click", this._renderAppearanceArea);
             this._themeAreaButton.addEventListener("click", this._renderThemeArea);
             this._layoutAreaButton.addEventListener("click", this._renderLayoutArea);
@@ -55292,6 +55231,53 @@ You should be redirected to the song at:<br /><br />
             this._okayButton.addEventListener("click", this._confirm);
             this._cancelButton.addEventListener("click", this._close);
             this.container.addEventListener("keydown", this._whenKeyPressed);
+        }
+        _makeThemeList() {
+            const themeContainer = HTML.div();
+            for (const group of themes) {
+                const groupContainer = HTML.div();
+                const heading = HTML.div({ style: ` display:flex; align-items:center; cursor:pointer; font-style:italic; font-weight:bold; font-size:13px; padding:4px 8px 4px 10px; user-select:none;` }, div$2({ style: "margin-left:6px;" }, group.group));
+                const itemsContainer = HTML.div();
+                for (const theme of group.items) {
+                    const item = HTML.div({ class: "themeItem", style: `font-weight: normal; font-size: 13px; padding: 4px 8px 4px 40px; text-align: left; cursor: pointer; user-select: none; ` }, theme.name);
+                    if (theme.id === this._selectedTheme) {
+                        item.classList.add("selected");
+                    }
+                    item.addEventListener("mouseenter", () => {
+                        this._themeButtonText.textContent = theme.name;
+                        item.style.background = "rgba(70, 120, 255, 0.5)";
+                        if (this._previewFrame != null) {
+                            cancelAnimationFrame(this._previewFrame);
+                        }
+                        this._previewFrame = requestAnimationFrame(() => {
+                            ColorConfig.setTheme(theme.id);
+                            this._previewFrame = null;
+                        });
+                    });
+                    item.addEventListener("mouseout", () => {
+                        var _a;
+                        item.style.background = "";
+                        if (this._previewFrame != null) {
+                            cancelAnimationFrame(this._previewFrame);
+                            this._previewFrame = null;
+                        }
+                        const selectedTheme = themes.flatMap(group => group.items).find(t => t.id === this._selectedTheme);
+                        this._themeButtonText.textContent = (_a = selectedTheme === null || selectedTheme === void 0 ? void 0 : selectedTheme.name) !== null && _a !== void 0 ? _a : this._selectedTheme;
+                    });
+                    item.addEventListener("click", () => {
+                        this._selectedTheme = theme.id;
+                        ColorConfig.setTheme(theme.id);
+                        this._themeButtonText.textContent = theme.name;
+                        themeContainer.querySelectorAll(".themeItem").forEach(el => el.classList.remove("selected"));
+                        item.classList.add("selected");
+                    });
+                    itemsContainer.appendChild(item);
+                }
+                groupContainer.appendChild(heading);
+                groupContainer.appendChild(itemsContainer);
+                themeContainer.appendChild(groupContainer);
+            }
+            return themeContainer;
         }
     }
 
