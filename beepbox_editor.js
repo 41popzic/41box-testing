@@ -834,7 +834,7 @@ var beepbox = (function (exports) {
     ]);
     Config.customUnisonIndex = 63;
     Config.effectNames = ["reverb", "chorus", "panning", "distortion", "bitcrusher", "note filter", "echo", "pitch shift", "detune", "vibrato", "transition type", "chord type", "note range", "ring mod", "granular", "flanger", "phaser"];
-    Config.effectOrder = [2, 10, 11, 12, 7, 8, 9, 5, 14, 3, 4, 1, 6, 0, 13, 15, 16];
+    Config.effectOrder = [2, 10, 11, 7, 8, 9, 5, 14, 3, 4, 1, 6, 0, 13, 12, 16, 15,];
     Config.noteSizeMax = 6;
     Config.volumeRange = 50;
     Config.volumeLogScale = 0.1428;
@@ -40556,6 +40556,9 @@ li.select2-results__option[role=group] > strong:hover {
         lastChangeWas(change) {
             return change != null && change == this._recentChange;
         }
+        renderChanges() {
+            this.notifier.changed();
+        }
         goBackToStart() {
             this.bar = 0;
             this.channel = 0;
@@ -44512,6 +44515,130 @@ You should be redirected to the song at:<br /><br />
             return this._oldValue;
         }
     }
+    class DoubleSlider {
+        constructor(_doc, _getChangeLeft, _getChangeRight, leftInitial, rightInitial, min, max, midTick) {
+            this._doc = _doc;
+            this._getChangeLeft = _getChangeLeft;
+            this._getChangeRight = _getChangeRight;
+            this.min = min;
+            this.max = max;
+            this._change = null;
+            this._valueLeft = 0;
+            this._oldValueLeft = 0;
+            this._valueRight = 0;
+            this._oldValueRight = 0;
+            this.mouseDown = 3;
+            this._mouseDown = (event) => {
+                if (this.mouseDown != 3)
+                    return;
+                this.mouseDown = 2;
+                this.container.setPointerCapture(event.pointerId);
+                this._oldValueLeft = this._valueLeft;
+                this._oldValueRight = this._valueRight;
+                const position = this.getValueFromMouse(event.clientX || event.pageX);
+                const midpoint = (this._valueLeft + this._valueRight) / 2;
+                if (position < midpoint || position < this._valueLeft) {
+                    this.mouseDown = 0;
+                }
+                else {
+                    this.mouseDown = 1;
+                }
+                this._handleChangeEvent(position);
+            };
+            this._mouseMove = (event) => {
+                if (this.mouseDown == 3)
+                    return;
+                this._handleChangeEvent(this.getValueFromMouse(event.clientX || event.pageX));
+            };
+            this._mouseUp = (event) => {
+                this.mouseDown = 3;
+                this.container.releasePointerCapture(event.pointerId);
+                if ((this._getChangeLeft != null || this._getChangeRight != null) && this._change != null) {
+                    if (this._change.isNoop())
+                        this._doc.renderChanges();
+                    this._doc.record(this._change);
+                    this._change = null;
+                }
+            };
+            this._valueLeft = leftInitial;
+            this._valueRight = rightInitial;
+            this._svg = SVG.svg({ style: `background-color: ${ColorConfig.editorBackground}; touch-action: none;`, width: "100%", height: "100%", viewBox: "0 -12 " + DoubleSlider.width + " 24", preserveAspectRatio: "none" });
+            this.bar = SVG.rect({ fill: ColorConfig.uiWidgetBackground, x: 0, y: -3, width: 113, height: 6 });
+            this.leftThumb = SVG.g();
+            this.rightThumb = SVG.g();
+            this.render();
+            this.container = span$7((midTick == 1) ? { class: "midTick", style: "position: sticky; width: 61.5%;" } : { style: "position: sticky; flex: 3" }, this._svg);
+            this.container.addEventListener("pointerdown", this._mouseDown);
+            this.container.addEventListener("pointermove", this._mouseMove);
+            this.container.addEventListener("pointerup", this._mouseUp);
+            this.container.addEventListener("pointercancel", this._mouseUp);
+        }
+        updateLeft(value, render = false) {
+            if (value <= this._valueRight) {
+                if (value >= this.min) {
+                    this._valueLeft = value;
+                    if (render)
+                        this.render();
+                }
+            }
+            return this;
+        }
+        updateRight(value, render = false) {
+            if (value >= this._valueLeft) {
+                if (value <= this.max) {
+                    this._valueRight = value;
+                    if (render)
+                        this.render();
+                }
+            }
+            return this;
+        }
+        getValueFromMouse(eventX) {
+            const boundingRect = this._svg.getBoundingClientRect();
+            let mouseX = (eventX - boundingRect.left) / (boundingRect.right - boundingRect.left);
+            if (isNaN(mouseX))
+                return this.min;
+            return Math.round(mouseX * (this.max - this.min)) + this.min;
+        }
+        _handleChangeEvent(position) {
+            if (this.mouseDown == 0 && this._getChangeLeft != null) {
+                this.updateLeft(position);
+                this._change = this._getChangeLeft(this._oldValueLeft, this._valueLeft);
+                if (this._change.isNoop())
+                    this._doc.renderChanges();
+                this._doc.setProspectiveChange(this._change);
+            }
+            else if (this.mouseDown == 1 && this._getChangeRight != null) {
+                this.updateRight(position);
+                this._change = this._getChangeRight(this._oldValueRight, this._valueRight);
+                if (this._change.isNoop())
+                    this._doc.renderChanges();
+                this._doc.setProspectiveChange(this._change);
+            }
+            this.render();
+        }
+        getLeftValueBeforeProspectiveChange() {
+            return this._oldValueLeft;
+        }
+        getRightValueBeforeProspectiveChange() {
+            return this._oldValueRight;
+        }
+        render() {
+            this.leftThumb.innerHTML = "";
+            this.rightThumb.innerHTML = "";
+            this.leftThumb.appendChild(this._thumb(this._valueLeft, true));
+            this.rightThumb.appendChild(this._thumb(this._valueRight, false));
+            this._svg.innerHTML = "";
+            this._svg.appendChild(this.bar);
+            this._svg.appendChild(this.leftThumb);
+            this._svg.appendChild(this.rightThumb);
+        }
+        _thumb(x, isLeft) {
+            const ratio = Math.floor(x / (this.max - this.min) * (DoubleSlider.width - 10)) + (isLeft ? 4.5 : 5.5);
+            return SVG.path({ d: `M ${ratio} -12 A 4 4 0 0 ${isLeft ? 0 : 1} ${ratio + (isLeft ? -4 : 4)} -8 L ${ratio + (isLeft ? -4 : 4)} 8 A 4 4 0 0 ${isLeft ? 0 : 1} ${ratio} 12 `, "fill": "currentColor" });
+        }
+    }
+    DoubleSlider.width = 113;
 
     const { span: span$6 } = HTML;
     const { svg, circle, line, path } = SVG;
@@ -56579,11 +56706,10 @@ You should be redirected to the song at:<br /><br />
             this._bitcrusherFreqSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.bitcrusherFreqRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeBitcrusherFreq(this.doc, oldValue, newValue), false);
             this._bitcrusherFreqRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("bitcrusherFreq") }, "freq-crush"), this._bitcrusherFreqSlider.container);
             this._bitcrusherContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "bitcrush"), this._bitcrusherQuantizationRow, this._bitcrusherFreqRow);
-            this._upperNoteLimitInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "upperNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
-            this._upperNoteLimitRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("upperNoteLimit") }, "upper note limit"), this._upperNoteLimitInputBox);
-            this._lowerNoteLimitInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "lowerNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
-            this._lowerNoteLimitRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("lowerNoteLimit") }, "lower note limit"), this._lowerNoteLimitInputBox);
-            this._noteRangeContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "note range"), this._upperNoteLimitRow, this._lowerNoteLimitRow);
+            this._noteRangeDoubSlider = new DoubleSlider(this.doc, (oldValue, newValue) => new ChangeLowerLimit(this.doc, oldValue, newValue), (oldValue, newValue) => new ChangeUpperLimit(this.doc, oldValue, newValue), 60, 60, 0, Config.maxPitch, 0);
+            this._noteRangeDoubSliderContainer = div({ style: "max-width: 9em" }, this._noteRangeDoubSlider.container);
+            this._noteRangeDoubRow = div({ style: "margin-top: 0.667em;", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("noteRange") }, "range"), this._noteRangeDoubSliderContainer);
+            this._noteRangeContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "note range"), this._noteRangeDoubRow);
             this._stringSustainSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.stringSustainRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeStringSustain(this.doc, oldValue, newValue), false);
             this._stringSustainLabel = span({ class: "tip", onclick: () => this._openPrompt("stringSustain") }, "sustain");
             this._stringSustainRow = div({ class: "selectRow" }, this._stringSustainLabel, this._stringSustainSlider.container);
@@ -57429,15 +57555,13 @@ You should be redirected to the song at:<br /><br />
                         this._phaserContainer.style.display = "none";
                     }
                     if (effectsIncludeNoteRange(instrument.effects)) {
-                        this._upperNoteLimitRow.style.display = "";
-                        this._lowerNoteLimitRow.style.display = "";
+                        this._noteRangeDoubRow.style.display = "";
                         this._noteRangeContainer.style.display = "";
-                        this._upperNoteLimitInputBox.value = String(instrument.upperNoteLimit);
-                        this._lowerNoteLimitInputBox.value = String(instrument.lowerNoteLimit);
+                        this._noteRangeDoubSlider.updateLeft(instrument.lowerNoteLimit, true);
+                        this._noteRangeDoubSlider.updateRight(instrument.upperNoteLimit, true);
                     }
                     else {
-                        this._upperNoteLimitRow.style.display = "none";
-                        this._lowerNoteLimitRow.style.display = "none";
+                        this._noteRangeDoubRow.style.display = "none";
                         this._noteRangeContainer.style.display = "none";
                     }
                     if (effectsIncludeReverb(instrument.effects)) {
@@ -57553,10 +57677,9 @@ You should be redirected to the song at:<br /><br />
                     this._envelopeSpeedSlider.updateValue(instrument.envelopeSpeed);
                     this._envelopeSpeedSlider.input.title = "x" + prettyNumber(Config.arpSpeedScale[instrument.envelopeSpeed]);
                     this._envelopeSpeedDisplay.textContent = "x" + prettyNumber(Config.arpSpeedScale[instrument.envelopeSpeed]);
-                    this._upperNoteLimitRow.firstChild.textContent = "upper note limit [" + Piano.getPitchName((instrument.upperNoteLimit + Config.keys[this.doc.song.key].basePitch) % Config.pitchesPerOctave, instrument.upperNoteLimit, this.doc.song.octave, true)
-                        + "]:";
-                    this._lowerNoteLimitRow.firstChild.textContent = "lower note limit [" + Piano.getPitchName((instrument.lowerNoteLimit + Config.keys[this.doc.song.key].basePitch) % Config.pitchesPerOctave, instrument.lowerNoteLimit, this.doc.song.octave, true)
-                        + "]:";
+                    this._noteRangeDoubRow.firstChild.textContent = "" + Piano.getPitchName((instrument.lowerNoteLimit + Config.keys[this.doc.song.key].basePitch) % Config.pitchesPerOctave, instrument.lowerNoteLimit, this.doc.song.octave, true)
+                        + "-" + Piano.getPitchName((instrument.upperNoteLimit + Config.keys[this.doc.song.key].basePitch) % Config.pitchesPerOctave, instrument.upperNoteLimit, this.doc.song.octave, true)
+                        + "";
                     if (instrument.type == 9) {
                         this._customWaveDrawCanvas.redrawCanvas();
                         if (this.prompt instanceof CustomChipPrompt) {
@@ -59889,8 +60012,6 @@ You should be redirected to the song at:<br /><br />
             this._unisonOffsetInputBox.addEventListener("input", () => { this.doc.record(new ChangeUnisonOffset(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].unisonOffset, Math.min(Config.unisonOffsetMax, Math.max(Config.unisonOffsetMin, +this._unisonOffsetInputBox.value)))); });
             this._unisonExpressionInputBox.addEventListener("input", () => { this.doc.record(new ChangeUnisonExpression(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].unisonExpression, Math.min(Config.unisonExpressionMax, Math.max(Config.unisonExpressionMin, +this._unisonExpressionInputBox.value)))); });
             this._unisonSignInputBox.addEventListener("input", () => { this.doc.record(new ChangeUnisonSign(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].unisonSign, Math.min(Config.unisonSignMax, Math.max(Config.unisonSignMin, +this._unisonSignInputBox.value)))); });
-            this._upperNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeUpperLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].upperNoteLimit, (Math.min(Config.maxPitch, Math.max(0.0, Math.round(+this._upperNoteLimitInputBox.value)))))); });
-            this._lowerNoteLimitInputBox.addEventListener("input", () => { this.doc.record(new ChangeLowerLimit(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].lowerNoteLimit, (Math.min(Config.maxPitch, Math.max(0.0, Math.round(+this._lowerNoteLimitInputBox.value)))))); });
             this._customWaveDraw.addEventListener("input", () => { this.doc.record(new ChangeCustomWave(this.doc, this._customWaveDrawCanvas.newArray)); });
             this._twoNoteArpBox.addEventListener("input", () => { this.doc.record(new ChangeFastTwoNoteArp(this.doc, this._twoNoteArpBox.checked)); });
             this._clicklessTransitionBox.addEventListener("input", () => { this.doc.record(new ChangeClicklessTransition(this.doc, this._clicklessTransitionBox.checked)); });
