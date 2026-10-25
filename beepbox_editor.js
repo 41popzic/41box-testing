@@ -15844,16 +15844,17 @@ content: "";
 }
 
 .beepboxEditor .effectContainer {
-	background: color-mix(in srgb, ${ColorConfig.editorBackground} 50%, black);
+	background: color-mix(in srgb, ${ColorConfig.editorBackground} 95%, grey);
 	//border: 1px solid color-mix(in srgb, ${ColorConfig.blackPianoKey} 40%, transparent);
-	border-radius: 6px;
-	margin: 4px 0;
+	border-radius: 2px;
+	margin: 2px -6px;
 	padding: 0.667em 0.5em !important
 }
 
 .beepboxEditor .effectTitle {
-	color: ${ColorConfig.pitchChannels};
+	color: currentColor;
 	font-weight: 1000;
+	margin: -3px 0;
 }
 
 .beepboxEditor .knobContainer {
@@ -15909,7 +15910,7 @@ content: "";
 	fill: none;
 }
 
-.beepboxEditor .miniBox:not(:hover) {
+.beepboxEditor .arrowsOnHover:not(:hover) {
 	appearance: textfield;
 }
 
@@ -32806,6 +32807,7 @@ li.select2-results__option[role=group] > strong:hover {
             this.visibleOctaves = (window.localStorage.getItem("visibleOctaves") >>> 0) || Preferences.defaultVisibleOctaves;
             this.selectiveRandom.fromJsonObject(JSON.parse(window.localStorage.getItem("selectiveRandom") || "{}"));
             this.selectivePaste.fromJsonObject(JSON.parse(window.localStorage.getItem("selectivePaste") || "{}"));
+            this.collapseEffectsOnLoad = window.localStorage.getItem("collapseEffectsOnLoad") == "true";
             const defaultScale = Config.scales.dictionary[window.localStorage.getItem("defaultScale")];
             this.defaultScale = (defaultScale != undefined) ? defaultScale.index : 1;
             if (window.localStorage.getItem("volume") != null) {
@@ -32864,6 +32866,7 @@ li.select2-results__option[role=group] > strong:hover {
             window.localStorage.setItem("visibleOctaves", String(this.visibleOctaves));
             window.localStorage.setItem("selectiveRandom", this.selectiveRandom.toJsonObject());
             window.localStorage.setItem("selectivePaste", this.selectivePaste.toJsonObject());
+            window.localStorage.setItem("collapseEffectsOnLoad", this.collapseEffectsOnLoad ? "true" : "false");
         }
     }
     Preferences.defaultVisibleOctaves = 3;
@@ -55168,6 +55171,7 @@ You should be redirected to the song at:<br /><br />
             this._showDescription = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
             this._rainbowifyLoop = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
             this._promptSongDetails = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
+            this._collapseEffectsOnLoad = input$2({ style: "width: 2em; margin-left: 1em;", type: "checkbox" });
             this._layoutForm = form({ style: "display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; text-align: center;" }, label({ class: "layout-option" }, input$2({ type: "radio", name: "layout", value: "small" }), SVG(`\
 			  <svg viewBox="-4 -1 28 22">
 			  <rect x="0" y="0" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1"/>
@@ -55372,7 +55376,7 @@ You should be redirected to the song at:<br /><br />
             this._generalAreaButton = button$2({ class: "generalAreaButton", style: "width:6em; height:3em" }, "General");
             this._recordingAreaButton = button$2({ class: "recordingAreaButton", style: "width:6em; height:3em" }, "Recording");
             this._keybindAreaButton = button$2({ class: "keybindAreaButton", style: "width:6em; height:3em" }, "Shortcuts");
-            this._appearanceArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Appearance"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "fifth" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showFifth)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "third" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showThird)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Advanced Color Scheme:', div$2({ style: "width: 50%; text-align: center;" }, this._ACS)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Flash notes when played:', div$2({ style: "width: 50%; text-align: center;" }, this._notesFlashWhenPlayed)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Blur background while in prompt:"), div$2({ style: "width: 50%; text-align: center;" }, this._frostedGlassBackground)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show all channels:", div$2({ style: "width: 50%; text-align: center;" }, this._showChannels)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show instrument scrollbars:", div$2({ style: "width: 50%; text-align: center;" }, this._showInstrumentScrollbars)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument copy/paste buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentCopyPaste)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument import/export buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentImportExport)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument buttons at top:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentButtonsAtTop)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show piano keys:", div$2({ style: "width: 50%; text-align: center;" }, this._showLetters)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show volume bar:", div$2({ style: "width: 50%; text-align: center;" }, this._displayVolumeBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show oscilloscope:", div$2({ style: "width: 50%; text-align: center;" }, this._showOscilloscope)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show sample loading status:", div$2({ style: "width: 50%; text-align: center;" }, this._showSampleLoadingStatus)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show description:", div$2({ style: "width: 50%; text-align: center;" }, this._showDescription)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Rainbowify Song Loop:", div$2({ style: "width: 50%; text-align: center;" }, this._rainbowifyLoop))));
+            this._appearanceArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Appearance"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "fifth" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showFifth)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Highlight "third" note:', div$2({ style: "width: 50%; text-align: center;" }, this._showThird)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Advanced Color Scheme:', div$2({ style: "width: 50%; text-align: center;" }, this._ACS)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, 'Flash notes when played:', div$2({ style: "width: 50%; text-align: center;" }, this._notesFlashWhenPlayed)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Blur background while in prompt:"), div$2({ style: "width: 50%; text-align: center;" }, this._frostedGlassBackground)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show all channels:", div$2({ style: "width: 50%; text-align: center;" }, this._showChannels)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show instrument scrollbars:", div$2({ style: "width: 50%; text-align: center;" }, this._showInstrumentScrollbars)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument copy/paste buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentCopyPaste)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument import/export buttons:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentImportExport)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Show instrument buttons at top:"), div$2({ style: "width: 50%; text-align: center;" }, this._instrumentButtonsAtTop)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show piano keys:", div$2({ style: "width: 50%; text-align: center;" }, this._showLetters)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show volume bar:", div$2({ style: "width: 50%; text-align: center;" }, this._displayVolumeBar)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show oscilloscope:", div$2({ style: "width: 50%; text-align: center;" }, this._showOscilloscope)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show sample loading status:", div$2({ style: "width: 50%; text-align: center;" }, this._showSampleLoadingStatus)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Show description:", div$2({ style: "width: 50%; text-align: center;" }, this._showDescription)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Rainbowify Song Loop:", div$2({ style: "width: 50%; text-align: center;" }, this._rainbowifyLoop)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Collapse Effects on Load:", div$2({ style: "width: 50%; text-align: center;" }, this._collapseEffectsOnLoad))));
             this._themeArea = div$2({ style: "min-width: 100%; display: none; overflow: visible;" }, h2$1("Theme"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Color theme:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._themeButton, this._themeMenu)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Custom color theme data:", div$2({ style: "width: 50%; text-align: center;" }, this._colorInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Editor background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Website background image:"), div$2({ style: "width: 50%; text-align: center;" }, this._customThemeFileInput2)), div$2({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._customThemeFileReset)));
             this._layoutArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Layout"), div$2({ style: "text-align: left;" }, h3({ style: "text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "Layout"), div$2({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, div$2({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, ""), div$2({ style: "width: 90%; height: 30em; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._layoutForm), div$2({ style: "width: 10%; text-align: center; margin-top: 0.5em; margin-bottom: 0.5em;" }, "")), h2$1("Custom Layout"), p({ style: "text-align: left; margin: 0; margin-left: 1em; margin-bottom: 5px;" }, "Replace the text below with your custom layout data to load it:"), div$2({ style: "display: grid; place-items: center; margin: 0 20px;" }, this._layoutInput), div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" }, this._resetButton), div$2({ style: "display: flex; flex-direction: row-reverse; justify-content: space-between;" })));
             this._recordingArea = div$2({ style: "display: none; overflow-y: visible; overflow-x: hidden;" }, h2$1("Recording"), div$2({ style: "text-align: left;" }, label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Always show recording button:", div$2({ style: "width: 50%; text-align: center;" }, this._showRecordButton)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Snap recorded notes to rhythm:"), div$2({ style: "width: 50%; text-align: center;" }, this._snapRecordedNotesToRhythm)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Ignore recorded notes outside of the scale:"), div$2({ style: "width: 50%; text-align: center;" }, this._ignorePerformedNotesNotInScale)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Recording keyboard layout:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardLayout)), div$2({ style: "display: flex; margin-top: 0.5em; margin-bottom: 0.5em;" }, this._keyboardLayoutPreview), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 0.5em; height: 2em;" }, "Shortcut / Recording mode:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._keyboardMode)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Enable MIDI performance:", div$2({ style: "width: 50%; text-align: center;" }, this._enableMidi)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Record with metronome:", div$2({ style: "width: 50%; text-align: center;" }, this._metronomeWhileRecording)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, div$2({ style: "width: 50%;" }, "Count-in recording with metronome:"), div$2({ style: "width: 50%; text-align: center;" }, this._metronomeCountIn)), label({ style: "display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 0.5em; margin-bottom: 0.5em; height: 2em;" }, "Bass channel offset:", div$2({ class: "selectContainer", style: "width: 50%; text-align: center;" }, this._bassOffset))));
@@ -55440,6 +55444,7 @@ You should be redirected to the song at:<br /><br />
                 this._doc.prefs.showDescription = this._showDescription.checked;
                 this._doc.prefs.promptSongDetails = this._promptSongDetails.checked;
                 this._doc.prefs.rainbowLoop = this._rainbowifyLoop.checked;
+                this._doc.prefs.collapseEffectsOnLoad = this._collapseEffectsOnLoad.checked;
                 this._doc.prefs.layout = this._layoutForm.elements["layout"].value;
                 this._doc.prefs.colorTheme = this._selectedTheme;
                 this._newTheme = true;
@@ -55480,8 +55485,7 @@ You should be redirected to the song at:<br /><br />
                 this._doc.prefs.save();
                 Layout.setLayout(this._doc.prefs.layout);
                 this._close();
-                if (localStorage.getItem("customLayout") != this._layoutInput.value)
-                    setTimeout(() => { window.location.reload(); }, 50);
+                setTimeout(() => { window.location.reload(); }, 50);
             };
             this._clickOutside = (event) => {
                 const target = event.target;
@@ -55723,6 +55727,7 @@ You should be redirected to the song at:<br /><br />
             this._showDescription.checked = this._doc.prefs.showDescription;
             this._promptSongDetails.checked = this._doc.prefs.promptSongDetails;
             this._rainbowifyLoop.checked = this._doc.prefs.rainbowLoop;
+            this._collapseEffectsOnLoad.checked = this._doc.prefs.collapseEffectsOnLoad;
             this._layoutForm.elements["layout"].value = this._doc.prefs.layout;
             this._colorInput.value = this._doc.prefs.customColors || "";
             this._autoPlay.checked = this._doc.prefs.autoPlay;
@@ -56526,30 +56531,34 @@ You should be redirected to the song at:<br /><br />
             this._buttonsRow = div({ style: "display: flex; width: 100%; gap: 2%;" }, this._newSong, this._import);
             this._scaleSelect = select();
             this._keySelect = buildOptions(select(), Config.keys.map(key => key.name).reverse());
-            this._octaveStepper = input({ style: "width: 3em;", type: "number", min: Config.octaveMin, max: Config.octaveMax, value: "0" });
+            this._octaveStepper = input({ class: "arrowsOnHover", style: "width: 3em;", type: "number", min: Config.octaveMin, max: Config.octaveMax, value: "0" });
             this._tempoSlider = new Slider(input({ style: "margin: 0; vertical-align: middle;", type: "range", min: "1", max: "500", value: "160", step: "1" }), this.doc, (oldValue, newValue) => new ChangeTempo(this.doc, oldValue, newValue), false);
-            this._tempoStepper = input({ style: "width: 4em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", type: "number", step: "1" });
+            this._tempoStepper = input({ class: "arrowsOnHover", style: "width: 4em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", type: "number", step: "1" });
             this._songEqFilterEditor = new FilterEditor(this.doc, false, false, true);
             this._songEqFilterZoom = button({ style: "margin-left:0em; padding-left:0.2em; height:1.5em; max-width: 12px;", onclick: () => this._openPrompt("customSongEQFilterSettings") }, "+");
-            this._rhythmInput = input({ type: "number", min: "1", max: "32", style: "width: 5em;" });
+            this._rhythmInput = input({ class: "arrowsOnHover", type: "number", min: "1", max: "32", style: "width: 5em;" });
             this._rhythmActionSelect = select({ type: "button", style: "width: 1.7em; height: 1.7em; margin-left: 5px;", }, "");
             this._rhythmActionOption = option({ value: "toggleRhythm" }, "disable subgrid");
             this._favoriteRhythmOption = option({ value: "toggleFavoriteRhythm" }, "add current division to favorites");
             this._rhythmDisabledLabel = span({ style: ` position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; display: none; color: currentColor; font-style: italic; ` }, "(disabled)");
             this._favoriteRhythms = [];
             this._favoriteRhythmGroup = optgroup({ label: "favorites" });
-            this._panSlider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: Config.panMax, value: Config.panCenter, step: "1" }), this.doc, (oldValue, newValue) => new ChangePan(this.doc, oldValue, newValue), true);
             this._panKnob = new Knob(0, Config.panMax, 1, Config.panCenter, true, this.doc, (oldValue, newValue) => new ChangePan(this.doc, oldValue, newValue), [0, 50, 100]);
-            this._panDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(1) }, "▼");
-            this._panSliderInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "panSliderInputBox", type: "number", step: "1", min: "0", max: "100", value: "0" });
-            this._panKnobRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, div({}, span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("pan") }, "pan "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._panSliderInputBox)), this._panDropdown, this._panKnob.container);
+            this._panDropdown = button({ style: "margin-top: 0em; margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(1) }, "▼");
+            this._panKnobInputBox = input({ class: "arrowsOnHover", style: "width: 4em; font-size: 80%; margin-bottom: 2em", id: "panSliderInputBox", type: "number", step: "1", min: "0", max: "100", value: "0" });
+            this._panKnobInputBoxRow = div({ style: "display: flex; flex-direction: column;" }, this._panKnob.container, this._panKnobInputBox);
+            this._panKnobRow = div({ style: "margin-top: 2.367em", class: "selectRow" }, div(span({ class: "tip", tabindex: "0", style: "height:0em; font-size: smaller;", onclick: () => this._openPrompt("pan") }, "controls")), this._panDropdown, this._panKnobInputBoxRow);
             this._panDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.modulators.dictionary["pan delay"].maxRawVol, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePanDelay(this.doc, oldValue, newValue), false);
-            this._panDelayRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("panDelay") }, "‣ delay"), this._panDelaySlider.container);
+            this._panDelayRow = div({ style: "margin-top: 1.667em", class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("panDelay") }, "‣ delay"), this._panDelaySlider.container);
             this._panDropdownGroup = div({ class: "editor-controls-alt", style: "display: none;" }, this._panDelayRow);
-            this._panContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "panning"), this._panKnobRow, this._panDropdownGroup);
+            this._panPreContainer = div({ style: "display: flex; flex-direction: column" }, this._panKnobRow, this._panDropdownGroup);
+            this._panTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "panning");
+            this._panContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em; padding: 2em;" }, this._panTitle, this._panPreContainer);
             this._chorusSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.chorusRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeChorus(this.doc, oldValue, newValue), false);
             this._chorusRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chorusMix") }, "mix"), this._chorusSlider.container);
-            this._chorusContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "chorus"), this._chorusRow);
+            this._chorusTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "chorus");
+            this._chorusPreContainer = div({ style: "display: flex; flex-direction: column" }, this._chorusRow);
+            this._chorusContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._chorusTitle), this._chorusPreContainer);
             this.reverbDelayNum = div({ style: "font-size: 80%; ", id: "reverbDelayNum" });
             this.reverbShelfHzNum = div({ style: "font-size: 80%; ", id: "reverbShelfHzNum" });
             this.reverbShelfGainNum = div({ style: "font-size: 80%; ", id: "reverbShelfGainnum" });
@@ -56561,7 +56570,9 @@ You should be redirected to the song at:<br /><br />
             this._reverbShelfHzRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex;  text-align: left; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("reverbShelf") }, "shelf hz. "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.reverbShelfHzNum)), this._reverbShelfHzSlider.container);
             this._reverbShelfGainSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.reverbShelfGainRange - 0, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeReverbShelfGain(this.doc, oldValue, newValue), false);
             this._reverbShelfGainRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex;  text-align: left; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("reverbShelf") }, "shelf gain "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.reverbShelfGainNum)), this._reverbShelfGainSlider.container);
-            this._reverbContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "reverb"), this._reverbMixRow, this._reverbDelayRow, this._reverbShelfHzRow, this._reverbShelfGainRow);
+            this._reverbTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "reverb");
+            this._reverbPreContainer = div({ style: "display: flex; flex-direction: column" }, this._reverbMixRow, this._reverbDelayRow, this._reverbShelfHzRow, this._reverbShelfGainRow);
+            this._reverbContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._reverbTitle), this._reverbPreContainer);
             this._ringModWaveSelect = buildOptions(select({}), Config.operatorWaves.map(wave => wave.name));
             this._ringModPulsewidthSlider = new Slider(input({ style: "margin-left: 10px; width: 85%;", type: "range", min: "0", max: Config.pwmOperatorWaves.length - 1, value: "0", step: "1", title: "pulse width" }), this.doc, (oldValue, newValue) => new ChangeRingModPulseWidth(this.doc, oldValue, newValue), true);
             this._ringModSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.ringModRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeRingMod(this.doc, oldValue, newValue), false);
@@ -56572,7 +56583,9 @@ You should be redirected to the song at:<br /><br />
             this._ringModWaveText = span({ class: "tip", onclick: () => this._openPrompt("ringModChipWave") }, "wave ");
             this._ringModWaveSelectRow = div({ class: "selectRow", style: "width: 100%;" }, this._ringModWaveText, this._ringModPulsewidthSlider.container, div({ class: "selectContainer", style: "width:40%;" }, this._ringModWaveSelect));
             this._ringModContainerRow = div({ class: "", style: "display:flex; flex-direction:column;" }, this._ringModRow, this._ringModHzSliderRow, this._ringModWaveSelectRow);
-            this._ringModContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "ring modulation"), this._ringModContainerRow);
+            this._ringModPreContainer = div({ style: "display: flex; flex-direction: column" }, this._ringModContainerRow);
+            this._ringModTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "ring modulation");
+            this._ringModContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._ringModTitle), this._ringModPreContainer);
             this._granularSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.granularRange, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeGranular(this.doc, oldValue, newValue), false);
             this._granularRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("granularMix") }, "mix "), this._granularSlider.container);
             this._grainSizeSlider = new Slider(input({ style: "margin: 0;", type: "range", min: Config.grainSizeMin / Config.grainSizeStep, max: Config.grainSizeMax / Config.grainSizeStep, value: Config.grainSizeMin / Config.grainSizeStep, step: "1" }), this.doc, (oldValue, newValue) => new ChangeGrainSize(this.doc, oldValue, newValue), false);
@@ -56584,13 +56597,17 @@ You should be redirected to the song at:<br /><br />
             this.grainRangeNum = div({ style: "font-size: 80%; ", id: "grainRangeNum" });
             this._grainRangeSliderRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("grainRange") }, "range "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.grainRangeNum)), this._grainRangeSlider.container);
             this._granularContainerRow = div({ class: "", style: "display:flex; flex-direction:column;" }, this._granularRow, this._grainAmountsRow, this._grainSizeSliderRow, this._grainRangeSliderRow);
-            this._granularContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "granular"), this._granularContainerRow);
+            this._granularTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "granular");
+            this._granularPreContainer = div({ style: "display: flex; flex-direction: column" }, this._granularContainerRow);
+            this._granularContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._granularTitle), this._granularPreContainer);
             this.echoDelayNum = div({ style: "font-size: 80%; ", id: "echoDelayNum" });
             this._echoSustainSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.echoSustainRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEchoSustain(this.doc, oldValue, newValue), false);
             this._echoSustainRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("echoSustain") }, "mix"), this._echoSustainSlider.container);
             this._echoDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.echoDelayRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEchoDelay(this.doc, oldValue, newValue), true);
             this._echoDelayRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: small;", onclick: () => this._openPrompt("echoDelay") }, "delay "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.echoDelayNum)), this._echoDelaySlider.container);
-            this._echoContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "echo"), this._echoSustainRow, this._echoDelayRow);
+            this._echoPreContainer = div({ style: "display: flex; flex-direction: column" }, this._echoSustainRow, this._echoDelayRow);
+            this._echoTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "echo");
+            this._echoContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._echoTitle), this._echoPreContainer);
             this.flangerRateNum = div({ style: "font-size: 80%;", id: "flangerRateNum" });
             this.flangerDelayNum = div({ style: "font-size: 80%;", id: "flangerDelayNum" });
             this.flangerDepthNum = div({ style: "font-size: 80%;", id: "flangerDepthNum" });
@@ -56604,7 +56621,9 @@ You should be redirected to the song at:<br /><br />
             this._flangerRateRow = div({ class: "selectRow" }, span({ style: "text-align: left", class: "tip", onclick: () => this._openPrompt("flangerRate"), }, span("rate "), div({ style: `color: ${ColorConfig.secondaryText};` }, this.flangerRateNum)), this._flangerRateSlider.container);
             this._flangerFeedbackSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.flangerFeedbackRange - 1, value: "0", step: "1", }), this.doc, (oldValue, newValue) => new ChangeFlangerFeedback(this.doc, oldValue, newValue), false);
             this._flangerFeedbackRow = div({ class: "selectRow" }, span({ style: "text-align: left", class: "tip", onclick: () => this._openPrompt("flangerFeedback"), }, span("feedback")), this._flangerFeedbackSlider.container);
-            this._flangerContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "flanger"), this._flangerMixRow, this._flangerDelayRow, this._flangerDepthRow, this._flangerRateRow, this._flangerFeedbackRow);
+            this._flangerPreContainer = div({ style: "display: flex; flex-direction: column" }, this._flangerMixRow, this._flangerDelayRow, this._flangerDepthRow, this._flangerRateRow, this._flangerFeedbackRow);
+            this._flangerTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "flanger");
+            this._flangerContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._flangerTitle), this._flangerPreContainer);
             this._phaserMixSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.phaserMixRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePhaserMix(this.doc, oldValue, newValue), false);
             this._phaserMixRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaserMix") }, span("mix")), this._phaserMixSlider.container);
             this._phaserFreqSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.phaserFreqRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePhaserFreq(this.doc, oldValue, newValue), false);
@@ -56613,7 +56632,9 @@ You should be redirected to the song at:<br /><br />
             this._phaserFeedbackRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaserFeedback") }, span(" feedback")), this._phaserFeedbackSlider.container);
             this._phaserStagesSlider = new Slider(input({ style: "margin: 0;", type: "range", min: Config.phaserMinStages, max: Config.phaserMaxStages, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangePhaserStages(this.doc, oldValue, newValue), false);
             this._phaserStagesRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("phaserStages") }, span(" stages")), this._phaserStagesSlider.container);
-            this._phaserContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "phaser"), this._phaserMixRow, this._phaserFreqRow, this._phaserFeedbackRow, this._phaserStagesRow);
+            this._phaserPreContainer = div({ style: "display: flex; flex-direction: column" }, this._phaserMixRow, this._phaserFreqRow, this._phaserFeedbackRow, this._phaserStagesRow);
+            this._phaserTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "phaser");
+            this._phaserContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._phaserTitle), this._phaserPreContainer);
             this._pitchedPresetSelect = buildPresetOptions(false, "pitchPresetSelect");
             this._drumPresetSelect = buildPresetOptions(true, "drumPresetSelect");
             this._algorithmSelect = buildOptions(select(), Config.algorithms.map(algorithm => algorithm.name));
@@ -56624,8 +56645,8 @@ You should be redirected to the song at:<br /><br />
             this._instrumentsButtonBar = div({ class: "instrument-bar" }, this._instrumentRemoveButton, this._instrumentAddButton);
             this._instrumentsButtonRow = div({ class: "selectRow", style: "display: none;" }, span({ class: "tip", onclick: () => this._openPrompt("instrumentIndex") }, "instrument"), this._instrumentsButtonBar);
             this._instrumentVolumeSlider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: Math.floor(-Config.volumeRange / 2), max: Math.floor(Config.volumeRange / 2), value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeVolume(this.doc, oldValue, newValue), true);
-            this._instrumentVolumeSliderInputBox = input({ style: "width: 4em; font-size: 80%", id: "volumeSliderInputBox", type: "number", step: "1", min: Math.floor(-Config.volumeRange / 2), max: Math.floor(Config.volumeRange / 2), value: "0" });
-            this._instrumentVolumeSliderTip = div({ class: "selectRow", style: "height: 1em" }, span({ class: "tip", style: "font-size: smaller;", onclick: () => this._openPrompt("instrumentVolume") }, "volume: "));
+            this._instrumentVolumeSliderInputBox = input({ class: "arrowsOnHover", style: "width: 4em; font-size: 80%", id: "volumeSliderInputBox", type: "number", step: "1", min: Math.floor(-Config.volumeRange / 2), max: Math.floor(Config.volumeRange / 2), value: "0" });
+            this._instrumentVolumeSliderTip = div({ class: "selectRow", style: "height: 1em" }, span({ class: "tip", style: "font-size: smaller;", onclick: () => this._openPrompt("instrumentVolume") }, "volume "));
             this._instrumentVolumeSliderRow = div({ class: "selectRow" }, div({}, div({ style: `color: ${ColorConfig.secondaryText};` }, span({ class: "tip" }, this._instrumentVolumeSliderTip)), div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._instrumentVolumeSliderInputBox)), this._instrumentVolumeSlider.container);
             this._chipWaveSelect = buildOptions(select(), Config.chipWaves.map(wave => wave.name));
             this._chipNoiseSelect = buildOptions(select(), Config.chipNoises.map(wave => wave.name));
@@ -56656,7 +56677,9 @@ You should be redirected to the song at:<br /><br />
             this._slideSpeedSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "1", max: Config.maxSlideTicks, value: "3", step: "1" }), this.doc, (oldValue, newValue) => new ChangeSlideSpeed(this.doc, oldValue, newValue), false);
             this._slideSpeedRow = div({ class: "selectRow" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("slideSpeedSlider") }, "‣ spd"), this._slideSpeedDisplay, this._slideSpeedSlider.container);
             this._transitionDropdownGroup = div({ class: "editor-controls-alt", style: "display: none;" }, this._slideSpeedRow, this._clicklessTransitionRow);
-            this._transitionContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "transition"), this._transitionRow, this._transitionDropdownGroup);
+            this._transitionPreContainer = div({ style: "display: flex; flex-direction: column;" }, this._transitionRow, this._transitionDropdownGroup);
+            this._transitionTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "transition");
+            this._transitionContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._transitionTitle), this._transitionPreContainer);
             this._effectsSelect = select(option({ selected: true, disabled: true, hidden: false }));
             this._eqFilterSimpleButton = button({ style: "font-size: x-small; width: 50%; height: 40%", class: "no-underline", onclick: () => this._switchEQFilterType(true) }, "noob");
             this._eqFilterAdvancedButton = button({ style: "font-size: x-small; width: 50%; height: 40%", class: "last-button no-underline", onclick: () => this._switchEQFilterType(false) }, "pro");
@@ -56678,7 +56701,9 @@ You should be redirected to the song at:<br /><br />
             this._noteFilterSimpleCutRow = div({ class: "selectRow", title: "low-pass filter cutoff frequency" }, span({ class: "tip", onclick: () => this._openPrompt("filterCutoff") }, "filter cut"), this._noteFilterSimpleCutSlider.container);
             this._noteFilterSimplePeakSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.filterSimplePeakRange - 1, value: "6", step: "1" }), this.doc, (oldValue, newValue) => new ChangeNoteFilterSimplePeak(this.doc, oldValue, newValue), false);
             this._noteFilterSimplePeakRow = div({ class: "selectRow", title: "low-pass filter peak resonance" }, span({ class: "tip", onclick: () => this._openPrompt("filterResonance") }, "filter peak"), this._noteFilterSimplePeakSlider.container);
-            this._noteFilterContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em;" }, span({ class: "effectTitle" }, "note filter"), this._noteFilterTypeRow, this._noteFilterRow, this._noteFilterSimpleCutRow, this._noteFilterSimplePeakRow);
+            this._noteFilterPreContainer = div({ style: "display: flex; flex-direction: column" }, this._noteFilterTypeRow, this._noteFilterRow, this._noteFilterSimpleCutRow, this._noteFilterSimplePeakRow);
+            this._noteFilterTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "note filter");
+            this._noteFilterContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em;" }, span(this._noteFilterTitle), this._noteFilterPreContainer);
             this._supersawDynamismSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.supersawDynamismMax, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeSupersawDynamism(this.doc, oldValue, newValue), false);
             this._supersawDynamismRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("supersawDynamism") }, "dynamism"), this._supersawDynamismSlider.container);
             this._supersawSpreadSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.supersawSpreadMax, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeSupersawSpread(this.doc, oldValue, newValue), false);
@@ -56687,56 +56712,66 @@ You should be redirected to the song at:<br /><br />
             this._supersawShapeRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("supersawShape"), style: "overflow: clip;" }, "saw-pulse"), this._supersawShapeSlider.container);
             this._pulseWidthSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "1", max: Config.pulseWidthRange, value: "1", step: "1" }), this.doc, (oldValue, newValue) => new ChangePulseWidth(this.doc, oldValue, newValue), false);
             this._pulseWidthDropdown = button({ style: "margin-left:53px; position: absolute; margin-top: 15px; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(5) }, "▼");
-            this._pwmSliderInputBox = input({ style: "width: 4em; font-size: 70%;", id: "pwmSliderInputBox", type: "number", step: "1", min: "1", max: Config.pulseWidthRange, value: "1" });
+            this._pwmSliderInputBox = input({ class: "arrowsOnHover", style: "width: 4em; font-size: 70%;", id: "pwmSliderInputBox", type: "number", step: "1", min: "1", max: Config.pulseWidthRange, value: "1" });
             this._pulseWidthRow = div({ class: "selectRow" }, div({}, span({ class: "tip", tabindex: "0", style: "height:1em; font-size: smaller; white-space: nowrap;", onclick: () => this._openPrompt("pulseWidth") }, "pulse width"), div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._pwmSliderInputBox)), this._pulseWidthDropdown, this._pulseWidthSlider.container);
             this._decimalOffsetSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: "99", value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeDecimalOffset(this.doc, oldValue, 99 - newValue), false);
             this._decimalOffsetRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:10px;", onclick: () => this._openPrompt("decimalOffset") }, "‣ offset"), this._decimalOffsetSlider.container);
             this._pulseWidthDropdownGroup = div({ class: "editor-controls-alt", style: "display: none;" }, this._decimalOffsetRow);
             this._pitchShiftKnob = new Knob(0, Config.pitchShiftRange - 1, 1, 0, true, this.doc, (oldValue, newValue) => new ChangePitchShift(this.doc, oldValue, newValue), [0, 7, 12, 19, 24], [false, true, false, true]);
             this._pitchShiftRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("pitchShift") }, "transpose"), this._pitchShiftKnob.container);
-            this._pitchShiftContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "pitch shift"), this._pitchShiftRow);
+            this._pitchShiftPreContainer = div({ style: "display: flex; flex-direction: column" }, this._pitchShiftRow);
+            this._pitchShiftTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "pitch shift (transpose)");
+            this._pitchShiftContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._pitchShiftTitle), this._pitchShiftPreContainer);
             this._detuneSlider = new Slider(input({ style: "margin: 0;", type: "range", min: Config.detuneMin - Config.detuneCenter, max: Config.detuneMax - Config.detuneCenter, value: 0, step: "4" }), this.doc, (oldValue, newValue) => new ChangeDetune(this.doc, oldValue, newValue), true);
-            this._detuneSliderInputBox = input({ style: "width: 4em; font-size: 80%; ", id: "detuneSliderInputBox", type: "number", step: "1", min: Config.detuneMin - Config.detuneCenter, max: Config.detuneMax - Config.detuneCenter, value: 0 });
+            this._detuneSliderInputBox = input({ class: "arrowsOnHover", style: "width: 4em; font-size: 80%; ", id: "detuneSliderInputBox", type: "number", step: "1", min: Config.detuneMin - Config.detuneCenter, max: Config.detuneMax - Config.detuneCenter, value: 0 });
             this._detuneSliderRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, div({}, span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("detune") }, "cents "), div({ style: `color: ${ColorConfig.secondaryText}; margin-top: -3px;` }, this._detuneSliderInputBox)), this._detuneSlider.container);
-            this._detuneContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "detune"), this._detuneSliderRow);
+            this._detunePreContainer = div({ style: "display: flex; flex-direction: column" }, this._detuneSliderRow);
+            this._detuneTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "detune");
+            this._detuneContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._detuneTitle), this._detunePreContainer);
             this._distortionSlider = new Slider(input({ style: "margin: 0; position: sticky;", type: "range", min: "0", max: Config.distortionRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeDistortion(this.doc, oldValue, newValue), false);
             this._distortionRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("distortionMix") }, "mix"), this._distortionSlider.container);
             this._aliasingBox = input({ type: "checkbox", style: "width: 1em; padding: 0; margin-right: 4em;" });
             this._aliasingRow = div({ class: "selectRow" }, span({ class: "tip", style: "margin-left:10px;", onclick: () => this._openPrompt("aliases") }, "aliasing"), this._aliasingBox);
-            this._distortionContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "distortion"), this._distortionRow, this._aliasingRow);
+            this._distortionTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "distortion");
+            this._distortionPreContainer = div({ style: "display: flex; flex-direction: column" }, this._distortionRow, this._aliasingRow);
+            this._distortionContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._distortionTitle), this._distortionPreContainer);
             this._bitcrusherQuantizationSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.bitcrusherQuantizationRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeBitcrusherQuantization(this.doc, oldValue, newValue), false);
             this._bitcrusherQuantizationRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("bitcrusherQuantization") }, "bitcrush"), this._bitcrusherQuantizationSlider.container);
             this._bitcrusherFreqSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.bitcrusherFreqRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeBitcrusherFreq(this.doc, oldValue, newValue), false);
             this._bitcrusherFreqRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("bitcrusherFreq") }, "freq-crush"), this._bitcrusherFreqSlider.container);
-            this._bitcrusherContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "bitcrush"), this._bitcrusherQuantizationRow, this._bitcrusherFreqRow);
-            this._upperNoteLimitInputBox = input({ class: "miniBox", style: "width: 3em; font-size: 80%; ", id: "upperNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
-            this._lowerNoteLimitInputBox = input({ class: "miniBox", style: "width: 3em; font-size: 80%; ", id: "lowerNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
+            this._bitcrusherPreContainer = div({ style: "display: flex; flex-direction: column" }, this._bitcrusherQuantizationRow, this._bitcrusherFreqRow);
+            this._bitcrusherTitle = div({ style: "cursor: pointer;", class: "effectTitle" }, "bitcrush");
+            this._bitcrusherContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._bitcrusherTitle), this._bitcrusherPreContainer);
+            this._upperNoteLimitInputBox = input({ class: "arrowsOnHover", style: "width: 3em; font-size: 80%; ", id: "upperNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
+            this._lowerNoteLimitInputBox = input({ class: "arrowsOnHover", style: "width: 3em; font-size: 80%; ", id: "lowerNoteLimitInputBox", type: "number", step: "1", min: 0, max: Config.maxPitch, value: 60 });
             this._lowerNoteLimitBoxWrapper = HTML.div({ style: "flex: 1; display: flex; flex-direction: column; align-items: center;" }, HTML.span({ class: "tip", style: `flex:1; height:1em; font-size: smaller;`, onclick: () => this._openPrompt("envelopeRange") }, "[60] "), this._lowerNoteLimitInputBox);
             this._upperNoteLimitBoxWrapper = HTML.div({ style: "flex: 1; display: flex; flex-direction: column; align-items: center;" }, HTML.span({ class: "tip", style: `flex:1; height:1em; font-size: smaller;`, onclick: () => this._openPrompt("envelopeRange") }, "[60] "), this._upperNoteLimitInputBox);
             this._noteRangeDoubSlider = new DoubleSlider(this.doc, (oldValue, newValue) => new ChangeLowerLimit(this.doc, oldValue, newValue), (oldValue, newValue) => new ChangeUpperLimit(this.doc, oldValue, newValue), 60, 60, 0, Config.maxPitch, 0);
             this._noteRangeDoubSliderContainer = div({ style: "max-width: 9em" }, this._noteRangeDoubSlider.container);
             this._noteRangeDoubRow = div({ style: "margin-top: 0.667em;", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("noteRange") }, ""), this._lowerNoteLimitBoxWrapper, this._noteRangeDoubSliderContainer, this._upperNoteLimitBoxWrapper);
-            this._noteRangeContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "note range"), this._noteRangeDoubRow);
+            this._noteRangePreContainer = div({ style: "display: flex; flex-direction: column" }, this._noteRangeDoubRow);
+            this._noteRangeTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "note range");
+            this._noteRangeContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._noteRangeTitle), this._noteRangePreContainer);
             this._stringSustainSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.stringSustainRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeStringSustain(this.doc, oldValue, newValue), false);
             this._stringSustainLabel = span({ class: "tip", onclick: () => this._openPrompt("stringSustain") }, "sustain");
             this._stringSustainRow = div({ class: "selectRow" }, this._stringSustainLabel, this._stringSustainSlider.container);
             this._unisonDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(6) }, "▼");
             this._unisonSelect = select();
             this._unisonSelectRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("unison") }, "unison"), this._unisonDropdown, div({ class: "selectContainer", style: "width: 61.5%;" }, this._unisonSelect));
-            this._unisonVoicesInputBox = input({ style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonVoicesInputBox", type: "number", step: "1", min: Config.unisonVoicesMin, max: Config.unisonVoicesMax, value: 1 });
+            this._unisonVoicesInputBox = input({ class: "arrowsOnHover", style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonVoicesInputBox", type: "number", step: "1", min: Config.unisonVoicesMin, max: Config.unisonVoicesMax, value: 1 });
             this._unisonVoicesRow = div({ class: "selectRow dropFader" }, div({}, span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("unisonVoices") }, "‣ voices: "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._unisonVoicesInputBox)));
-            this._unisonSpreadInputBox = input({ style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonSpreadInputBox", type: "number", step: "0.001", min: Config.unisonSpreadMin, max: Config.unisonSpreadMax, value: 0.0 });
+            this._unisonSpreadInputBox = input({ class: "arrowsOnHover", style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonSpreadInputBox", type: "number", step: "0.001", min: Config.unisonSpreadMin, max: Config.unisonSpreadMax, value: 0.0 });
             this._unisonSpreadRow = div({ class: "selectRow dropFader" }, div({}, span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("unisonSpread") }, "‣ spread: "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._unisonSpreadInputBox)));
-            this._unisonOffsetInputBox = input({ style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonOffsetInputBox", type: "number", step: "0.001", min: Config.unisonOffsetMin, max: Config.unisonOffsetMax, value: 0.0 });
+            this._unisonOffsetInputBox = input({ class: "arrowsOnHover", style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonOffsetInputBox", type: "number", step: "0.001", min: Config.unisonOffsetMin, max: Config.unisonOffsetMax, value: 0.0 });
             this._unisonOffsetRow = div({ class: "selectRow dropFader" }, div({}, span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("unisonOffset") }, "‣ offset: "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._unisonOffsetInputBox)));
-            this._unisonExpressionInputBox = input({ style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonExpressionInputBox", type: "number", step: "0.001", min: Config.unisonExpressionMin, max: Config.unisonExpressionMax, value: 1.4 });
+            this._unisonExpressionInputBox = input({ class: "arrowsOnHover", style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonExpressionInputBox", type: "number", step: "0.001", min: Config.unisonExpressionMin, max: Config.unisonExpressionMax, value: 1.4 });
             this._unisonExpressionRow = div({ class: "selectRow dropFader" }, div({}, span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("unisonExpression") }, "‣ volume: "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._unisonExpressionInputBox)));
-            this._unisonSignInputBox = input({ style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonSignInputBox", type: "number", step: "0.001", min: Config.unisonSignMin, max: Config.unisonSignMax, value: 1.0 });
+            this._unisonSignInputBox = input({ class: "arrowsOnHover", style: "width: 150%; height: 1.5em; font-size: 80%; margin-left: 0.4em; vertical-align: middle;", id: "unisonSignInputBox", type: "number", step: "0.001", min: Config.unisonSignMin, max: Config.unisonSignMax, value: 1.0 });
             this._unisonSignRow = div({ class: "selectRow dropFader" }, div({}, span({ class: "tip", style: "height:1em; font-size: smaller;", onclick: () => this._openPrompt("unisonSign") }, "‣ sign: "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._unisonSignInputBox)));
             this._unisonDropdownGroup = div({ class: "editor-controls-alt", style: "display: none; gap: 3px; margin-bottom: 0.5em;" }, this._unisonVoicesRow, this._unisonSpreadRow, this._unisonOffsetRow, this._unisonExpressionRow, this._unisonSignRow);
             this._chordSelect = buildOptions(select({ style: "flex-shrink: 100" }), Config.chords.map(chord => chord.name));
             this._chordDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(2) }, "▼");
-            this._monophonicNoteInputBox = input({ style: "width: 2.35em; height: 1.5em; font-size: 80%; margin: 0.5em; vertical-align: middle;", id: "unisonSignInputBox", type: "number", step: "1", min: 1, max: Config.maxChordSize, value: 1.0 });
+            this._monophonicNoteInputBox = input({ class: "arrowsOnHover", style: "width: 2.35em; height: 1.5em; font-size: 80%; margin: 0.5em; vertical-align: middle;", id: "unisonSignInputBox", type: "number", step: "1", min: 1, max: Config.maxChordSize, value: 1.0 });
             this._chordSelectContainer = div({ class: "selectContainer", style: "width=100%" }, this._chordSelect);
             this._chordSelectRow = div({ style: "margin-top: 0.667em; display: flex; flex-direction: row;", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("chords") }, "type "), this._monophonicNoteInputBox, this._chordDropdown, this._chordSelectContainer);
             this._arpeggioSpeedDisplay = span({ style: `color: ${ColorConfig.secondaryText}; font-size: smaller; text-overflow: clip;` }, "x1");
@@ -56748,7 +56783,9 @@ You should be redirected to the song at:<br /><br />
             this._strumSpeedSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "1", max: Config.maxStrumSpeed, value: "1", step: "1" }), this.doc, (oldValue, newValue) => new ChangeStrumSpeed(this.doc, oldValue, newValue), false);
             this._strumSpeedRow = div({ class: "selectRow dropFader" }, div({ style: "display: flex; flex-direction: column" }, span({ class: "tip", style: "margin-left:4px; font-size: smaller;", onclick: () => this._openPrompt("strumSpeedSlider") }, "‣ spd"), this._strumSpeedDisplay), this._strumSpeedSlider.container);
             this._chordDropdownGroup = div({ class: "editor-controls-alt", style: "display: none;" }, this._strumSpeedRow, this._arpeggioSpeedRow, this._twoNoteArpRow);
-            this._chordContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "chord type"), this._chordSelectRow, this._chordDropdownGroup);
+            this._chordPreContainer = div({ style: "display: flex; flex-direction: column" }, this._chordSelectRow, this._chordDropdownGroup);
+            this._chordTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "chord type");
+            this._chordContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._chordTitle), this._chordPreContainer);
             this._vibratoSelect = buildOptions(select(), Config.vibratos.map(vibrato => vibrato.name));
             this._vibratoDropdown = button({ style: "margin-left:0em; height:1.5em; width: 10px; padding: 0px; font-size: 8px;", onclick: () => this._toggleDropdownMenu(0) }, "▼");
             this._vibratoSelectRow = div({ style: "margin-top: 0.667em", class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("vibrato") }, "vibrato "), this._vibratoDropdown, div({ class: "selectContainer", style: "width: 61.5%;" }, this._vibratoSelect));
@@ -56762,7 +56799,9 @@ You should be redirected to the song at:<br /><br />
             this._vibratoTypeSelect = buildOptions(select(), Config.vibratoTypes.map(vibrato => vibrato.name));
             this._vibratoTypeSelectRow = div({ class: "selectRow dropFader" }, span({ class: "tip", style: "margin-left:4px;", onclick: () => this._openPrompt("vibratoType") }, "‣ type"), div({ class: "selectContainer", style: "width: 61.5%;" }, this._vibratoTypeSelect));
             this._vibratoDropdownGroup = div({ class: "editor-controls-alt", style: `display: none;` }, this._vibratoDepthRow, this._vibratoSpeedRow, this._vibratoDelayRow, this._vibratoTypeSelectRow);
-            this._vibratoContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span({ class: "effectTitle" }, "vibrato"), this._vibratoSelectRow, this._vibratoDropdownGroup);
+            this._vibratoPreContainer = div({ style: "display: flex; flex-direction: column" }, this._vibratoSelectRow, this._vibratoDropdownGroup);
+            this._vibratoTitle = div({ style: "cursor: pointer", class: "effectTitle" }, "vibrato");
+            this._vibratoContainer = div({ class: "effectContainer", style: "display: flex; flex-direction: column; text-align: center; padding: 0.33em" }, span(this._vibratoTitle), this._vibratoPreContainer);
             this._phaseModGroup = div({ class: "editor-controls-alt" });
             this._feedbackTypeSelect = buildOptions(select(), Config.feedbacks.map(feedback => feedback.name));
             this.envelopeEditor = new EnvelopeEditor(this.doc, (id, submenu, subtype) => this._toggleDropdownMenu(id, submenu), (name) => this._openPrompt(name));
@@ -57348,6 +57387,7 @@ You should be redirected to the song at:<br /><br />
                     if (effectsIncludeTransition(instrument.effects)) {
                         this._transitionRow.style.display = "";
                         this._transitionContainer.style.display = "";
+                        this._transitionPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                         if (this._openTransitionDropdown) {
                             this._transitionDropdownGroup.style.display = "";
                         }
@@ -57364,6 +57404,7 @@ You should be redirected to the song at:<br /><br />
                     }
                     if (effectsIncludeChord(instrument.effects)) {
                         this._chordContainer.style.display = "";
+                        this._chordPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                         this._chordSelectRow.style.display = "";
                         this._chordDropdown.style.display = (instrument.chord == Config.chords.dictionary["arpeggio"].index) || (instrument.chord == Config.chords.dictionary["strum"].index) ? "" : "none";
                         this._chordDropdownGroup.style.display = (((instrument.chord == Config.chords.dictionary["arpeggio"].index) || (instrument.chord == Config.chords.dictionary["strum"].index)) && this._openChordDropdown) ? "" : "none";
@@ -57393,6 +57434,7 @@ You should be redirected to the song at:<br /><br />
                         this._pitchShiftContainer.style.display = "";
                         this._pitchShiftKnob.updateValue(instrument.pitchShift);
                         this._pitchShiftKnob.setTitle(((instrument.pitchShift - Config.pitchShiftCenter) + " semitone(s)").toString());
+                        this._pitchShiftPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                     }
                     else {
                         this._pitchShiftRow.style.display = "none";
@@ -57403,6 +57445,7 @@ You should be redirected to the song at:<br /><br />
                         this._detuneContainer.style.display = "";
                         this._detuneSlider.updateValue(instrument.detune - Config.detuneCenter);
                         this._detuneSlider.input.title = (Synth.detuneToCents(instrument.detune)) + " cent(s)";
+                        this._detunePreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                     }
                     else {
                         this._detuneSliderRow.style.display = "none";
@@ -57414,6 +57457,7 @@ You should be redirected to the song at:<br /><br />
                             this._vibratoDropdownGroup.style.display = "";
                         setSelectedValue(this._vibratoSelect, instrument.vibrato);
                         this._vibratoContainer.style.display = "";
+                        this._vibratoPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                     }
                     else {
                         this._vibratoDropdownGroup.style.display = "none";
@@ -57427,6 +57471,7 @@ You should be redirected to the song at:<br /><br />
                         this._noteFilterTypeRow.style.setProperty("--background-color-dim", colors.secondaryChannel);
                         this._noteFilterTypeRow.style.display = "";
                         this._noteFilterContainer.style.display = "";
+                        this._noteFilterPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                         if (this.doc.synth.isFilterModActive(true, this.doc.channel, this.doc.getCurrentInstrument())) {
                             this._noteFilterEditor.render(true, this._ctrlHeld || this._shiftHeld);
                         }
@@ -57463,6 +57508,7 @@ You should be redirected to the song at:<br /><br />
                         else
                             this._aliasingRow.style.display = "none";
                         this._distortionSlider.updateValue(instrument.distortion);
+                        this._distortionPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                     }
                     else {
                         this._distortionRow.style.display = "none";
@@ -57475,6 +57521,7 @@ You should be redirected to the song at:<br /><br />
                         this._bitcrusherContainer.style.display = "";
                         this._bitcrusherQuantizationSlider.updateValue(instrument.bitcrusherQuantization);
                         this._bitcrusherFreqSlider.updateValue(instrument.bitcrusherFreq);
+                        this._bitcrusherPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                     }
                     else {
                         this._bitcrusherQuantizationRow.style.display = "none";
@@ -57484,9 +57531,9 @@ You should be redirected to the song at:<br /><br />
                     if (effectsIncludePanning(instrument.effects)) {
                         if (this._openPanDropdown)
                             this._panDropdownGroup.style.display = "";
-                        this._panSlider.updateValue(instrument.pan);
                         this._panKnob.updateValue(instrument.pan);
                         this._panContainer.style.display = "";
+                        this._panPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                     }
                     else {
                         this._panDropdownGroup.style.display = "none";
@@ -57496,6 +57543,7 @@ You should be redirected to the song at:<br /><br />
                         this._chorusRow.style.display = "";
                         this._chorusContainer.style.display = "";
                         this._chorusSlider.updateValue(instrument.chorus);
+                        this._chorusPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                     }
                     else {
                         this._chorusRow.style.display = "none";
@@ -57507,6 +57555,7 @@ You should be redirected to the song at:<br /><br />
                         this._echoDelayRow.style.display = "";
                         this._echoDelaySlider.updateValue(instrument.echoDelay);
                         this._echoContainer.style.display = "";
+                        this._echoPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                     }
                     else {
                         this._echoSustainRow.style.display = "none";
@@ -57525,6 +57574,7 @@ You should be redirected to the song at:<br /><br />
                         this._flangerFeedbackRow.style.display = "";
                         this._flangerFeedbackSlider.updateValue(instrument.flangerFeedback);
                         this._flangerContainer.style.display = "";
+                        this._flangerPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                         const rateIndex = Math.round(instrument.flangerRate / (Config.flangerRateRange - 1) * (flangerRateValues.length - 1));
                         this.flangerRateNum.innerHTML = " (" + (prettyNumber(flangerRateValues[rateIndex] * 1)) + " beats)";
                         const delayMs = (instrument.flangerDelay / (Config.flangerDelayRange - 1)) * 10;
@@ -57550,6 +57600,7 @@ You should be redirected to the song at:<br /><br />
                         this._phaserFeedbackRow.style.display = "";
                         this._phaserFeedbackSlider.updateValue(instrument.phaserFeedback);
                         this._phaserContainer.style.display = "";
+                        this._phaserPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                     }
                     else {
                         this._phaserMixRow.style.display = "none";
@@ -57561,6 +57612,7 @@ You should be redirected to the song at:<br /><br />
                     if (effectsIncludeNoteRange(instrument.effects)) {
                         this._noteRangeDoubRow.style.display = "";
                         this._noteRangeContainer.style.display = "";
+                        this._noteRangePreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                         this._upperNoteLimitInputBox.value = String(instrument.upperNoteLimit);
                         this._lowerNoteLimitInputBox.value = String(instrument.lowerNoteLimit);
                         this._noteRangeDoubSlider.updateLeft(instrument.lowerNoteLimit, true);
@@ -57576,6 +57628,7 @@ You should be redirected to the song at:<br /><br />
                         this._reverbShelfHzRow.style.display = "";
                         this._reverbShelfGainRow.style.display = "";
                         this._reverbContainer.style.display = "";
+                        this._reverbPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                         this._reverbMixSlider.updateValue(instrument.reverb);
                         this._reverbDelaySlider.updateValue(instrument.reverbDelay);
                         this._reverbShelfHzSlider.updateValue(instrument.reverbShelfHz);
@@ -57591,6 +57644,7 @@ You should be redirected to the song at:<br /><br />
                     if (effectsIncludeRingModulation(instrument.effects)) {
                         this._ringModContainerRow.style.display = "";
                         this._ringModContainer.style.display = "";
+                        this._ringModPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                         this._ringModSlider.updateValue(instrument.ringModulation);
                         this._ringModHzSlider.updateValue(instrument.ringModulationHz);
                         setSelectedValue(this._ringModWaveSelect, instrument.ringModWaveformIndex);
@@ -57603,6 +57657,7 @@ You should be redirected to the song at:<br /><br />
                     if (effectsIncludeGranular(instrument.effects)) {
                         this._granularContainerRow.style.display = "";
                         this._granularContainer.style.display = "";
+                        this._granularPreContainer.style.display = this.doc.prefs.collapseEffectsOnLoad ? "none" : "";
                         this._granularSlider.updateValue(instrument.granular);
                         this._grainSizeSlider.updateValue(instrument.grainSize);
                         this._grainAmountsSlider.updateValue(instrument.grainAmounts);
@@ -57649,7 +57704,7 @@ You should be redirected to the song at:<br /><br />
                     setSelectedValue(this._vibratoSelect, instrument.vibrato);
                     setSelectedValue(this._vibratoTypeSelect, instrument.vibratoType);
                     setSelectedValue(this._chordSelect, instrument.chord);
-                    this._panSliderInputBox.value = instrument.pan + "";
+                    this._panKnobInputBox.value = instrument.pan + "";
                     this._pwmSliderInputBox.value = instrument.pulseWidth + "";
                     this._detuneSliderInputBox.value = (instrument.detune - Config.detuneCenter) + "";
                     this.ringModHzNum.innerHTML = " (" + calculateRingModHertz(instrument.ringModulationHz / (Config.ringModHzRange - 1)) + ")";
@@ -58444,7 +58499,7 @@ You should be redirected to the song at:<br /><br />
                     }
                     return;
                 }
-                if (document.activeElement == this._panSliderInputBox
+                if (document.activeElement == this._panKnobInputBox
                     || document.activeElement == this._pwmSliderInputBox
                     || document.activeElement == this._detuneSliderInputBox
                     || document.activeElement == this._instrumentVolumeSliderInputBox
@@ -59767,6 +59822,23 @@ You should be redirected to the song at:<br /><br />
                 this.doc.notifier.changed();
                 this.doc.prefs.save();
             };
+            this._panCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._reverbCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._chorusCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._transitionCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._chordCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._pitchShiftCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._detuneCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._vibratoCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._distortionCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._noteFilterCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._granularCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._bitcrusherCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._echoCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._ringModCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._flangerCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._phaserCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
+            this._noteRangeCollapsed = this.doc.prefs.collapseEffectsOnLoad ? true : false;
             this.doc.notifier.watch(this.whenUpdated);
             this.doc.modRecordingHandler = () => { this.handleModRecording(); };
             new MidiInputHandler(this.doc);
@@ -59965,6 +60037,23 @@ You should be redirected to the song at:<br /><br />
             this._zoomOutButton.addEventListener("click", this._zoomOut);
             this._patternArea.addEventListener("mousedown", this._refocusStageNotEditing);
             this._trackArea.addEventListener("mousedown", this.refocusStage);
+            this._panTitle.addEventListener("click", () => this.collapseEffect("pan"));
+            this._reverbTitle.addEventListener("click", () => this.collapseEffect("reverb"));
+            this._chorusTitle.addEventListener("click", () => this.collapseEffect("chorus"));
+            this._transitionTitle.addEventListener("click", () => this.collapseEffect("transition"));
+            this._chordTitle.addEventListener("click", () => this.collapseEffect("chord type"));
+            this._pitchShiftTitle.addEventListener("click", () => this.collapseEffect("pitch shift"));
+            this._detuneTitle.addEventListener("click", () => this.collapseEffect("detune"));
+            this._vibratoTitle.addEventListener("click", () => this.collapseEffect("vibrato"));
+            this._distortionTitle.addEventListener("click", () => this.collapseEffect("distortion"));
+            this._noteFilterTitle.addEventListener("click", () => this.collapseEffect("note filter"));
+            this._granularTitle.addEventListener("click", () => this.collapseEffect("granular"));
+            this._bitcrusherTitle.addEventListener("click", () => this.collapseEffect("bitcrusher"));
+            this._echoTitle.addEventListener("click", () => this.collapseEffect("echo"));
+            this._ringModTitle.addEventListener("click", () => this.collapseEffect("ring mod"));
+            this._flangerTitle.addEventListener("click", () => this.collapseEffect("flanger"));
+            this._phaserTitle.addEventListener("click", () => this.collapseEffect("phaser"));
+            this._noteRangeTitle.addEventListener("click", () => this.collapseEffect("note range"));
             this._volumeSlider.container.style.setProperty("flex-grow", "1");
             this._volumeSlider.container.style.setProperty("display", "flex");
             this._volumeBarContainerL.style.setProperty("flex-grow", "1");
@@ -60011,7 +60100,7 @@ You should be redirected to the song at:<br /><br />
             this._instrumentImportButton.addEventListener("click", this._importInstruments.bind(this));
             sampleLoadEvents.addEventListener("sampleloaded", this._updateSampleLoadingBar.bind(this));
             this._instrumentVolumeSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangeVolume(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].volume, Math.min(25.0, Math.max(-25.0, Math.round(+this._instrumentVolumeSliderInputBox.value))))); });
-            this._panSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangePan(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pan, Math.min(100.0, Math.max(0.0, Math.round(+this._panSliderInputBox.value))))); });
+            this._panKnobInputBox.addEventListener("input", () => { this.doc.record(new ChangePan(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pan, Math.min(100.0, Math.max(0.0, Math.round(+this._panKnobInputBox.value))))); });
             this._pwmSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangePulseWidth(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pulseWidth, Math.min(Config.pulseWidthRange, Math.max(1.0, Math.round(+this._pwmSliderInputBox.value))))); });
             this._detuneSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangeDetune(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].detune, Math.min(Config.detuneMax - Config.detuneCenter, Math.max(Config.detuneMin - Config.detuneCenter, Math.round(+this._detuneSliderInputBox.value))))); });
             this._unisonVoicesInputBox.addEventListener("input", () => { this.doc.record(new ChangeUnisonVoices(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].unisonVoices, Math.min(Config.unisonVoicesMax, Math.max(Config.unisonVoicesMin, Math.round(+this._unisonVoicesInputBox.value))))); });
@@ -60402,8 +60491,6 @@ You should be redirected to the song at:<br /><br />
         getSliderForModSetting(setting, index) {
             index = index == undefined ? 0 : index;
             switch (setting) {
-                case Config.modulators.dictionary["pan"].index:
-                    return this._panSlider;
                 case Config.modulators.dictionary["detune"].index:
                     return this._detuneSlider;
                 case Config.modulators.dictionary["fm slider 1"].index:
@@ -60938,6 +61025,80 @@ You should be redirected to the song at:<br /><br />
             }
             this.doc.record(new ChangeSong(this.doc, ""), false, true);
             this.doc.synth.isPlayingSong = false;
+        }
+        collapseEffect(effect) {
+            if (effect === "pan") {
+                this._panCollapsed = !this._panCollapsed;
+                this._panPreContainer.style.display = this._panCollapsed ? "none" : "";
+            }
+            else if (effect === "reverb") {
+                this._reverbCollapsed = !this._reverbCollapsed;
+                this._reverbPreContainer.style.display = this._reverbCollapsed ? "none" : "";
+            }
+            else if (effect === "chorus") {
+                this._chorusCollapsed = !this._chorusCollapsed;
+                this._chorusPreContainer.style.display = this._chorusCollapsed ? "none" : "";
+            }
+            else if (effect === "transition") {
+                this._transitionCollapsed = !this._transitionCollapsed;
+                this._transitionPreContainer.style.display = this._transitionCollapsed ? "none" : "";
+            }
+            else if (effect === "chord type") {
+                this._chordCollapsed = !this._chordCollapsed;
+                this._chordPreContainer.style.display = this._chordCollapsed ? "none" : "";
+            }
+            else if (effect === "pitch shift") {
+                this._pitchShiftCollapsed = !this._pitchShiftCollapsed;
+                this._pitchShiftPreContainer.style.display = this._pitchShiftCollapsed ? "none" : "";
+            }
+            else if (effect === "detune") {
+                this._detuneCollapsed = !this._detuneCollapsed;
+                this._detunePreContainer.style.display = this._detuneCollapsed ? "none" : "";
+            }
+            else if (effect === "vibrato") {
+                this._vibratoCollapsed = !this._vibratoCollapsed;
+                this._vibratoPreContainer.style.display = this._vibratoCollapsed ? "none" : "";
+            }
+            else if (effect === "distortion") {
+                this._distortionCollapsed = !this._distortionCollapsed;
+                this._distortionPreContainer.style.display = this._distortionCollapsed ? "none" : "";
+            }
+            else if (effect === "note filter") {
+                this._noteFilterCollapsed = !this._noteFilterCollapsed;
+                this._noteFilterPreContainer.style.display = this._noteFilterCollapsed ? "none" : "";
+            }
+            else if (effect === "granular") {
+                this._granularCollapsed = !this._granularCollapsed;
+                this._granularPreContainer.style.display = this._granularCollapsed ? "none" : "";
+            }
+            else if (effect === "bitcrusher") {
+                this._bitcrusherCollapsed = !this._bitcrusherCollapsed;
+                this._bitcrusherPreContainer.style.display = this._bitcrusherCollapsed ? "none" : "";
+            }
+            else if (effect === "echo") {
+                this._echoCollapsed = !this._echoCollapsed;
+                this._echoPreContainer.style.display = this._echoCollapsed ? "none" : "";
+            }
+            else if (effect === "ring mod") {
+                this._ringModCollapsed = !this._ringModCollapsed;
+                this._ringModPreContainer.style.display = this._ringModCollapsed ? "none" : "";
+            }
+            else if (effect === "flanger") {
+                this._flangerCollapsed = !this._flangerCollapsed;
+                this._flangerPreContainer.style.display = this._flangerCollapsed ? "none" : "";
+            }
+            else if (effect === "phaser") {
+                this._phaserCollapsed = !this._phaserCollapsed;
+                this._phaserPreContainer.style.display = this._phaserCollapsed ? "none" : "";
+            }
+            else if (effect === "note range") {
+                this._noteRangeCollapsed = !this._noteRangeCollapsed;
+                this._noteRangePreContainer.style.display = this._noteRangeCollapsed ? "none" : "";
+            }
+            else {
+                console.warn("Effect not collapsible!");
+            }
+            return;
         }
     }
     SongEditor._styleElement = document.head.appendChild(HTML.style({ type: "text/css" }));
